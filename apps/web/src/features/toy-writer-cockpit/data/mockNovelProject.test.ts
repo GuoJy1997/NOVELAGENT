@@ -22,6 +22,7 @@ describe('mockNovelProject', () => {
   it('links the selected chapter seed to a clue chain', () => {
     const selectedChapter = mockNovelProject.chapters.find((chapter) => chapter.selected);
     expect(selectedChapter?.id).toBe('chapter-3');
-    expect(mockNovelProject.clueChains.some((chain) => chain.relatedChapterIds.includes('chapter-3'))).toBe(true);
+    expect(mockNovelProject.clueChains.every((chain) => chain.relatedChapterIds.includes('chapter-3'))).toBe(true);
+    expect(mockNovelProject.clueChains.every((chain) => chain.missingFields.length === 0)).toBe(true);
   });
 });
