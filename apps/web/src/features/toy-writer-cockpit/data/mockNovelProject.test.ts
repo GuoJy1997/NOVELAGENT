@@ -5,8 +5,8 @@ describe('mockNovelProject', () => {
   it('keeps all project data scoped to one novel project', () => {
     expect(mockNovelProject.id).toBe('tides-of-embers');
     expect(mockNovelProject.title).toBe('Tides of Embers');
-    expect(mockNovelProject.chapters.length).toBeGreaterThanOrEqual(5);
-    expect(mockNovelProject.clueChains.length).toBeGreaterThanOrEqual(1);
+    expect(mockNovelProject.chapters).toHaveLength(6);
+    expect(mockNovelProject.clueChains).toHaveLength(2);
   });
 
   it('has complete clue attribution fields for every clue chain', () => {
