@@ -1,0 +1,25 @@
+:root {
+  color-scheme: dark;
+  --color-bg-base: #0f0c09;
+  --color-bg-panel: #211a13;
+  --color-bg-card: #3a2c20;
+  --color-paper: #d8c3a0;
+  --color-accent-primary: #f28a2e;
+  --color-accent-brass: #b88a4a;
+  --color-accent-support: #4c9a8a;
+  --color-text-primary: #f3e4c6;
+  --color-text-secondary: #a9987a;
+  --color-state-done: #6fae7d;
+  --color-state-warning: #d49a3a;
+  --color-state-danger: #b65a3c;
+  --color-border-soft: rgba(216, 195, 160, 0.22);
+  --shadow-deep: 0 24px 80px rgba(0, 0, 0, 0.45);
+  --shadow-card: 0 12px 34px rgba(0, 0, 0, 0.26);
+  --radius-shell: 28px;
+  --radius-panel: 22px;
+  --radius-card: 16px;
+  --font-ui: Inter, "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+  --font-display: Georgia, "Times New Roman", "Songti SC", serif;
+  --motion-fast: 160ms ease-out;
+  --motion-medium: 280ms ease;
+}
