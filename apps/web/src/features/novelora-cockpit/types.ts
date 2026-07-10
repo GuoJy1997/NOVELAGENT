@@ -1,10 +1,16 @@
+import type {
+  characterPortraits,
+  inspirationThumbnails,
+  projectCovers,
+} from './assetRegistry';
+
 export type InspirationType = 'image' | 'quote' | 'location' | 'research';
 
 export type AgentTaskState = 'queued' | 'running' | 'done' | 'blocked';
 
-type ProjectCoverAssetKey = 'eclipseOfEchoes' | 'whispersVale' | 'chroniclesLumin';
-type CharacterPortraitAssetKey = 'liora' | 'arden' | 'kael' | 'selene' | 'vex';
-type InspirationAssetKey = 'moonQuote' | 'observatory' | 'ruins' | 'portal';
+type ProjectCoverAssetKey = keyof typeof projectCovers;
+type CharacterPortraitAssetKey = keyof typeof characterPortraits;
+type InspirationAssetKey = keyof typeof inspirationThumbnails;
 
 export interface Act {
   id: string;
@@ -92,6 +98,7 @@ export interface NoveloraProject {
   title: string;
   genre: string;
   coverAssetKey: ProjectCoverAssetKey;
+  memoryHealthPercent: number;
   acts: Act[];
   chapters: CockpitChapter[];
   selectedChapterId: string;

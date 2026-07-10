@@ -1,4 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import {
+  characterPortraits,
+  inspirationThumbnails,
+  projectCovers,
+} from '../assetRegistry';
 import { noveloraMockProject } from './noveloraMockProject';
 
 describe('noveloraMockProject', () => {
@@ -37,15 +42,19 @@ describe('noveloraMockProject', () => {
     expect(noveloraMockProject.memorySources.length).toBeGreaterThanOrEqual(4);
   });
 
-  it('uses asset keys instead of resource URLs', () => {
-    const assetValues = [
-      noveloraMockProject.coverAssetKey,
-      ...noveloraMockProject.inspirations.map(({ assetKey }) => assetKey),
-      ...noveloraMockProject.characters.map(({ portraitAssetKey }) => portraitAssetKey),
-    ];
+  it('exposes the planned memory-health percentage as project data', () => {
+    expect(noveloraMockProject.memoryHealthPercent).toBe(78);
+  });
 
-    for (const assetValue of assetValues) {
-      expect(assetValue).not.toMatch(/^(?:https?:\/\/|\/src\/|data:)/i);
+  it('uses asset keys registered in their matching asset groups', () => {
+    expect(Object.hasOwn(projectCovers, noveloraMockProject.coverAssetKey)).toBe(true);
+
+    for (const inspiration of noveloraMockProject.inspirations) {
+      expect(Object.hasOwn(inspirationThumbnails, inspiration.assetKey)).toBe(true);
+    }
+
+    for (const character of noveloraMockProject.characters) {
+      expect(Object.hasOwn(characterPortraits, character.portraitAssetKey)).toBe(true);
     }
   });
 
@@ -71,6 +80,54 @@ describe('noveloraMockProject', () => {
       expect(clueFlow.trigger.triggeredBy).toBeTruthy();
       expect(clueFlow.receiver.receivedBy).toBeTruthy();
       expect(clueFlow.payoff.paidOffBy).toBeTruthy();
+    }
+  });
+
+  it('keeps fixture references internally consistent', () => {
+    const actIds = new Set(noveloraMockProject.acts.map(({ id }) => id));
+    const chapterIds = new Set(noveloraMockProject.chapters.map(({ id }) => id));
+    const characterIds = new Set(noveloraMockProject.characters.map(({ id }) => id));
+
+    expect(chapterIds.has(noveloraMockProject.selectedChapterId)).toBe(true);
+
+    for (const act of noveloraMockProject.acts) {
+      for (const chapterId of act.chapterIds) {
+        expect(chapterIds.has(chapterId)).toBe(true);
+      }
+    }
+
+    for (const chapter of noveloraMockProject.chapters) {
+      expect(actIds.has(chapter.actId)).toBe(true);
+    }
+
+    for (const relationship of noveloraMockProject.characterRelationships) {
+      expect(characterIds.has(relationship.fromCharacterId)).toBe(true);
+      expect(characterIds.has(relationship.toCharacterId)).toBe(true);
+    }
+
+    for (const clueFlow of noveloraMockProject.clueFlows) {
+      const stages = [clueFlow.provider, clueFlow.trigger, clueFlow.receiver, clueFlow.payoff];
+
+      for (const stage of stages) {
+        expect(chapterIds.has(stage.chapterId)).toBe(true);
+      }
+
+      const responsibilityActors = [
+        clueFlow.provider.providedBy,
+        clueFlow.trigger.triggeredBy,
+        clueFlow.receiver.receivedBy,
+        clueFlow.payoff.paidOffBy,
+      ].filter((actor) => /^[a-z][a-z0-9-]*$/.test(actor));
+
+      for (const actorId of responsibilityActors) {
+        expect(characterIds.has(actorId)).toBe(true);
+      }
+    }
+
+    for (const item of [...noveloraMockProject.inspirations, ...noveloraMockProject.memorySources]) {
+      for (const chapterId of item.relatedChapterIds) {
+        expect(chapterIds.has(chapterId)).toBe(true);
+      }
     }
   });
 

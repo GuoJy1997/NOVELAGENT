@@ -5,6 +5,7 @@ export const noveloraMockProject: NoveloraProject = {
   title: 'Tides of Embers',
   genre: 'Maritime fantasy',
   coverAssetKey: 'eclipseOfEchoes',
+  memoryHealthPercent: 78,
   acts: [
     {
       id: 'act-i',
