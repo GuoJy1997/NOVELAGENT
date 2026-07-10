@@ -1,10 +1,34 @@
+import { useState } from 'react';
 import './styles/cockpit.css';
 import { AppShell } from './features/novelora-cockpit/components/AppShell';
+import { ChapterSwimlane } from './features/novelora-cockpit/components/ChapterSwimlane';
 import { ProjectSidebar } from './features/novelora-cockpit/components/ProjectSidebar';
+import { StructureMap } from './features/novelora-cockpit/components/StructureMap';
 import { WorkspaceTopbar } from './features/novelora-cockpit/components/WorkspaceTopbar';
 import { noveloraMockProject } from './features/novelora-cockpit/data/noveloraMockProject';
 
 export default function App() {
+  const initialChapter = noveloraMockProject.chapters.find(
+    (chapter) => chapter.id === noveloraMockProject.selectedChapterId,
+  );
+  const [selectedChapterId, setSelectedChapterId] = useState(noveloraMockProject.selectedChapterId);
+  const [selectedActId, setSelectedActId] = useState(
+    initialChapter?.actId ?? noveloraMockProject.acts[0]?.id ?? '',
+  );
+  const activeChapters = noveloraMockProject.chapters
+    .filter((chapter) => chapter.actId === selectedActId)
+    .sort((first, second) => first.order - second.order);
+
+  function selectAct(actId: string) {
+    const act = noveloraMockProject.acts.find((candidate) => candidate.id === actId);
+    const firstChapterId = act?.chapterIds[0];
+
+    setSelectedActId(actId);
+    if (firstChapterId) {
+      setSelectedChapterId(firstChapterId);
+    }
+  }
+
   return (
     <AppShell
       sidebar={<ProjectSidebar project={noveloraMockProject} />}
@@ -17,10 +41,17 @@ export default function App() {
         </div>
       }
     >
-      <div className="workspace-loading-state">
-        <p className="workspace-eyebrow">Story Map</p>
-        <h2>Story workspace is loading</h2>
-        <p>Your chapter map and narrative connections will appear here.</p>
+      <div className="story-workspace">
+        <StructureMap
+          acts={noveloraMockProject.acts}
+          selectedActId={selectedActId}
+          onSelectAct={selectAct}
+        />
+        <ChapterSwimlane
+          chapters={activeChapters}
+          selectedChapterId={selectedChapterId}
+          onSelectChapter={setSelectedChapterId}
+        />
       </div>
     </AppShell>
   );
