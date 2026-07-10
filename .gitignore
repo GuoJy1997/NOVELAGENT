@@ -9,3 +9,4 @@ dist/
 apps/web/node_modules/
 apps/web/dist/
 coverage/
+.worktrees/
