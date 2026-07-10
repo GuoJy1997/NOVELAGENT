@@ -365,6 +365,341 @@
   font-weight: 400;
 }
 
+.knowledge-workspace-grid {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.92fr) minmax(390px, 1.08fr);
+  gap: 28px;
+  min-width: 0;
+}
+
+.inspiration-vault,
+.character-graph,
+.clue-attribution-flow {
+  min-width: 0;
+  padding: 24px;
+  border: 1px solid color-mix(in srgb, var(--color-line) 88%, white);
+  border-radius: var(--radius-panel);
+  background: color-mix(in srgb, var(--color-surface) 88%, transparent);
+  box-shadow: 0 14px 36px rgba(116, 91, 58, 0.045);
+}
+
+.inspiration-vault__heading {
+  align-items: start;
+}
+
+.inspiration-vault__filters {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  gap: 6px;
+}
+
+.inspiration-filter {
+  padding: 6px 9px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-pill);
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.inspiration-filter.is-selected,
+.inspiration-filter:hover {
+  border-color: color-mix(in srgb, var(--color-coral) 55%, var(--color-line));
+  color: #b64b3d;
+  background: color-mix(in srgb, var(--color-coral) 12%, white);
+}
+
+.inspiration-vault__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.inspiration-card {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid color-mix(in srgb, var(--color-line) 86%, white);
+  border-radius: 16px;
+  color: var(--color-ink);
+  background: var(--color-surface);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.inspiration-card:hover,
+.inspiration-card.is-selected {
+  border-color: var(--color-sky);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--color-sky) 14%, transparent);
+}
+
+.inspiration-card > img {
+  width: 64px;
+  height: 86px;
+  border-radius: 11px;
+  object-fit: cover;
+  background: var(--color-bg-card);
+}
+
+.inspiration-card__content {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  min-width: 0;
+}
+
+.inspiration-card__meta,
+.inspiration-card__provenance,
+.clue-stage__label,
+.clue-stage__chapter {
+  color: var(--color-text-muted);
+  font-size: 10px;
+  font-weight: 760;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.inspiration-card strong {
+  font-family: var(--font-display);
+  font-size: 15px;
+  line-height: 1.08;
+}
+
+.inspiration-card__note {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.inspiration-card__provenance {
+  margin-top: 3px;
+  color: #4d7c74;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.character-graph__viewport {
+  overflow-x: auto;
+  outline-offset: 4px;
+}
+
+.character-graph__stage {
+  position: relative;
+  min-width: 620px;
+  min-height: 255px;
+}
+
+.character-graph__edges {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.character-graph__edge {
+  stroke-width: 4;
+  stroke-linecap: round;
+  opacity: 0.58;
+}
+
+.character-graph__edge--0 { stroke: var(--color-coral); }
+.character-graph__edge--1 { stroke: var(--color-sky); }
+.character-graph__edge--2 { stroke: var(--color-amber); }
+.character-graph__edge--3 { stroke: var(--color-mint); }
+
+.character-graph__nodes {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(130px, 1fr));
+  grid-template-areas: 'kael liora arden' '. vex selene';
+  gap: 48px 34px;
+  padding: 16px 4px;
+}
+
+.character-graph__node {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 7px;
+  border: 1px solid var(--color-line);
+  border-radius: 16px;
+  color: var(--color-ink);
+  background: color-mix(in srgb, var(--color-surface) 94%, var(--color-bg-card));
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.character-graph__node:hover { border-color: var(--color-sky); }
+.character-graph__node--kael { grid-area: kael; }
+.character-graph__node--liora { grid-area: liora; }
+.character-graph__node--arden { grid-area: arden; }
+.character-graph__node--vex { grid-area: vex; }
+.character-graph__node--selene { grid-area: selene; }
+
+.character-graph__node img {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  border-radius: 13px;
+  object-fit: cover;
+  background: var(--color-bg-card);
+}
+
+.character-graph__node span {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.character-graph__node strong {
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-size: 15px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.character-graph__node small {
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.character-graph__legend {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px 16px;
+  margin: 16px 0 0;
+  padding: 14px 0 0;
+  border-top: 1px solid color-mix(in srgb, var(--color-line) 72%, white);
+  list-style: none;
+}
+
+.character-graph__legend-item {
+  display: grid;
+  grid-template-columns: 9px auto;
+  column-gap: 7px;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.character-graph__legend-item > span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.character-graph__legend-item strong { font-size: 11px; }
+.character-graph__legend-item small {
+  grid-column: 2;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.character-graph__legend-item--0 > span { background: var(--color-coral); }
+.character-graph__legend-item--1 > span { background: var(--color-sky); }
+.character-graph__legend-item--2 > span { background: var(--color-amber); }
+.character-graph__legend-item--3 > span { background: var(--color-mint); }
+
+.clue-attribution-flow__list {
+  display: grid;
+  gap: 12px;
+}
+
+.clue-flow-card {
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--color-line) 85%, white);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--color-bg-card) 45%, var(--color-surface));
+}
+
+.clue-flow-card h3 {
+  margin: 0 0 14px;
+  font-family: var(--font-display);
+  font-size: 18px;
+}
+
+.clue-flow-card__stages {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  gap: 22px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.clue-stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: 37px minmax(0, 1fr);
+  gap: 9px;
+  min-width: 150px;
+}
+
+.clue-stage > img {
+  width: 37px;
+  height: 37px;
+}
+
+.clue-stage__arrow {
+  position: absolute;
+  top: 8px;
+  left: -17px;
+  color: var(--color-sky);
+  font-size: 18px;
+}
+
+.clue-stage > div { min-width: 0; }
+.clue-stage__responsibility,
+.clue-stage__detail { margin: 3px 0 0; }
+.clue-stage__responsibility {
+  color: var(--color-ink);
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.3;
+}
+.clue-stage__detail {
+  color: var(--color-text-muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+.clue-stage__chapter {
+  display: inline-block;
+  margin-top: 6px;
+  color: #4d7c74;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.clue-attribution-flow__empty {
+  margin: 0;
+  padding: 22px;
+  border: 1px dashed var(--color-line);
+  border-radius: 16px;
+  color: var(--color-text-muted);
+  background: var(--color-bg-card);
+  font-size: 13px;
+}
+
 .project-sidebar-content {
   position: relative;
   display: flex;

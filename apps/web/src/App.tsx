@@ -2,6 +2,9 @@ import { useState } from 'react';
 import './styles/cockpit.css';
 import { AppShell } from './features/novelora-cockpit/components/AppShell';
 import { ChapterSwimlane } from './features/novelora-cockpit/components/ChapterSwimlane';
+import { CharacterGraph } from './features/novelora-cockpit/components/CharacterGraph';
+import { ClueAttributionFlow } from './features/novelora-cockpit/components/ClueAttributionFlow';
+import { InspirationVault } from './features/novelora-cockpit/components/InspirationVault';
 import { ProjectSidebar } from './features/novelora-cockpit/components/ProjectSidebar';
 import { StructureMap } from './features/novelora-cockpit/components/StructureMap';
 import { WorkspaceTopbar } from './features/novelora-cockpit/components/WorkspaceTopbar';
@@ -51,6 +54,18 @@ export default function App() {
           chapters={activeChapters}
           selectedChapterId={selectedChapterId}
           onSelectChapter={setSelectedChapterId}
+        />
+        <div className="knowledge-workspace-grid">
+          <InspirationVault inspirations={noveloraMockProject.inspirations} />
+          <CharacterGraph
+            characters={noveloraMockProject.characters}
+            relationships={noveloraMockProject.characterRelationships}
+          />
+        </div>
+        <ClueAttributionFlow
+          clueFlows={noveloraMockProject.clueFlows}
+          chapters={noveloraMockProject.chapters}
+          selectedChapterId={selectedChapterId}
         />
       </div>
     </AppShell>
