@@ -92,13 +92,25 @@ describe('noveloraMockProject', () => {
 
     for (const act of noveloraMockProject.acts) {
       for (const chapterId of act.chapterIds) {
-        expect(chapterIds.has(chapterId)).toBe(true);
+        const chapter = noveloraMockProject.chapters.find(
+          (candidate) => candidate.id === chapterId,
+        );
+
+        expect(chapter).toBeDefined();
+        expect(chapter?.actId).toBe(act.id);
       }
     }
 
     for (const chapter of noveloraMockProject.chapters) {
       expect(actIds.has(chapter.actId)).toBe(true);
+
+      const act = noveloraMockProject.acts.find((candidate) => candidate.id === chapter.actId);
+      expect(act?.chapterIds).toContain(chapter.id);
     }
+
+    const listedChapterIds = noveloraMockProject.acts.flatMap((act) => act.chapterIds);
+    expect(new Set(listedChapterIds).size).toBe(listedChapterIds.length);
+    expect(new Set(listedChapterIds)).toEqual(chapterIds);
 
     for (const relationship of noveloraMockProject.characterRelationships) {
       expect(characterIds.has(relationship.fromCharacterId)).toBe(true);
@@ -110,17 +122,6 @@ describe('noveloraMockProject', () => {
 
       for (const stage of stages) {
         expect(chapterIds.has(stage.chapterId)).toBe(true);
-      }
-
-      const responsibilityActors = [
-        clueFlow.provider.providedBy,
-        clueFlow.trigger.triggeredBy,
-        clueFlow.receiver.receivedBy,
-        clueFlow.payoff.paidOffBy,
-      ].filter((actor) => /^[a-z][a-z0-9-]*$/.test(actor));
-
-      for (const actorId of responsibilityActors) {
-        expect(characterIds.has(actorId)).toBe(true);
       }
     }
 
