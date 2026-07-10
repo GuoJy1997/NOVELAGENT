@@ -1,0 +1,48 @@
+{
+  "product": "Novelora AI Writing Studio",
+  "style": "Bright premium collectible toy UI",
+  "colors": {
+    "canvas": "#FFFDF8",
+    "surface": "#FFFFFF",
+    "surfaceWarm": "#FFF7EE",
+    "line": "#ECE6DC",
+    "ink": "#141414",
+    "mutedText": "#6F6A63",
+    "coral": "#FF6B57",
+    "coralSoft": "#FFE5DD",
+    "mint": "#36C7B4",
+    "mintSoft": "#E6FAF6",
+    "sky": "#3A86FF",
+    "skySoft": "#EAF3FF",
+    "amber": "#FFB547",
+    "amberSoft": "#FFF1D8",
+    "lilac": "#8F67FF",
+    "lilacSoft": "#F1ECFF",
+    "jade": "#0E8F7C",
+    "charcoal": "#0F2422"
+  },
+  "radii": {
+    "xs": "8px",
+    "sm": "12px",
+    "md": "18px",
+    "lg": "24px",
+    "xl": "32px",
+    "pill": "999px"
+  },
+  "shadow": {
+    "card": "0 12px 36px rgba(26, 22, 18, 0.08)",
+    "selected": "0 18px 42px rgba(255, 107, 87, 0.18)",
+    "toy": "0 28px 60px rgba(20, 20, 20, 0.18)"
+  },
+  "typography": {
+    "display": "Playfair Display / Cormorant Garamond fallback",
+    "ui": "Inter / SF Pro / system-ui",
+    "mono": "JetBrains Mono / SF Mono"
+  },
+  "layout": {
+    "canvas": "16:9 desktop, 1920x1080 reference",
+    "sidebar": "296px",
+    "rightPanel": "360px",
+    "mainGap": "24px"
+  }
+}

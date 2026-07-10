@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="140" height="40" viewBox="0 0 140 40" fill="none">
+
+<rect x="1" y="1" width="138" height="38" rx="19" fill="#EAF3FF" stroke="#3A86FF" stroke-width="1.4"/>
+<circle cx="22" cy="20" r="5" fill="#3A86FF"/>
+<text x="36" y="24" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="700" fill="#2A56B8">Style Match</text>
+
+</svg>

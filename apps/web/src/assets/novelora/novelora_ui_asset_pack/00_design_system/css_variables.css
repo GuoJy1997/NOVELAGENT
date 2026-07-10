@@ -1,0 +1,24 @@
+:root {
+  --canvas: #FFFDF8;
+  --surface: #FFFFFF;
+  --surface-warm: #FFF7EE;
+  --line: #ECE6DC;
+  --ink: #141414;
+  --muted: #6F6A63;
+  --coral: #FF6B57;
+  --coral-soft: #FFE5DD;
+  --mint: #36C7B4;
+  --mint-soft: #E6FAF6;
+  --sky: #3A86FF;
+  --sky-soft: #EAF3FF;
+  --amber: #FFB547;
+  --amber-soft: #FFF1D8;
+  --lilac: #8F67FF;
+  --lilac-soft: #F1ECFF;
+  --jade: #0E8F7C;
+  --charcoal: #0F2422;
+  --radius-card: 24px;
+  --radius-tile: 18px;
+  --shadow-card: 0 12px 36px rgba(26,22,18,.08);
+  --shadow-selected: 0 18px 42px rgba(255,107,87,.18);
+}

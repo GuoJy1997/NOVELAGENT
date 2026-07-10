@@ -1,0 +1,136 @@
+{
+  "project": {
+    "id": "eclipse",
+    "title": "Eclipse of Echoes",
+    "genre": "Science Fantasy",
+    "wordGoal": 120000,
+    "currentWords": 62347,
+    "status": "In Progress"
+  },
+  "acts": [
+    {
+      "id": "act1",
+      "title": "ACT I",
+      "subtitle": "Setup",
+      "range": "1–8 Chapters",
+      "progress": 12,
+      "color": "mint"
+    },
+    {
+      "id": "act2",
+      "title": "ACT II",
+      "subtitle": "Confrontation",
+      "range": "9–24 Chapters",
+      "progress": 40,
+      "color": "amber",
+      "selected": true
+    },
+    {
+      "id": "act3",
+      "title": "ACT III",
+      "subtitle": "Resolution",
+      "range": "25–30 Chapters",
+      "progress": 28,
+      "color": "coral"
+    },
+    {
+      "id": "epilogue",
+      "title": "EPILOGUE",
+      "subtitle": "Aftermath",
+      "range": "31–32 Chapters",
+      "progress": 20,
+      "color": "lilac"
+    }
+  ],
+  "chapters": [
+    {
+      "id": "ch09",
+      "number": 9,
+      "beat": "Turning Point",
+      "wordCount": 2275,
+      "characters": [
+        "arden",
+        "liora"
+      ],
+      "clueCount": 2
+    },
+    {
+      "id": "ch10",
+      "number": 10,
+      "beat": "False Victory",
+      "wordCount": 3180,
+      "characters": [
+        "arden",
+        "kael"
+      ],
+      "clueCount": 2
+    },
+    {
+      "id": "ch11",
+      "number": 11,
+      "beat": "Midnight Betrayal",
+      "wordCount": 3614,
+      "characters": [
+        "liora",
+        "arden",
+        "vex"
+      ],
+      "clueCount": 4,
+      "selected": true
+    },
+    {
+      "id": "ch12",
+      "number": 12,
+      "beat": "Darkest Hour",
+      "wordCount": 2768,
+      "characters": [
+        "arden",
+        "kael"
+      ],
+      "clueCount": 2
+    },
+    {
+      "id": "ch13",
+      "number": 13,
+      "beat": "New Resolve",
+      "wordCount": 2324,
+      "characters": [
+        "liora",
+        "selene"
+      ],
+      "clueCount": 2
+    }
+  ],
+  "agents": [
+    {
+      "name": "Plot Architect",
+      "task": "Building Act II structure",
+      "progress": 80,
+      "status": "running"
+    },
+    {
+      "name": "Character Scout",
+      "task": "Deepening Kael's backstory",
+      "progress": 65,
+      "status": "running"
+    },
+    {
+      "name": "Lore Keeper",
+      "task": "Expanding magic system",
+      "progress": 40,
+      "status": "queued"
+    },
+    {
+      "name": "Tone Weaver",
+      "task": "Refining voice and mood",
+      "progress": 20,
+      "status": "queued"
+    }
+  ],
+  "clueFlow": {
+    "origin": "Ancient cipher in the observatory",
+    "trigger": "Decoded during betrayal",
+    "receiver": "Liora confronts the traitor",
+    "payoff": "Cipher unlocks the final path"
+  }
+}

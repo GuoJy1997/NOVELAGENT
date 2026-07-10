@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" fill="none">
+
+<rect width="128" height="128" rx="64" fill="#0F2422"/>
+<circle cx="64" cy="52" r="24" fill="#36C7B4" opacity=".28"/>
+<circle cx="64" cy="54" r="20" fill="#FFFDF8" stroke="#36C7B4" stroke-width="3"/>
+<path d="M34 106 C40 80 88 80 94 106" fill="#36C7B4" opacity=".45"/>
+<text x="64" y="62" text-anchor="middle" font-family="Georgia,serif" font-size="24" font-weight="700" fill="#FFFDF8">X</text>
+<text x="64" y="119" text-anchor="middle" font-family="Inter,Arial,sans-serif" font-size="12" font-weight="700" fill="#FFFDF8">Vex</text>
+
+</svg>

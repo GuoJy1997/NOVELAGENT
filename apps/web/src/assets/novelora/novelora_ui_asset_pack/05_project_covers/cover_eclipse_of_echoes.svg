@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="180" height="240" viewBox="0 0 180 240" fill="none">
+
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="180" y2="240">
+    <stop stop-color="#0F2422"/><stop offset=".58" stop-color="#1E5F78"/><stop offset="1" stop-color="#FF6B57"/>
+  </linearGradient>
+  <filter id="s"><feDropShadow dx="0" dy="12" stdDeviation="10" flood-opacity=".18"/></filter>
+</defs>
+<rect width="180" height="240" rx="24" fill="url(#bg)"/>
+<circle cx="142" cy="52" r="28" fill="#FFFDF8" opacity=".9"/>
+<circle cx="142" cy="52" r="18" fill="#1E5F78" opacity=".9"/>
+<path d="M0 188 C44 146 70 164 106 132 C138 104 153 116 180 92 L180 240 L0 240 Z" fill="#141414" opacity=".22"/>
+<path d="M0 204 C38 174 80 190 110 164 C138 140 151 146 180 124 L180 240 L0 240 Z" fill="#FFFDF8" opacity=".18"/>
+<text x="18" y="158" font-family="Georgia,serif" font-size="18" font-weight="700" fill="#FFFDF8">ECLIPSE</text>
+<text x="18" y="182" font-family="Inter,Arial,sans-serif" font-size="10" fill="#FFFDF8" opacity=".82">OF ECHOES</text>
+
+</svg>
