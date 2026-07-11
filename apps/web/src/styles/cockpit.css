@@ -1001,6 +1001,163 @@
   font-size: 24px;
 }
 
+.cockpit-right-panel {
+  max-height: 100svh;
+  overflow-y: auto;
+}
+
+.agent-panel {
+  display: grid;
+  gap: 22px;
+  padding-bottom: 22px;
+}
+
+.nova-lead-card,
+.agent-panel__section,
+.focus-mode-toggle {
+  border: 1px solid color-mix(in srgb, var(--color-line) 84%, white);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--color-surface) 90%, var(--color-bg-card));
+}
+
+.nova-lead-card {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px;
+}
+
+.nova-lead-card img {
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  background: var(--color-coral-soft, #ffe5dd);
+}
+
+.nova-lead-card h2,
+.agent-panel h3 {
+  margin: 3px 0 0;
+  font-family: var(--font-display);
+}
+
+.nova-lead-card h2 { font-size: 22px; }
+.nova-lead-card p:not(.workspace-eyebrow),
+.agent-task-row p,
+.chapter-detail-summary,
+.chapter-detail-empty {
+  margin: 5px 0 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.agent-panel__section { padding: 15px; }
+.agent-panel__heading,
+.agent-task-row__topline,
+.agent-task-row__meta,
+.focus-mode-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 9px;
+}
+
+.agent-panel__heading { margin-bottom: 13px; }
+.agent-panel__heading > span,
+.memory-health,
+.agent-task-row__meta,
+.memory-source-list span {
+  color: var(--color-text-muted);
+  font-size: 11px;
+}
+
+.memory-health { color: #4d7c74; font-size: 17px; }
+.agent-task-list,
+.memory-source-list,
+.review-checklist,
+.chapter-detail-tags,
+.chapter-detail-clue-list {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.agent-task-row {
+  padding: 10px 0;
+  border-top: 1px solid color-mix(in srgb, var(--color-line) 66%, white);
+}
+.agent-task-row:first-child { padding-top: 0; border-top: 0; }
+.agent-task-row strong { font-size: 12px; line-height: 1.35; }
+.agent-task-row__meta { margin-top: 8px; }
+.agent-skill-chip,
+.agent-status-chip {
+  display: inline-flex;
+  padding: 3px 6px;
+  border-radius: var(--radius-pill);
+  font-size: 10px;
+  font-weight: 750;
+  line-height: 1;
+}
+.agent-skill-chip { color: #496f9e; background: color-mix(in srgb, var(--color-sky) 17%, white); }
+.agent-status-chip--queued { color: #8b6b22; background: #fff1d8; }
+.agent-status-chip--running { color: #2c7483; background: color-mix(in srgb, var(--color-sky) 18%, white); }
+.agent-status-chip--done { color: #4d7c74; background: color-mix(in srgb, var(--color-mint) 23%, white); }
+.agent-status-chip--blocked { color: #b64b3d; background: color-mix(in srgb, var(--color-coral) 15%, white); }
+.agent-task-progress { width: 100%; height: 4px; margin-top: 9px; accent-color: var(--color-sky); }
+.memory-health-meter { height: 6px; overflow: hidden; border-radius: 999px; background: var(--color-bg-card); }
+.memory-health-meter span { display: block; height: 100%; border-radius: inherit; background: var(--color-mint); }
+.memory-source-list { margin-top: 13px; }
+.memory-source-list li { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.memory-source-list strong { font-size: 11px; }
+.memory-source-list span { text-transform: capitalize; }
+.review-checklist { margin-top: 11px; }
+.review-checklist li { display: grid; grid-template-columns: 14px minmax(0, 1fr); color: var(--color-text-muted); font-size: 12px; }
+.review-checklist li span { color: var(--color-coral); font-weight: 800; }
+.focus-mode-toggle { width: 100%; padding: 13px 15px; color: var(--color-ink); font: inherit; cursor: pointer; }
+.focus-mode-toggle small { color: var(--color-text-muted); font-weight: 750; }
+.focus-mode-toggle.is-active { border-color: var(--color-coral); background: color-mix(in srgb, var(--color-coral) 11%, white); }
+
+.chapter-selection-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: -14px; }
+.chapter-details-button,
+.chapter-clear-button,
+.chapter-detail-drawer__close {
+  border: 1px solid var(--color-line);
+  color: var(--color-ink);
+  background: var(--color-surface);
+  font: inherit;
+  cursor: pointer;
+}
+.chapter-details-button,
+.chapter-clear-button { padding: 8px 11px; border-radius: var(--radius-pill); font-size: 12px; font-weight: 700; }
+.chapter-details-button { border-color: var(--color-coral); color: #b64b3d; background: color-mix(in srgb, var(--color-coral) 10%, white); }
+.chapter-details-button:disabled,
+.chapter-clear-button:disabled { cursor: not-allowed; opacity: .52; }
+
+.chapter-drawer-backdrop { position: fixed; inset: 0; z-index: 10; display: flex; justify-content: flex-end; background: color-mix(in srgb, var(--color-ink) 8%, transparent); }
+.chapter-detail-drawer { width: min(430px, 100%); min-height: 100%; padding: 26px; overflow-y: auto; border-left: 1px solid var(--color-line); background: var(--color-surface); box-shadow: -18px 0 42px rgba(116, 91, 58, .12); }
+.chapter-detail-drawer__header { display: flex; align-items: start; justify-content: space-between; gap: 16px; }
+.chapter-detail-drawer h2,
+.chapter-detail-drawer h3 { margin: 4px 0 0; font-family: var(--font-display); }
+.chapter-detail-drawer h2 { font-size: 28px; line-height: 1.05; }
+.chapter-detail-drawer h3 { font-size: 18px; }
+.chapter-detail-drawer__close { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border-radius: 50%; font-size: 24px; line-height: 1; }
+.chapter-detail-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 22px 0; }
+.chapter-detail-facts div { padding: 10px; border-radius: 13px; background: var(--color-bg-card); }
+.chapter-detail-facts dt { color: var(--color-text-muted); font-size: 10px; font-weight: 750; letter-spacing: .05em; text-transform: uppercase; }
+.chapter-detail-facts dd { margin: 4px 0 0; font-size: 11px; line-height: 1.35; }
+.chapter-detail-drawer section { margin-top: 24px; }
+.chapter-detail-tags { grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); margin-top: 11px; }
+.chapter-detail-tags li,
+.chapter-detail-clue-list li { padding: 8px 10px; border-radius: 11px; color: var(--color-ink); background: var(--color-bg-card); font-size: 12px; }
+.chapter-detail-clue-list { margin-top: 11px; }
+
+.focus-mode-toggle:focus-visible,
+.chapter-details-button:focus-visible,
+.chapter-clear-button:focus-visible,
+.chapter-detail-drawer__close:focus-visible { outline: 3px solid color-mix(in srgb, var(--color-sky) 58%, transparent); outline-offset: 3px; }
+
 .workspace-loading-state {
   align-content: center;
   justify-items: start;

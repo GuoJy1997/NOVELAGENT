@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { AgentPanel } from './features/novelora-cockpit/components/AgentPanel';
 import './styles/cockpit.css';
 import { AppShell } from './features/novelora-cockpit/components/AppShell';
 import { ChapterSwimlane } from './features/novelora-cockpit/components/ChapterSwimlane';
+import { ChapterDetailDrawer } from './features/novelora-cockpit/components/ChapterDetailDrawer';
 import { CharacterGraph } from './features/novelora-cockpit/components/CharacterGraph';
 import { ClueAttributionFlow } from './features/novelora-cockpit/components/ClueAttributionFlow';
 import { InspirationVault } from './features/novelora-cockpit/components/InspirationVault';
@@ -15,12 +17,17 @@ export default function App() {
     (chapter) => chapter.id === noveloraMockProject.selectedChapterId,
   );
   const [selectedChapterId, setSelectedChapterId] = useState(noveloraMockProject.selectedChapterId);
+  const [isChapterDrawerOpen, setIsChapterDrawerOpen] = useState(false);
+  const chapterDetailsButtonRef = useRef<HTMLButtonElement>(null);
   const [selectedActId, setSelectedActId] = useState(
     initialChapter?.actId ?? noveloraMockProject.acts[0]?.id ?? '',
   );
   const activeChapters = noveloraMockProject.chapters
     .filter((chapter) => chapter.actId === selectedActId)
     .sort((first, second) => first.order - second.order);
+  const selectedChapter = noveloraMockProject.chapters.find(
+    (chapter) => chapter.id === selectedChapterId,
+  );
 
   function selectAct(actId: string) {
     const act = noveloraMockProject.acts.find((candidate) => candidate.id === actId);
@@ -36,13 +43,7 @@ export default function App() {
     <AppShell
       sidebar={<ProjectSidebar project={noveloraMockProject} />}
       topbar={<WorkspaceTopbar project={noveloraMockProject} />}
-      rightPanel={
-        <div className="coming-soon-panel">
-          <p className="workspace-eyebrow">Workspace assistant</p>
-          <h2>Coming soon</h2>
-          <p>Guided story support will appear here.</p>
-        </div>
-      }
+      rightPanel={<AgentPanel project={noveloraMockProject} />}
     >
       <div className="story-workspace">
         <StructureMap
@@ -55,6 +56,28 @@ export default function App() {
           selectedChapterId={selectedChapterId}
           onSelectChapter={setSelectedChapterId}
         />
+        <div className="chapter-selection-actions">
+          <button
+            ref={chapterDetailsButtonRef}
+            className="chapter-details-button"
+            type="button"
+            disabled={!selectedChapter}
+            onClick={() => setIsChapterDrawerOpen(true)}
+          >
+            Open chapter details
+          </button>
+          <button
+            className="chapter-clear-button"
+            type="button"
+            disabled={!selectedChapter}
+            onClick={() => {
+              setSelectedChapterId('');
+              setIsChapterDrawerOpen(false);
+            }}
+          >
+            Clear chapter selection
+          </button>
+        </div>
         <div className="knowledge-workspace-grid">
           <InspirationVault inspirations={noveloraMockProject.inspirations} />
           <CharacterGraph
@@ -68,6 +91,13 @@ export default function App() {
           selectedChapterId={selectedChapterId}
         />
       </div>
+      <ChapterDetailDrawer
+        project={noveloraMockProject}
+        selectedChapter={selectedChapter}
+        isOpen={isChapterDrawerOpen}
+        onClose={() => setIsChapterDrawerOpen(false)}
+        invokerRef={chapterDetailsButtonRef}
+      />
     </AppShell>
   );
 }
