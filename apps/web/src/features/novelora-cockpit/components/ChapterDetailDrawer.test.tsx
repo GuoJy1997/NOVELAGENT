@@ -60,6 +60,29 @@ describe('ChapterDetailDrawer', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
+  it('keeps Tab and Shift+Tab focus within the open drawer', async () => {
+    const user = userEvent.setup();
+    render(<DrawerHarness />);
+
+    await user.click(screen.getByRole('button', { name: 'Open chapter details' }));
+
+    const dialog = screen.getByRole('dialog', { name: /Chapter details/i });
+    const closeButton = screen.getByRole('button', { name: 'Close chapter details' });
+    const detailsButton = document.createElement('button');
+    detailsButton.type = 'button';
+    detailsButton.textContent = 'Drawer test action';
+    dialog.append(detailsButton);
+
+    await user.tab();
+    expect(document.activeElement).toBe(detailsButton);
+
+    await user.tab();
+    expect(document.activeElement).toBe(closeButton);
+
+    await user.tab({ shift: true });
+    expect(document.activeElement).toBe(detailsButton);
+  });
+
   it('renders the selected chapter beat and word count from its data', () => {
     const selectedChapter = {
       ...noveloraMockProject.chapters.find((chapter) => chapter.id === 'chapter-3')!,

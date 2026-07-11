@@ -1,4 +1,4 @@
-import { useEffect, useRef, type RefObject } from 'react';
+import { useEffect, useRef, type KeyboardEvent as ReactKeyboardEvent, type RefObject } from 'react';
 import type { CockpitChapter, NoveloraProject } from '../types';
 
 interface ChapterDetailDrawerProps {
@@ -21,6 +21,44 @@ function relatedClues(project: NoveloraProject, chapter: CockpitChapter) {
   );
 }
 
+const tabbableSelector = [
+  'a[href]',
+  'area[href]',
+  'button:not([disabled])',
+  'input:not([disabled]):not([type="hidden"])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  'iframe',
+  'object',
+  'embed',
+  'summary',
+  '[contenteditable]:not([contenteditable="false"])',
+  '[tabindex]',
+].join(',');
+
+function tabbableElements(container: HTMLElement) {
+  return Array.from(container.querySelectorAll<HTMLElement>(tabbableSelector))
+    .filter((element) =>
+      element.tabIndex >= 0
+      && !element.closest('[aria-hidden="true"], [hidden], [inert]'),
+    )
+    .sort((first, second) => {
+      if (first.tabIndex === second.tabIndex) {
+        return 0;
+      }
+
+      if (first.tabIndex === 0) {
+        return 1;
+      }
+
+      if (second.tabIndex === 0) {
+        return -1;
+      }
+
+      return first.tabIndex - second.tabIndex;
+    });
+}
+
 export function ChapterDetailDrawer({
   project,
   selectedChapter,
@@ -29,6 +67,7 @@ export function ChapterDetailDrawer({
   invokerRef,
 }: ChapterDetailDrawerProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLElement>(null);
   const wasOpenRef = useRef(false);
 
   useEffect(() => {
@@ -59,6 +98,28 @@ export function ChapterDetailDrawer({
     return () => window.removeEventListener('keydown', closeOnEscape);
   }, [isOpen, onClose]);
 
+  const trapFocus = (event: ReactKeyboardEvent<HTMLElement>) => {
+    if (event.key !== 'Tab' || !drawerRef.current) {
+      return;
+    }
+
+    const elements = tabbableElements(drawerRef.current);
+    const firstElement = elements[0];
+    const lastElement = elements.at(-1);
+
+    if (!firstElement || !lastElement) {
+      return;
+    }
+
+    if (event.shiftKey && document.activeElement === firstElement) {
+      event.preventDefault();
+      lastElement.focus();
+    } else if (!event.shiftKey && document.activeElement === lastElement) {
+      event.preventDefault();
+      firstElement.focus();
+    }
+  };
+
   if (!isOpen || !selectedChapter) {
     return null;
   }
@@ -70,10 +131,12 @@ export function ChapterDetailDrawer({
   return (
     <div className="chapter-drawer-backdrop">
       <aside
+        ref={drawerRef}
         className="chapter-detail-drawer"
         role="dialog"
         aria-modal="true"
         aria-label="Chapter details"
+        onKeyDown={trapFocus}
       >
         <div className="chapter-detail-drawer__header">
           <div>
