@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { createRef, useRef, useState } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
@@ -58,5 +58,26 @@ describe('ChapterDetailDrawer', () => {
     await user.keyboard('{Escape}');
 
     expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('renders the selected chapter beat and word count from its data', () => {
+    const selectedChapter = {
+      ...noveloraMockProject.chapters.find((chapter) => chapter.id === 'chapter-3')!,
+      beat: 'Fixture proof beat',
+      wordCount: 4_321,
+    };
+
+    render(
+      <ChapterDetailDrawer
+        project={noveloraMockProject}
+        selectedChapter={selectedChapter}
+        isOpen
+        onClose={() => undefined}
+        invokerRef={createRef<HTMLButtonElement>()}
+      />,
+    );
+
+    expect(screen.getByText('Fixture proof beat')).toBeTruthy();
+    expect(screen.getByText('4,321 words')).toBeTruthy();
   });
 });

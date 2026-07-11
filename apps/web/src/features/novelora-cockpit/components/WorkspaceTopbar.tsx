@@ -12,7 +12,9 @@ export function WorkspaceTopbar({ project }: WorkspaceTopbarProps) {
       <div className="workspace-project-meta">
         <p className="workspace-eyebrow">{project.genre}</p>
         <h1>{project.title}</h1>
-        <p className="workspace-progress">3,240 / 80,000 words</p>
+        <p className="workspace-progress">
+          {project.currentWords.toLocaleString()} / {project.wordGoal.toLocaleString()} words
+        </p>
       </div>
 
       <div className="workspace-actions">

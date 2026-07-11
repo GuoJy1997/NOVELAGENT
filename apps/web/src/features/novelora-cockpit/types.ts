@@ -25,6 +25,10 @@ export interface CockpitChapter {
   order: number;
   title: string;
   summary: string;
+  beat: string;
+  wordCount: number;
+  characterIds: string[];
+  clueCount: number;
   status: 'planned' | 'drafting' | 'review' | 'complete';
 }
 
@@ -99,6 +103,8 @@ export interface NoveloraProject {
   genre: string;
   coverAssetKey: ProjectCoverAssetKey;
   memoryHealthPercent: number;
+  currentWords: number;
+  wordGoal: number;
   acts: Act[];
   chapters: CockpitChapter[];
   selectedChapterId: string;

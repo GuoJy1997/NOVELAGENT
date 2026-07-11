@@ -39,4 +39,31 @@ describe('ChapterSwimlane', () => {
     expect(chapterThree.getAttribute('aria-pressed')).toBe('true');
     expect(onSelectChapter).toHaveBeenCalledWith('chapter-3');
   });
+
+  it('renders each supplied chapter display value', () => {
+    const chapters = actTwoChapters.map((chapter) =>
+      chapter.id === 'chapter-3'
+        ? {
+            ...chapter,
+            beat: 'Fixture proof beat',
+            wordCount: 4_321,
+            characterIds: ['vex'],
+            clueCount: 6,
+          }
+        : chapter,
+    );
+
+    render(
+      <ChapterSwimlane
+        chapters={chapters}
+        selectedChapterId="chapter-3"
+        onSelectChapter={() => undefined}
+      />,
+    );
+
+    expect(screen.getByText('Fixture proof beat')).toBeTruthy();
+    expect(screen.getByText('4,321 words')).toBeTruthy();
+    expect(screen.getByText('6 clues')).toBeTruthy();
+    expect(screen.getByLabelText('Characters: vex')).toBeTruthy();
+  });
 });

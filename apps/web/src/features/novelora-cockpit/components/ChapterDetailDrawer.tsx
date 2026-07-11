@@ -9,26 +9,8 @@ interface ChapterDetailDrawerProps {
   invokerRef: RefObject<HTMLButtonElement | null>;
 }
 
-const beats = ['Opening pressure', 'Crossing a threshold', 'Turning point', 'Reckoning'];
-
 function relatedCharacters(project: NoveloraProject, chapter: CockpitChapter) {
-  const chapterClueText = project.clueFlows
-    .filter((flow) =>
-      [flow.provider, flow.trigger, flow.receiver, flow.payoff].some(
-        (stage) => stage.chapterId === chapter.id,
-      ),
-    )
-    .map((flow) =>
-      [
-        flow.provider.providedBy,
-        flow.trigger.triggeredBy,
-        flow.receiver.receivedBy,
-        flow.payoff.paidOffBy,
-      ].join(' '),
-    )
-    .join(' ');
-
-  return project.characters.filter((character) => chapterClueText.includes(character.name));
+  return project.characters.filter((character) => chapter.characterIds.includes(character.id));
 }
 
 function relatedClues(project: NoveloraProject, chapter: CockpitChapter) {
@@ -111,7 +93,8 @@ export function ChapterDetailDrawer({
 
         <dl className="chapter-detail-facts">
           <div><dt>Act</dt><dd>{act?.title ?? 'Unassigned act'}</dd></div>
-          <div><dt>Presentation beat</dt><dd>{beats[(selectedChapter.order - 1) % beats.length]}</dd></div>
+          <div><dt>Presentation beat</dt><dd>{selectedChapter.beat}</dd></div>
+          <div><dt>Word count</dt><dd>{selectedChapter.wordCount.toLocaleString()} words</dd></div>
         </dl>
 
         <p className="chapter-detail-summary">{selectedChapter.summary}</p>

@@ -46,6 +46,28 @@ describe('noveloraMockProject', () => {
     expect(noveloraMockProject.memoryHealthPercent).toBe(78);
   });
 
+  it('supplies explicit display data for every chapter and the project progress', () => {
+    const characterIds = new Set(noveloraMockProject.characters.map((character) => character.id));
+
+    expect(noveloraMockProject.currentWords).toBeGreaterThan(0);
+    expect(noveloraMockProject.wordGoal).toBeGreaterThanOrEqual(noveloraMockProject.currentWords);
+
+    for (const chapter of noveloraMockProject.chapters) {
+      expect(chapter.beat).toMatch(/\S/);
+      expect(chapter.wordCount).toBeGreaterThan(0);
+      expect(chapter.clueCount).toBeGreaterThanOrEqual(0);
+      expect(chapter.characterIds.length).toBeGreaterThan(0);
+
+      for (const characterId of chapter.characterIds) {
+        expect(characterIds.has(characterId)).toBe(true);
+      }
+    }
+
+    expect(noveloraMockProject.currentWords).toBe(
+      noveloraMockProject.chapters.reduce((total, chapter) => total + chapter.wordCount, 0),
+    );
+  });
+
   it('uses asset keys registered in their matching asset groups', () => {
     expect(Object.hasOwn(projectCovers, noveloraMockProject.coverAssetKey)).toBe(true);
 
