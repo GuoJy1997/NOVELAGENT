@@ -25,4 +25,26 @@ describe('App', () => {
     expect(screen.getByText(/Received by Kael/i)).toBeTruthy();
     expect(screen.getByText(/Paid off by The crew reaching the drowned forge/i)).toBeTruthy();
   });
+
+  it('opens chapter details from its user-facing trigger and restores trigger focus after each close path', async () => {
+    const user = userEvent.setup();
+
+    render(<App />);
+
+    const opener = screen.getByRole('button', { name: 'Open chapter details' });
+    await user.click(opener);
+
+    expect(screen.getByRole('dialog', { name: 'Chapter details' })).toBeTruthy();
+
+    await user.click(screen.getByRole('button', { name: 'Close chapter details' }));
+
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(document.activeElement).toBe(opener);
+
+    await user.click(opener);
+    await user.keyboard('{Escape}');
+
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(document.activeElement).toBe(opener);
+  });
 });

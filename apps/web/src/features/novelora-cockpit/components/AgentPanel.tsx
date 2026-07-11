@@ -13,15 +13,6 @@ const statusLabels: Record<AgentTask['state'], string> = {
   blocked: 'Blocked',
 };
 
-const ownerSkills: Record<string, string> = {
-  'Story Architect': 'Story design',
-  'Lore Keeper': 'Continuity',
-  'Character Gardener': 'Character arc',
-  'Clue Weaver': 'Clue tracking',
-};
-
-const reviewChecks = ['Plot consistency', 'Pacing check', 'Clue payoff'];
-
 export function AgentPanel({ project }: AgentPanelProps) {
   const [focusMode, setFocusMode] = useState(false);
 
@@ -56,7 +47,6 @@ export function AgentPanel({ project }: AgentPanelProps) {
               <p>{task.focus}</p>
               <div className="agent-task-row__meta">
                 <span>Owner: {task.owner}</span>
-                <span className="agent-skill-chip">{ownerSkills[task.owner] ?? 'Story support'}</span>
               </div>
               {task.state === 'running' ? (
                 <progress className="agent-task-progress" aria-label={`${task.title} progress`} />
@@ -82,19 +72,6 @@ export function AgentPanel({ project }: AgentPanelProps) {
             <li key={source.id}>
               <strong>{source.label}</strong>
               <span>{source.kind}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="agent-panel__section" aria-labelledby="review-checklist-title">
-        <p className="workspace-eyebrow">Review checklist</p>
-        <h3 id="review-checklist-title">Before the next pass</h3>
-        <ul className="review-checklist">
-          {reviewChecks.map((check) => (
-            <li key={check}>
-              <span aria-hidden="true">○</span>
-              {check}
             </li>
           ))}
         </ul>

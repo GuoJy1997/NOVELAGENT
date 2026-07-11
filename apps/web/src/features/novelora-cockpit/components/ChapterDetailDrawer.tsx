@@ -11,10 +11,6 @@ interface ChapterDetailDrawerProps {
 
 const beats = ['Opening pressure', 'Crossing a threshold', 'Turning point', 'Reckoning'];
 
-function wordCount(chapter: CockpitChapter) {
-  return `${(chapter.order * 1150 + 950).toLocaleString()} words`;
-}
-
 function relatedCharacters(project: NoveloraProject, chapter: CockpitChapter) {
   const chapterClueText = project.clueFlows
     .filter((flow) =>
@@ -115,8 +111,7 @@ export function ChapterDetailDrawer({
 
         <dl className="chapter-detail-facts">
           <div><dt>Act</dt><dd>{act?.title ?? 'Unassigned act'}</dd></div>
-          <div><dt>Beat</dt><dd>{beats[(selectedChapter.order - 1) % beats.length]}</dd></div>
-          <div><dt>Draft length</dt><dd>{wordCount(selectedChapter)}</dd></div>
+          <div><dt>Presentation beat</dt><dd>{beats[(selectedChapter.order - 1) % beats.length]}</dd></div>
         </dl>
 
         <p className="chapter-detail-summary">{selectedChapter.summary}</p>

@@ -1074,7 +1074,6 @@
 .memory-health { color: #4d7c74; font-size: 17px; }
 .agent-task-list,
 .memory-source-list,
-.review-checklist,
 .chapter-detail-tags,
 .chapter-detail-clue-list {
   display: grid;
@@ -1091,7 +1090,6 @@
 .agent-task-row:first-child { padding-top: 0; border-top: 0; }
 .agent-task-row strong { font-size: 12px; line-height: 1.35; }
 .agent-task-row__meta { margin-top: 8px; }
-.agent-skill-chip,
 .agent-status-chip {
   display: inline-flex;
   padding: 3px 6px;
@@ -1100,7 +1098,6 @@
   font-weight: 750;
   line-height: 1;
 }
-.agent-skill-chip { color: #496f9e; background: color-mix(in srgb, var(--color-sky) 17%, white); }
 .agent-status-chip--queued { color: #8b6b22; background: #fff1d8; }
 .agent-status-chip--running { color: #2c7483; background: color-mix(in srgb, var(--color-sky) 18%, white); }
 .agent-status-chip--done { color: #4d7c74; background: color-mix(in srgb, var(--color-mint) 23%, white); }
@@ -1112,16 +1109,12 @@
 .memory-source-list li { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .memory-source-list strong { font-size: 11px; }
 .memory-source-list span { text-transform: capitalize; }
-.review-checklist { margin-top: 11px; }
-.review-checklist li { display: grid; grid-template-columns: 14px minmax(0, 1fr); color: var(--color-text-muted); font-size: 12px; }
-.review-checklist li span { color: var(--color-coral); font-weight: 800; }
 .focus-mode-toggle { width: 100%; padding: 13px 15px; color: var(--color-ink); font: inherit; cursor: pointer; }
 .focus-mode-toggle small { color: var(--color-text-muted); font-weight: 750; }
 .focus-mode-toggle.is-active { border-color: var(--color-coral); background: color-mix(in srgb, var(--color-coral) 11%, white); }
 
 .chapter-selection-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: -14px; }
 .chapter-details-button,
-.chapter-clear-button,
 .chapter-detail-drawer__close {
   border: 1px solid var(--color-line);
   color: var(--color-ink);
@@ -1130,10 +1123,9 @@
   cursor: pointer;
 }
 .chapter-details-button,
-.chapter-clear-button { padding: 8px 11px; border-radius: var(--radius-pill); font-size: 12px; font-weight: 700; }
+.chapter-details-button { padding: 8px 11px; border-radius: var(--radius-pill); font-size: 12px; font-weight: 700; }
 .chapter-details-button { border-color: var(--color-coral); color: #b64b3d; background: color-mix(in srgb, var(--color-coral) 10%, white); }
-.chapter-details-button:disabled,
-.chapter-clear-button:disabled { cursor: not-allowed; opacity: .52; }
+.chapter-details-button:disabled { cursor: not-allowed; opacity: .52; }
 
 .chapter-drawer-backdrop { position: fixed; inset: 0; z-index: 10; display: flex; justify-content: flex-end; background: color-mix(in srgb, var(--color-ink) 8%, transparent); }
 .chapter-detail-drawer { width: min(430px, 100%); min-height: 100%; padding: 26px; overflow-y: auto; border-left: 1px solid var(--color-line); background: var(--color-surface); box-shadow: -18px 0 42px rgba(116, 91, 58, .12); }
@@ -1143,7 +1135,7 @@
 .chapter-detail-drawer h2 { font-size: 28px; line-height: 1.05; }
 .chapter-detail-drawer h3 { font-size: 18px; }
 .chapter-detail-drawer__close { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border-radius: 50%; font-size: 24px; line-height: 1; }
-.chapter-detail-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 22px 0; }
+.chapter-detail-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 22px 0; }
 .chapter-detail-facts div { padding: 10px; border-radius: 13px; background: var(--color-bg-card); }
 .chapter-detail-facts dt { color: var(--color-text-muted); font-size: 10px; font-weight: 750; letter-spacing: .05em; text-transform: uppercase; }
 .chapter-detail-facts dd { margin: 4px 0 0; font-size: 11px; line-height: 1.35; }
@@ -1155,7 +1147,6 @@
 
 .focus-mode-toggle:focus-visible,
 .chapter-details-button:focus-visible,
-.chapter-clear-button:focus-visible,
 .chapter-detail-drawer__close:focus-visible { outline: 3px solid color-mix(in srgb, var(--color-sky) 58%, transparent); outline-offset: 3px; }
 
 .workspace-loading-state {

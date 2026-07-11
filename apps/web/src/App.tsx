@@ -66,17 +66,6 @@ export default function App() {
           >
             Open chapter details
           </button>
-          <button
-            className="chapter-clear-button"
-            type="button"
-            disabled={!selectedChapter}
-            onClick={() => {
-              setSelectedChapterId('');
-              setIsChapterDrawerOpen(false);
-            }}
-          >
-            Clear chapter selection
-          </button>
         </div>
         <div className="knowledge-workspace-grid">
           <InspirationVault inspirations={noveloraMockProject.inspirations} />

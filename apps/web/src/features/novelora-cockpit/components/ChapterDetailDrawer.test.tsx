@@ -37,8 +37,8 @@ describe('ChapterDetailDrawer', () => {
     expect(screen.getByRole('dialog', { name: /Chapter details/i })).toBeTruthy();
     expect(screen.getByText('Salt Map, Ember Mark')).toBeTruthy();
     expect(screen.getByText(/Act II/i)).toBeTruthy();
+    expect(screen.getByText('Presentation beat')).toBeTruthy();
     expect(screen.getByText(/Turning point/i)).toBeTruthy();
-    expect(screen.getByText(/4,400 words/i)).toBeTruthy();
     expect(screen.getByText('Kael')).toBeTruthy();
     expect(screen.getByText('The old tide map')).toBeTruthy();
 
