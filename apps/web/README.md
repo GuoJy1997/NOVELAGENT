@@ -1,32 +1,31 @@
-# React + TypeScript + Vite
+# Novelora Bright Cockpit
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+This Vite + React workspace renders the current Novelora writing cockpit: a bright, fixture-backed dashboard for navigating a novel's structure, chapters, inspiration, character relationships, clue flow, and supporting context.
 
-Currently, two official plugins are available:
+## Run from the repository root
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev:web
+npm run test:web
+npm run lint:web
+npm run build:web
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+`npm run dev:web` starts the Vite development server. The root test command runs Vitest once through the app script.
+
+## Run from `apps/web`
+
+```bash
+npm install
+npm run dev
+npm run test -- --run
+npm run lint
+npm run build
+```
+
+## Current scope and limits
+
+The cockpit is a mock-data dashboard. Its visible project, chapter, inspiration, character, clue, memory, and task rows are driven by local fixtures so the information architecture and interaction patterns can be evaluated.
+
+The Agent rail and Nova are presentational only: status chips, task progress, focus mode, and context-health values do **not** invoke real agents, models, persistence, collaboration, search, or background work. The chapter drawer and local filters demonstrate client-side interaction only; they do not save changes.
