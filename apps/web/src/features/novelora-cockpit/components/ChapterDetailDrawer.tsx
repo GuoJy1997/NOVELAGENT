@@ -1,4 +1,4 @@
-import { useEffect, useRef, type KeyboardEvent as ReactKeyboardEvent, type RefObject } from 'react';
+import { useEffect, useRef, type KeyboardEvent as ReactKeyboardEvent, type ReactNode, type RefObject } from 'react';
 import type { CockpitChapter, NoveloraProject } from '../types';
 
 interface ChapterDetailDrawerProps {
@@ -7,6 +7,7 @@ interface ChapterDetailDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   invokerRef: RefObject<HTMLButtonElement | null>;
+  footer?: ReactNode;
 }
 
 function relatedCharacters(project: NoveloraProject, chapter: CockpitChapter) {
@@ -24,10 +25,10 @@ function relatedClues(project: NoveloraProject, chapter: CockpitChapter) {
 const tabbableSelector = [
   'a[href]',
   'area[href]',
-  'button:not([disabled])',
-  'input:not([disabled]):not([type="hidden"])',
-  'select:not([disabled])',
-  'textarea:not([disabled])',
+  'button',
+  'input:not([type="hidden"])',
+  'select',
+  'textarea',
   'iframe',
   'object',
   'embed',
@@ -36,12 +37,32 @@ const tabbableSelector = [
   '[tabindex]',
 ].join(',');
 
+function canReceiveTabFocus(element: HTMLElement) {
+  if (element.tabIndex < 0 || element.matches(':disabled')) {
+    return false;
+  }
+
+  for (let currentElement: HTMLElement | null = element; currentElement; currentElement = currentElement.parentElement) {
+    if (
+      currentElement.hasAttribute('hidden')
+      || currentElement.hasAttribute('inert')
+      || currentElement.getAttribute('aria-hidden') === 'true'
+    ) {
+      return false;
+    }
+
+    const { display, visibility } = window.getComputedStyle(currentElement);
+    if (display === 'none' || visibility === 'hidden' || visibility === 'collapse') {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 function tabbableElements(container: HTMLElement) {
   return Array.from(container.querySelectorAll<HTMLElement>(tabbableSelector))
-    .filter((element) =>
-      element.tabIndex >= 0
-      && !element.closest('[aria-hidden="true"], [hidden], [inert]'),
-    )
+    .filter(canReceiveTabFocus)
     .sort((first, second) => {
       if (first.tabIndex === second.tabIndex) {
         return 0;
@@ -65,6 +86,7 @@ export function ChapterDetailDrawer({
   isOpen,
   onClose,
   invokerRef,
+  footer,
 }: ChapterDetailDrawerProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLElement>(null);
@@ -181,6 +203,8 @@ export function ChapterDetailDrawer({
             </ul>
           ) : <p className="chapter-detail-empty">No clue flow is linked to this chapter yet.</p>}
         </section>
+
+        {footer ? <footer className="chapter-detail-drawer__footer">{footer}</footer> : null}
       </aside>
     </div>
   );
