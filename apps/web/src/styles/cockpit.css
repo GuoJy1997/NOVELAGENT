@@ -1164,12 +1164,85 @@
   .knowledge-workspace-grid {
     grid-template-columns: minmax(0, 1fr);
   }
+
+  .cockpit-shell {
+    grid-template-columns: 256px minmax(520px, 1fr) 320px;
+  }
+}
+
+@media (max-width: 1180px) {
+  .cockpit-scroll {
+    overflow-x: auto;
+  }
+
+  .cockpit-shell {
+    min-width: 1176px;
+  }
+}
+
+@media (max-width: 900px) {
+  .cockpit-scroll {
+    overflow-x: visible;
+  }
+
+  .cockpit-shell {
+    grid-template-columns: minmax(0, 1fr);
+    min-width: 0;
+  }
+
+  .cockpit-sidebar,
+  .cockpit-right-panel,
+  .project-sidebar-content {
+    min-height: auto;
+  }
+
+  .cockpit-right-panel {
+    max-height: none;
+  }
+
+  .project-sidebar-content {
+    padding: 18px;
+    overflow: visible;
+  }
+
+  .project-navigation {
+    grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+  }
+
+  .nova-scene {
+    display: none;
+  }
 }
 
 @media (max-width: 760px) {
+  .workspace-topbar-content {
+    flex-wrap: wrap;
+  }
+
+  .workspace-actions {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .workspace-search {
+    width: auto;
+    flex: 1 1 auto;
+  }
+
   .cockpit-topbar,
   .cockpit-main {
     padding-right: 22px;
     padding-left: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }
