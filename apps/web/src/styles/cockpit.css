@@ -496,8 +496,8 @@
 
 .character-graph__stage {
   position: relative;
-  min-width: 620px;
-  min-height: 255px;
+  width: 620px;
+  height: 255px;
 }
 
 .character-graph__edges {
@@ -524,10 +524,16 @@
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: repeat(3, minmax(130px, 1fr));
+  box-sizing: border-box;
+  width: 620px;
+  height: 255px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, 56px);
   grid-template-areas: 'kael liora arden' '. vex selene';
   gap: 48px 34px;
+  margin: 0;
   padding: 16px 4px;
+  list-style: none;
 }
 
 .character-graph__node {
@@ -540,12 +546,9 @@
   border-radius: 16px;
   color: var(--color-ink);
   background: color-mix(in srgb, var(--color-surface) 94%, var(--color-bg-card));
-  font: inherit;
   text-align: left;
-  cursor: pointer;
 }
 
-.character-graph__node:hover { border-color: var(--color-sky); }
 .character-graph__node--kael { grid-area: kael; }
 .character-graph__node--liora { grid-area: liora; }
 .character-graph__node--arden { grid-area: arden; }
@@ -1007,6 +1010,12 @@
   border: 1px solid var(--color-line);
   border-radius: var(--radius-shell);
   background: color-mix(in srgb, var(--color-surface) 80%, transparent);
+}
+
+@media (max-width: 1440px) {
+  .knowledge-workspace-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 @media (max-width: 760px) {

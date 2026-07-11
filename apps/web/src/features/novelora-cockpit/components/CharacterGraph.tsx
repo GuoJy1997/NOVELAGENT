@@ -7,13 +7,15 @@ interface CharacterGraphProps {
 }
 
 const edgeCoordinates: Record<string, { x1: number; x2: number; y1: number; y2: number }> = {
-  'kael-liora': { x1: 170, y1: 92, x2: 500, y2: 92 },
-  'liora-arden': { x1: 500, y1: 92, x2: 825, y2: 92 },
-  'kael-vex': { x1: 170, y1: 106, x2: 340, y2: 250 },
-  'selene-arden': { x1: 660, y1: 250, x2: 825, y2: 106 },
+  'kael-liora': { x1: 185, y1: 44, x2: 219, y2: 44 },
+  'liora-arden': { x1: 401, y1: 44, x2: 435, y2: 44 },
+  'kael-vex': { x1: 185, y1: 44, x2: 219, y2: 148 },
+  'selene-arden': { x1: 525, y1: 120, x2: 525, y2: 72 },
 };
 
 export function CharacterGraph({ characters, relationships }: CharacterGraphProps) {
+  const characterNamesById = new Map(characters.map((character) => [character.id, character.name]));
+
   return (
     <section className="character-graph" aria-labelledby="character-graph-title">
       <div className="workspace-section-heading">
@@ -26,7 +28,7 @@ export function CharacterGraph({ characters, relationships }: CharacterGraphProp
 
       <div className="character-graph__viewport" tabIndex={0} aria-label="Character relationship graph">
         <div className="character-graph__stage">
-          <svg className="character-graph__edges" viewBox="0 0 1000 330" aria-hidden="true">
+          <svg className="character-graph__edges" viewBox="0 0 620 255" aria-hidden="true">
             {relationships.map((relationship, index) => {
               const coordinates = edgeCoordinates[relationship.id];
               if (!coordinates) return null;
@@ -40,12 +42,11 @@ export function CharacterGraph({ characters, relationships }: CharacterGraphProp
               );
             })}
           </svg>
-          <div className="character-graph__nodes">
+          <ul className="character-graph__nodes">
             {characters.map((character) => (
-              <button
+              <li
                 key={character.id}
                 className={`character-graph__node character-graph__node--${character.id}`}
-                type="button"
                 aria-label={`${character.name}, ${character.role}`}
               >
                 <img src={characterPortraits[character.portraitAssetKey]} alt="" />
@@ -53,9 +54,9 @@ export function CharacterGraph({ characters, relationships }: CharacterGraphProp
                   <strong>{character.name}</strong>
                   <small>{character.role}</small>
                 </span>
-              </button>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </div>
 
@@ -63,7 +64,13 @@ export function CharacterGraph({ characters, relationships }: CharacterGraphProp
         {relationships.map((relationship, index) => (
           <li key={relationship.id} className={`character-graph__legend-item character-graph__legend-item--${index % 4}`}>
             <span aria-hidden="true" />
-            <strong>{relationship.label}</strong>
+            <strong>
+              {characterNamesById.get(relationship.fromCharacterId) ?? relationship.fromCharacterId}
+              {' — '}
+              {characterNamesById.get(relationship.toCharacterId) ?? relationship.toCharacterId}
+              {' · '}
+              {relationship.label}
+            </strong>
             <small>{relationship.tension}</small>
           </li>
         ))}
