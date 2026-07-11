@@ -1147,7 +1147,7 @@
 
 .focus-mode-toggle:focus-visible,
 .chapter-details-button:focus-visible,
-.chapter-detail-drawer__close:focus-visible { outline: 3px solid color-mix(in srgb, var(--color-sky) 58%, transparent); outline-offset: 3px; }
+.chapter-detail-drawer__close:focus-visible { outline: 3px solid var(--color-sky); outline-offset: 3px; }
 
 .workspace-loading-state {
   align-content: center;
