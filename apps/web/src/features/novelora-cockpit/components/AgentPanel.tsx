@@ -31,7 +31,7 @@ export function AgentPanel({ project }: AgentPanelProps) {
         <div className="agent-panel__heading">
           <div>
             <p className="workspace-eyebrow">Task orchestration</p>
-            <h3 id="agent-task-title">Subagents</h3>
+            <h3 id="agent-task-title">Tasks</h3>
           </div>
           <span>{project.agentTasks.length} tasks</span>
         </div>
@@ -72,6 +72,72 @@ export function AgentPanel({ project }: AgentPanelProps) {
             <li key={source.id}>
               <strong>{source.label}</strong>
               <span>{source.kind}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="agent-panel__section" aria-labelledby="subagent-roster-title">
+        <div className="agent-panel__heading">
+          <div>
+            <p className="workspace-eyebrow">Fixture roster</p>
+            <h3 id="subagent-roster-title">Subagents</h3>
+          </div>
+          <span>{project.subagents.length} profiles</span>
+        </div>
+        <ul className="subagent-roster">
+          {project.subagents.map((subagent) => (
+            <li key={subagent.id} className="subagent-roster__item">
+              <span className="subagent-roster__avatar" aria-hidden="true">{subagent.avatarLabel}</span>
+              <span className="subagent-roster__identity">
+                <strong>{subagent.name}</strong>
+                <small>{subagent.role}</small>
+              </span>
+              <span
+                className={`subagent-roster__state${subagent.active ? ' is-active' : ''}`}
+                aria-label={`${subagent.name}: ${subagent.active ? 'active' : 'inactive'}`}
+              >
+                {subagent.active ? 'Active' : 'Inactive'}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="agent-panel__section" aria-labelledby="agent-skills-title">
+        <div className="agent-panel__heading">
+          <div>
+            <p className="workspace-eyebrow">Fixture skills</p>
+            <h3 id="agent-skills-title">Skills</h3>
+          </div>
+        </div>
+        <ul className="agent-skill-list">
+          {project.skills.map((skill) => (
+            <li key={skill.id} className="agent-skill-badge">
+              <span>{skill.label}</span>
+              <small>{skill.category}</small>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="agent-panel__section" aria-labelledby="review-checklist-title">
+        <div className="agent-panel__heading">
+          <div>
+            <p className="workspace-eyebrow">Fixture review</p>
+            <h3 id="review-checklist-title">Review checklist</h3>
+          </div>
+        </div>
+        <ul className="review-checklist">
+          {project.reviewChecklist.map((item) => (
+            <li key={item.id} className="review-checklist__item">
+              <span>{item.label}</span>
+              <span
+                className={`review-checklist__state${item.passed ? ' is-passed' : ''}`}
+                aria-label={`${item.label}: ${item.passed ? 'passed' : 'pending'}`}
+              >
+                {item.passed ? 'Passed' : 'Pending'}
+              </span>
             </li>
           ))}
         </ul>

@@ -7,6 +7,7 @@ import type {
 export type InspirationType = 'image' | 'quote' | 'location' | 'research';
 
 export type AgentTaskState = 'queued' | 'running' | 'done' | 'blocked';
+export type SkillCategory = 'writing' | 'review' | 'planning' | 'memory';
 
 type ProjectCoverAssetKey = keyof typeof projectCovers;
 type CharacterPortraitAssetKey = keyof typeof characterPortraits;
@@ -89,6 +90,26 @@ export interface AgentTask {
   focus: string;
 }
 
+export interface SubagentProfile {
+  id: string;
+  name: string;
+  role: string;
+  avatarLabel: string;
+  active: boolean;
+}
+
+export interface SkillBadge {
+  id: string;
+  label: string;
+  category: SkillCategory;
+}
+
+export interface ReviewChecklistItem {
+  id: string;
+  label: string;
+  passed: boolean;
+}
+
 export interface MemorySource {
   id: string;
   label: string;
@@ -113,5 +134,8 @@ export interface NoveloraProject {
   characterRelationships: CharacterRelationship[];
   clueFlows: ClueFlow[];
   agentTasks: AgentTask[];
+  subagents: SubagentProfile[];
+  skills: SkillBadge[];
+  reviewChecklist: ReviewChecklistItem[];
   memorySources: MemorySource[];
 }

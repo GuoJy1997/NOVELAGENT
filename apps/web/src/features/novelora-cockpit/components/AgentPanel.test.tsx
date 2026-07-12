@@ -26,6 +26,36 @@ describe('AgentPanel', () => {
     }
   });
 
+  it('renders each fixture-backed subagent, skill, and review check', () => {
+    render(<AgentPanel project={noveloraMockProject} />);
+
+    for (const subagent of noveloraMockProject.subagents) {
+      expect(screen.getByText(subagent.name)).toBeTruthy();
+      expect(screen.getByText(subagent.role)).toBeTruthy();
+      expect(screen.getByText(subagent.avatarLabel)).toBeTruthy();
+      expect(
+        screen.getByLabelText(`${subagent.name}: ${subagent.active ? 'active' : 'inactive'}`),
+      ).toBeTruthy();
+    }
+
+    for (const skill of noveloraMockProject.skills) {
+      expect(screen.getByText(skill.label)).toBeTruthy();
+    }
+
+    for (const category of new Set(noveloraMockProject.skills.map((skill) => skill.category))) {
+      expect(screen.getAllByText(category)).toHaveLength(
+        noveloraMockProject.skills.filter((skill) => skill.category === category).length,
+      );
+    }
+
+    for (const item of noveloraMockProject.reviewChecklist) {
+      expect(screen.getByText(item.label)).toBeTruthy();
+      expect(
+        screen.getByLabelText(`${item.label}: ${item.passed ? 'passed' : 'pending'}`),
+      ).toBeTruthy();
+    }
+  });
+
   it('toggles local focus mode state', async () => {
     const user = userEvent.setup();
     render(<AgentPanel project={noveloraMockProject} />);

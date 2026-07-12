@@ -260,6 +260,50 @@ export const noveloraMockProject: NoveloraProject = {
       focus: 'Await a decision on whether Arden knowingly staged the trap.',
     },
   ],
+  subagents: [
+    {
+      id: 'story-architect',
+      name: 'Story Architect',
+      role: 'Structure and turning points',
+      avatarLabel: 'SA',
+      active: true,
+    },
+    {
+      id: 'lore-keeper',
+      name: 'Lore Keeper',
+      role: 'World continuity',
+      avatarLabel: 'LK',
+      active: true,
+    },
+    {
+      id: 'character-gardener',
+      name: 'Character Gardener',
+      role: 'Character motives',
+      avatarLabel: 'CG',
+      active: false,
+    },
+    {
+      id: 'clue-weaver',
+      name: 'Clue Weaver',
+      role: 'Clue dependencies',
+      avatarLabel: 'CW',
+      active: true,
+    },
+  ],
+  skills: [
+    { id: 'story-structure', label: 'Story structure', category: 'planning' },
+    { id: 'scene-drafting', label: 'Scene drafting', category: 'writing' },
+    { id: 'continuity-review', label: 'Continuity review', category: 'review' },
+    { id: 'character-memory', label: 'Character memory', category: 'memory' },
+    { id: 'clue-architecture', label: 'Clue architecture', category: 'planning' },
+  ],
+  reviewChecklist: [
+    { id: 'act-turn', label: 'Act II turn is visible', passed: true },
+    { id: 'map-continuity', label: 'Tide-map continuity checked', passed: true },
+    { id: 'character-cost', label: 'Selene cost is explicit', passed: false },
+    { id: 'clue-payoff', label: 'Sigil payoff is planted', passed: true },
+    { id: 'chapter-exit', label: 'Chapter exit creates pressure', passed: false },
+  ],
   memorySources: [
     {
       id: 'chapter-3-draft',

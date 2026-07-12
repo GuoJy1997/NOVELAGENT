@@ -163,4 +163,23 @@ describe('noveloraMockProject', () => {
       'running',
     ]);
   });
+
+  it('supplies isolated fixture-backed agent rail sections', () => {
+    expect(noveloraMockProject.novelId).toBe('tides-of-embers');
+    expect(noveloraMockProject.subagents).toHaveLength(4);
+    expect(noveloraMockProject.skills).toHaveLength(5);
+    expect(noveloraMockProject.reviewChecklist).toHaveLength(5);
+
+    const subagentIds = noveloraMockProject.subagents.map((subagent) => subagent.id);
+    const skillIds = noveloraMockProject.skills.map((skill) => skill.id);
+    const checklistIds = noveloraMockProject.reviewChecklist.map((item) => item.id);
+
+    expect(new Set(subagentIds).size).toBe(subagentIds.length);
+    expect(new Set(skillIds).size).toBe(skillIds.length);
+    expect(new Set(checklistIds).size).toBe(checklistIds.length);
+    expect(noveloraMockProject.skills.map((skill) => skill.category)).toEqual(
+      expect.arrayContaining(['writing', 'review', 'planning', 'memory']),
+    );
+    expect(noveloraMockProject.subagents.every((subagent) => subagent.avatarLabel.length > 0)).toBe(true);
+  });
 });
