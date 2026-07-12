@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import * as assetRegistry from './assetRegistry';
 import {
   appIcon,
   brightCockpitBackground,
@@ -15,7 +16,6 @@ import {
   logo,
   novaAvatar,
   novaFront,
-  paperGrain,
   projectCovers,
 } from './assetRegistry';
 
@@ -72,7 +72,6 @@ describe('novelora asset registry', () => {
       [inspirationThumbnails.ruins, '../../assets/novelora/novelora_ui_asset_pack/07_inspiration_thumbnails/inspiration_ruins.svg'],
       [inspirationThumbnails.portal, '../../assets/novelora/novelora_ui_asset_pack/07_inspiration_thumbnails/inspiration_portal.svg'],
       [brightCockpitBackground, '../../assets/novelora/novelora_ui_asset_pack/09_textures_backgrounds/bright_cockpit_background.png'],
-      [paperGrain, '../../assets/novelora/novelora_ui_asset_pack/09_textures_backgrounds/paper_grain_overlay.png'],
       [clueNodes.origin, '../../assets/novelora/novelora_ui_asset_pack/08_graph_nodes/node_clue_origin.svg'],
       [clueNodes.trigger, '../../assets/novelora/novelora_ui_asset_pack/08_graph_nodes/node_trigger.svg'],
       [clueNodes.receiver, '../../assets/novelora/novelora_ui_asset_pack/08_graph_nodes/node_receiver.svg'],
@@ -80,7 +79,7 @@ describe('novelora asset registry', () => {
       [clueNodes.memory, '../../assets/novelora/novelora_ui_asset_pack/08_graph_nodes/node_memory.svg'],
     ];
 
-    expect(assets).toHaveLength(23);
+    expect(assets).toHaveLength(22);
     expect(assets.every(([asset]) => asset.length > 0)).toBe(true);
 
     assets.forEach(([asset, sourcePath]) => {
@@ -120,5 +119,23 @@ describe('novelora asset registry', () => {
     screen.getAllByRole('img').forEach((image, index) => {
       expect(image.getAttribute('src')).toBe(assets[index][0]);
     });
+  });
+
+  it('keeps the supplied paper grain auditable without turning it into a runtime Vite URL', () => {
+    const registry = assetRegistry as { paperGrainSourcePath?: string };
+    const expectedSourcePath = '../../assets/novelora/novelora_ui_asset_pack/09_textures_backgrounds/paper_grain_overlay.png';
+    const registrySource = readFileSync(
+      resolve(process.cwd(), 'src/features/novelora-cockpit/assetRegistry.ts'),
+      'utf8',
+    );
+
+    expect(registry.paperGrainSourcePath).toBe(expectedSourcePath);
+    expect(registrySource).not.toMatch(/new URL\(\s*['"][^'"]*paper_grain_overlay\.png/);
+
+    const paperGrainSource = fileURLToPath(new URL(expectedSourcePath, import.meta.url));
+    const contents = new Uint8Array(readFileSync(paperGrainSource));
+
+    expect(contents.byteLength).toBeGreaterThan(0);
+    expect(contents.subarray(0, pngSignature.length)).toEqual(pngSignature);
   });
 });
