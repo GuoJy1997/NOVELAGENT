@@ -5,10 +5,15 @@ import { describe, expect, it } from 'vitest';
 const globalCss = readFileSync(resolve(process.cwd(), 'src/styles/global.css'), 'utf8');
 const cockpitCss = readFileSync(resolve(process.cwd(), 'src/styles/cockpit.css'), 'utf8');
 const tokensCss = readFileSync(resolve(process.cwd(), 'src/styles/tokens.css'), 'utf8');
+const logoSvg = readFileSync(
+  resolve(process.cwd(), 'src/assets/novelora/novelora_ui_asset_pack/01_logo/novelora_logo_horizontal.svg'),
+  'utf8',
+);
 
 describe('global cockpit texture', () => {
   it('defines one white-mint visual language without the retired decorative palette', () => {
     expect(tokensCss).toMatch(/--color-canvas:\s*#f7fbf9;/i);
+    expect(tokensCss).toMatch(/--color-surface:\s*#ffffff;/);
     expect(tokensCss).toMatch(/--color-mint-primary:\s*#0aa85b;/i);
     expect(tokensCss).toMatch(/--color-mint-support:\s*#6fddb1;/i);
     expect(tokensCss).toMatch(/--color-mint-soft:\s*#ddf6ea;/i);
@@ -16,6 +21,12 @@ describe('global cockpit texture', () => {
     expect(tokensCss).toMatch(/--color-text-muted:\s*#6c7d75;/i);
     expect(tokensCss).not.toMatch(/#ff6b57|#3a86ff|#8f67ff|Georgia|Times New Roman/i);
     expect(tokensCss).toMatch(/--font-display:\s*var\(--font-ui\);/);
+  });
+
+  it('uses the contracted three-stop white-mint logo gradient', () => {
+    expect(logoSvg).toMatch(
+      /<stop stop-color="#0AA85B"\/><stop offset="\.58" stop-color="#6FDDB1"\/><stop offset="1" stop-color="#C7F2DE"\/>/,
+    );
   });
 
   it('uses separate fixed backdrop and foreground layers around readable content', () => {
