@@ -1,4 +1,5 @@
 import { useEffect, useRef, type KeyboardEvent as ReactKeyboardEvent, type ReactNode, type RefObject } from 'react';
+import { createPortal } from 'react-dom';
 import type { CockpitChapter, NoveloraProject } from '../types';
 
 interface ChapterDetailDrawerProps {
@@ -150,7 +151,7 @@ export function ChapterDetailDrawer({
   const characters = relatedCharacters(project, selectedChapter);
   const clues = relatedClues(project, selectedChapter);
 
-  return (
+  return createPortal(
     <div className="chapter-drawer-backdrop">
       <aside
         ref={drawerRef}
@@ -206,6 +207,7 @@ export function ChapterDetailDrawer({
 
         {footer ? <footer className="chapter-detail-drawer__footer">{footer}</footer> : null}
       </aside>
-    </div>
+    </div>,
+    document.body,
   );
 }

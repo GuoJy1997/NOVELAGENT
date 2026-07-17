@@ -18,14 +18,33 @@ describe('global cockpit texture', () => {
   });
 
   it('layers visual-stage art around the readable cockpit planes', () => {
+    const ambientRule = cockpitCss.match(/(?:^|})\s*\.cockpit-visual-stage__ambient\s*\{([^}]*)\}/s)?.[1] ?? '';
     const flowRule = cockpitCss.match(/(?:^|})\s*\.cockpit-visual-stage__flow\s*\{([^}]*)\}/s)?.[1] ?? '';
     const bookRule = cockpitCss.match(/(?:^|})\s*\.cockpit-visual-stage__book\s*\{([^}]*)\}/s)?.[1] ?? '';
     const mascotRule = cockpitCss.match(/(?:^|})\s*\.cockpit-visual-stage__mascot\s*\{([^}]*)\}/s)?.[1] ?? '';
+    const drawerBackdropRule = cockpitCss.match(/(?:^|})\s*\.chapter-drawer-backdrop\s*\{([^}]*)\}/s)?.[1] ?? '';
 
+    expect(ambientRule).toMatch(/z-index:\s*0;/);
     expect(flowRule).toMatch(/z-index:\s*1;/);
     expect(bookRule).toMatch(/z-index:\s*2;/);
     expect(mascotRule).toMatch(/z-index:\s*5;/);
     expect(cockpitCss).toMatch(/\.cockpit-sidebar,\s*\.cockpit-workspace,\s*\.cockpit-right-panel\s*\{[^}]*z-index:\s*3;/s);
+    expect(drawerBackdropRule).toMatch(/z-index:\s*10;/);
+  });
+
+  it('uses the approved visual-stage motion and reading-plane recipe', () => {
+    const flowRule = cockpitCss.match(/(?:^|})\s*\.cockpit-visual-stage__flow\s*\{([^}]*)\}/s)?.[1] ?? '';
+    const bookRule = cockpitCss.match(/(?:^|})\s*\.cockpit-visual-stage__book\s*\{([^}]*)\}/s)?.[1] ?? '';
+    const mascotRule = cockpitCss.match(/(?:^|})\s*\.cockpit-visual-stage__mascot\s*\{([^}]*)\}/s)?.[1] ?? '';
+    const workspaceRule = cockpitCss.match(/(?:^|})\s*\.cockpit-workspace\s*\{([^}]*)\}/s)?.[1] ?? '';
+
+    expect(flowRule).toMatch(/cockpit-flow-breathe\s+var\(--visual-stage-breathe\)\s+700ms;/);
+    expect(bookRule).toMatch(/filter:\s*drop-shadow\(0\s+30px\s+32px\s+rgba\(39,\s*104,\s*78,\s*0\.18\)\);/);
+    expect(bookRule).toMatch(/animation:\s*cockpit-book-enter\s+var\(--visual-stage-enter\)\s+90ms\s+both;/);
+    expect(mascotRule).toMatch(/filter:\s*drop-shadow\(0\s+28px\s+32px\s+rgba\(38,\s*97,\s*76,\s*0\.2\)\);/);
+    expect(mascotRule).toMatch(/animation:\s*cockpit-mascot-enter\s+var\(--visual-stage-enter\)\s+150ms\s+both;/);
+    expect(workspaceRule).toMatch(/background:\s*linear-gradient\(180deg,\s*rgba\(255,\s*255,\s*255,\s*0\.34\),\s*rgba\(247,\s*252,\s*249,\s*0\.52\)\);/);
+    expect(workspaceRule).toMatch(/backdrop-filter:\s*blur\(6px\);/);
   });
 
   it('defines stable visual-stage sizing and motion tokens', () => {

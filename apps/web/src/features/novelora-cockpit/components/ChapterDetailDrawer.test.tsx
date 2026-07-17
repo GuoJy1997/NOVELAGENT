@@ -28,6 +28,18 @@ function DrawerHarness({ footer }: { footer?: ReactNode }) {
 }
 
 describe('ChapterDetailDrawer', () => {
+  it('portals its backdrop to the document body above cockpit stacking contexts', async () => {
+    const user = userEvent.setup();
+    render(<DrawerHarness />);
+
+    await user.click(screen.getByRole('button', { name: 'Open chapter details' }));
+
+    const backdrop = screen.getByRole('dialog', { name: /Chapter details/i })
+      .closest('.chapter-drawer-backdrop');
+    expect(backdrop).not.toBeNull();
+    expect(backdrop?.parentElement).toBe(document.body);
+  });
+
   it('opens selected chapter details and restores focus to its invoker when closed', async () => {
     const user = userEvent.setup();
     render(<DrawerHarness />);

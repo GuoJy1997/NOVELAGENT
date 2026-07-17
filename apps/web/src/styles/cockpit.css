@@ -14,9 +14,8 @@
   min-height: 100svh;
   color: var(--color-ink);
   background:
-    radial-gradient(circle at 11% 88%, rgba(143, 224, 193, 0.24), transparent 34%),
-    radial-gradient(circle at 91% 10%, rgba(255, 220, 174, 0.2), transparent 30%),
-    linear-gradient(145deg, #fffdf8 0%, #f8fff9 52%, #fffaf2 100%);
+    radial-gradient(circle at 30% 88%, rgba(88, 224, 169, 0.2), transparent 30%),
+    linear-gradient(135deg, rgba(255, 253, 248, 0.9), rgba(235, 248, 242, 0.82));
 }
 
 .cockpit-visual-stage {
@@ -38,8 +37,8 @@
   inset: 0;
   z-index: 0;
   background:
-    radial-gradient(circle at 18% 76%, rgba(101, 207, 166, 0.14), transparent 31%),
-    radial-gradient(circle at 83% 21%, rgba(255, 197, 126, 0.12), transparent 28%);
+    radial-gradient(circle at 22% 86%, rgba(103, 235, 181, 0.2), transparent 26%),
+    radial-gradient(circle at 88% 30%, rgba(255, 255, 255, 0.86), transparent 28%);
 }
 
 .cockpit-visual-stage__flow {
@@ -52,7 +51,7 @@
   filter: saturate(0.88);
   animation:
     cockpit-flow-enter var(--visual-stage-enter) both,
-    cockpit-flow-breathe var(--visual-stage-breathe) 620ms;
+    cockpit-flow-breathe var(--visual-stage-breathe) 700ms;
 }
 
 .cockpit-visual-stage__book {
@@ -60,8 +59,8 @@
   bottom: clamp(-116px, -8vh, -62px);
   z-index: 2;
   width: var(--visual-stage-book-width);
-  filter: drop-shadow(0 24px 34px rgba(46, 119, 91, 0.18));
-  animation: cockpit-book-enter var(--visual-stage-enter) both;
+  filter: drop-shadow(0 30px 32px rgba(39, 104, 78, 0.18));
+  animation: cockpit-book-enter var(--visual-stage-enter) 90ms both;
 }
 
 .cockpit-visual-stage__mascot {
@@ -69,8 +68,8 @@
   bottom: clamp(-110px, -9vh, -58px);
   z-index: 5;
   width: var(--visual-stage-mascot-width);
-  filter: drop-shadow(0 24px 32px rgba(57, 91, 76, 0.18));
-  animation: cockpit-mascot-enter var(--visual-stage-enter) both;
+  filter: drop-shadow(0 28px 32px rgba(38, 97, 76, 0.2));
+  animation: cockpit-mascot-enter var(--visual-stage-enter) 150ms both;
 }
 
 @keyframes cockpit-flow-enter {
@@ -90,14 +89,14 @@
 @keyframes cockpit-book-enter {
   from {
     opacity: 0;
-    transform: translateY(26px);
+    transform: translate3d(0, 26px, 0);
   }
 }
 
 @keyframes cockpit-mascot-enter {
   from {
     opacity: 0;
-    transform: translate(18px, 20px) scale(0.96);
+    transform: translate3d(18px, 20px, 0) scale(0.96);
   }
 }
 
@@ -121,7 +120,7 @@
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   min-width: 0;
-  background: linear-gradient(180deg, rgba(255, 253, 248, 0.88), rgba(255, 255, 255, 0.76));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(247, 252, 249, 0.52));
   backdrop-filter: blur(6px);
 }
 
