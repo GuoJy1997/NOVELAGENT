@@ -13,17 +13,21 @@ const logoSvg = readFileSync(
 const readSvgAttributes = (source: string) =>
   Object.fromEntries(Array.from(source.matchAll(/([\w-]+)="([^"]*)"/g), ([, name, value]) => [name, value]));
 
-const ruleBodies = (source: string, selector: RegExp) =>
-  Array.from(source.matchAll(new RegExp(`(?:^|[{}])\\s*${selector.source}\\s*\\{([^{}]*)\\}`, 'gs')), ([, body]) => body);
+const styleRules = (source: string) =>
+  Array.from(source.matchAll(/([^{}]+)\{([^{}]*)\}/gs), ([, selectors, body]) => ({
+    selectors: selectors.split(',').map((candidate) => candidate.trim()),
+    body,
+  }));
+
+const ruleBodiesForSelector = (source: string, selector: string) =>
+  styleRules(source)
+    .filter((rule) => rule.selectors.includes(selector))
+    .map((rule) => rule.body);
 
 const finalDeclaration = (source: string, selector: string, property: string) => {
-  const declarations = Array.from(source.matchAll(/([^{}]+)\{([^{}]*)\}/gs)).flatMap(([, selectors, body]) => {
-    const selectorList = selectors.split(',').map((candidate) => candidate.trim());
-
-    return selectorList.includes(selector)
-      ? Array.from(body.matchAll(new RegExp(`(?:^|;)\\s*${property}\\s*:\\s*([^;]+);`, 'g')), ([, value]) => value.trim())
-      : [];
-  });
+  const declarations = ruleBodiesForSelector(source, selector).flatMap((body) =>
+    Array.from(body.matchAll(new RegExp(`(?:^|;)\\s*${property}\\s*:\\s*([^;]+);`, 'g')), ([, value]) => value.trim()),
+  );
 
   return declarations.at(-1);
 };
@@ -98,23 +102,61 @@ describe('global cockpit texture', () => {
 
   it('keeps the mint atmosphere visible through a deliberate transparent surface hierarchy', () => {
     const supportsStart = cockpitCss.indexOf('@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))');
+    const fallbackCss = cockpitCss.slice(0, supportsStart);
     const supportedCss = cockpitCss.slice(supportsStart);
-    const supportedSidePanels = ruleBodies(supportedCss, /\.cockpit-sidebar,\s*\.cockpit-right-panel/).at(0) ?? '';
-    const workspaceRules = ruleBodies(cockpitCss, /\.cockpit-workspace/);
+    const mainPanelSelectors = [
+      '.structure-map',
+      '.chapter-swimlane',
+      '.inspiration-vault',
+      '.character-graph',
+      '.clue-attribution-flow',
+      '.nova-lead-card',
+      '.agent-panel__section',
+      '.focus-mode-toggle',
+    ];
+    const innerCardSelectors = [
+      '.act-card',
+      '.chapter-card',
+      '.chapter-add-card',
+      '.clue-flow-card',
+      '.character-graph__node',
+      '.project-mini-card',
+      '.writing-streak',
+    ];
 
     expect(globalCss).not.toContain('bright_cockpit_background.png');
     expect(finalDeclaration(cockpitCss, '.cockpit-shell', 'background')).toBe('transparent');
     expect(finalDeclaration(cockpitCss, '.cockpit-workspace', 'background')).toBe('transparent');
     expect(supportsStart).toBeGreaterThan(cockpitCss.indexOf('.cockpit-workspace'));
-    expect(supportedSidePanels).toMatch(/background:\s*rgba\(255,\s*255,\s*255,\s*0\.(?:52|54|56)\);/);
-    expect(supportedSidePanels).toMatch(/-webkit-backdrop-filter:\s*blur\((?:18|20|22|24)px\);/);
-    expect(supportedSidePanels).toMatch(/(?:^|\s)backdrop-filter:\s*blur\((?:18|20|22|24)px\);/);
-    expect(finalDeclaration(cockpitCss, '.structure-map', 'background')).toMatch(
-      /rgba\(255,\s*255,\s*255,\s*0\.(?:60|62|64|66)\)/,
-    );
-    expect(finalDeclaration(cockpitCss, '.chapter-swimlane', 'background')).toBe(
-      finalDeclaration(cockpitCss, '.structure-map', 'background'),
-    );
+    expect(finalDeclaration(fallbackCss, '.cockpit-sidebar', 'background')).toBe('rgba(255, 255, 255, 0.9)');
+    expect(finalDeclaration(fallbackCss, '.cockpit-right-panel', 'background')).toBe('rgba(255, 255, 255, 0.9)');
+    expect(finalDeclaration(cockpitCss, '.cockpit-topbar', 'background')).toBe('rgba(255, 255, 255, 0.54)');
+    expect(finalDeclaration(cockpitCss, '.cockpit-topbar', '-webkit-backdrop-filter')).toBe('blur(20px)');
+    expect(finalDeclaration(cockpitCss, '.cockpit-topbar', 'backdrop-filter')).toBe('blur(20px)');
+
+    for (const selector of ['.cockpit-sidebar', '.cockpit-right-panel']) {
+      expect(finalDeclaration(supportedCss, selector, 'background')).toBe('rgba(255, 255, 255, 0.52)');
+      expect(finalDeclaration(supportedCss, selector, '-webkit-backdrop-filter')).toBe('blur(22px)');
+      expect(finalDeclaration(supportedCss, selector, 'backdrop-filter')).toBe('blur(22px)');
+    }
+
+    for (const selector of mainPanelSelectors) {
+      expect(finalDeclaration(cockpitCss, selector, 'border')).toBe('1px solid rgba(180, 224, 205, 0.72)');
+      expect(finalDeclaration(cockpitCss, selector, 'background')).toBe('rgba(255, 255, 255, 0.64)');
+      expect(finalDeclaration(cockpitCss, selector, 'box-shadow')).toBe('0 16px 44px rgba(31, 112, 79, 0.07)');
+      expect(finalDeclaration(cockpitCss, selector, '-webkit-backdrop-filter')).toBe('blur(20px)');
+      expect(finalDeclaration(cockpitCss, selector, 'backdrop-filter')).toBe('blur(20px)');
+    }
+
+    for (const selector of innerCardSelectors) {
+      expect(['1px solid var(--color-line)', '1px solid var(--color-mint-line)']).toContain(
+        finalDeclaration(cockpitCss, selector, 'border'),
+      );
+      expect(finalDeclaration(cockpitCss, selector, 'background')).toBe('rgba(255, 255, 255, 0.84)');
+      expect(finalDeclaration(cockpitCss, selector, 'box-shadow')).toBe('0 8px 24px rgba(31, 112, 79, 0.05)');
+    }
+
+    const workspaceRules = ruleBodiesForSelector(cockpitCss, '.cockpit-workspace');
     expect(workspaceRules).not.toHaveLength(0);
     for (const workspaceRule of workspaceRules) {
       expect(workspaceRule).not.toMatch(/(?:^|-)backdrop-filter\s*:/);
