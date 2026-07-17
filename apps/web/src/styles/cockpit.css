@@ -13,6 +13,13 @@
   color: var(--color-ink);
 }
 
+.cockpit-visual-stage {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
 .cockpit-sidebar,
 .cockpit-right-panel {
   min-height: 100svh;

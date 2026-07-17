@@ -6,6 +6,16 @@ const globalCss = readFileSync(resolve(process.cwd(), 'src/styles/global.css'), 
 const cockpitCss = readFileSync(resolve(process.cwd(), 'src/styles/cockpit.css'), 'utf8');
 
 describe('global cockpit texture', () => {
+  it('keeps the visual stage out of the cockpit grid and input flow', () => {
+    const visualStageRule =
+      cockpitCss.match(/\.cockpit-visual-stage\s*\{([^}]*)\}/s)?.[1] ?? '';
+
+    expect(visualStageRule).toMatch(/position:\s*fixed;/);
+    expect(visualStageRule).toMatch(/inset:\s*0;/);
+    expect(visualStageRule).toMatch(/pointer-events:\s*none;/);
+    expect(visualStageRule).toMatch(/overflow:\s*hidden;/);
+  });
+
   it('uses a CSS paper texture behind the app without intercepting input', () => {
     expect(globalCss).not.toContain('paper_grain_overlay.png');
     expect(globalCss).toMatch(/body\s*\{[^}]*isolation:\s*isolate;/s);
