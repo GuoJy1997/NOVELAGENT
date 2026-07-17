@@ -50,7 +50,7 @@ describe('global cockpit texture', () => {
   it('defines stable visual-stage sizing and motion tokens', () => {
     expect(tokensCss).toMatch(/--visual-stage-flow-opacity:\s*0\.62;/);
     expect(tokensCss).toMatch(/--visual-stage-book-width:\s*clamp\(430px,\s*34vw,\s*650px\);/);
-    expect(tokensCss).toMatch(/--visual-stage-mascot-width:\s*clamp\(250px,\s*20vw,\s*380px\);/);
+    expect(tokensCss).not.toMatch(/--visual-stage-mascot-width:/);
     expect(tokensCss).toMatch(/--visual-stage-enter:\s*620ms\s+cubic-bezier\(0\.22,\s*1,\s*0\.36,\s*1\);/);
     expect(tokensCss).toMatch(/--visual-stage-breathe:\s*10s\s+ease-in-out\s+infinite\s+alternate;/);
   });
@@ -65,7 +65,6 @@ describe('global cockpit texture', () => {
   it('keeps the cockpit responsive without viewport body overflow and honors reduced motion', () => {
     const mediumFlowRule = cockpitCss.match(/@media\s*\(max-width:\s*1180px\)\s*\{[\s\S]*?\.cockpit-visual-stage__flow\s*\{([^}]*)\}/s)?.[1] ?? '';
     const narrowFlowRule = cockpitCss.match(/@media\s*\(max-width:\s*900px\)\s*\{[\s\S]*?\.cockpit-visual-stage__flow\s*\{([^}]*)\}/s)?.[1] ?? '';
-    const mascotRule = cockpitCss.match(/(?:^|})\s*\.cockpit-visual-stage__mascot\s*\{([^}]*)\}/s)?.[1] ?? '';
 
     expect(globalCss).toMatch(/html,\s*body,\s*#root\s*\{[^}]*overflow-x:\s*hidden;/s);
     expect(cockpitCss).toMatch(/@media\s*\(max-width:\s*1440px\)\s*\{[\s\S]*?\.knowledge-workspace-grid\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\);/);
@@ -73,10 +72,8 @@ describe('global cockpit texture', () => {
     expect(cockpitCss).toMatch(/@media\s*\(max-width:\s*1180px\)\s*\{[\s\S]*?\.cockpit-visual-stage__flow\s*\{[^}]*--visual-stage-flow-opacity:\s*0\.48;[^}]*\}/s);
     expect(cockpitCss).toMatch(/@media\s*\(max-width:\s*900px\)\s*\{[\s\S]*?\.cockpit-shell\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\);[\s\S]*?\.cockpit-sidebar,\s*\.cockpit-right-panel,\s*\.project-sidebar-content\s*\{[^}]*min-height:\s*auto;/s);
     expect(cockpitCss).toMatch(/@media\s*\(max-width:\s*900px\)\s*\{[\s\S]*?\.cockpit-visual-stage__book\s*\{[^}]*display:\s*none;/s);
-    expect(mascotRule).toMatch(/right:\s*312px;/);
-    expect(mascotRule).toMatch(/bottom:\s*-34px;/);
-    expect(mascotRule).toMatch(/width:\s*96px;/);
-    expect(cockpitCss).toMatch(/@media\s*\(max-width:\s*900px\)\s*\{[\s\S]*?\.cockpit-visual-stage__mascot\s*\{[^}]*left:\s*-18px;[^}]*right:\s*auto;[^}]*bottom:\s*-22px;[^}]*width:\s*64px;/s);
+    expect(cockpitCss).toMatch(/@media\s*\(min-width:\s*901px\)\s*and\s*\(max-width:\s*1175px\)\s*\{[\s\S]*?\.cockpit-visual-stage__mascot\s*\{[^}]*display:\s*none;/s);
+    expect(cockpitCss).toMatch(/@media\s*\(max-width:\s*900px\)\s*\{[\s\S]*?\.cockpit-visual-stage__mascot\s*\{[^}]*display:\s*block;[^}]*left:\s*-18px;[^}]*right:\s*auto;[^}]*bottom:\s*-22px;[^}]*width:\s*64px;/s);
     expect(mediumFlowRule).not.toMatch(/(?:^|\s)opacity:/);
     expect(narrowFlowRule).not.toMatch(/(?:^|\s)opacity:/);
     expect(cockpitCss).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{[\s\S]*?transition-duration:\s*0\.01ms\s*!important;/s);

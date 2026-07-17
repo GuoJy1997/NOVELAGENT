@@ -1393,6 +1393,12 @@
   }
 }
 
+@media (min-width: 901px) and (max-width: 1175px) {
+  .cockpit-visual-stage__mascot {
+    display: none;
+  }
+}
+
 @media (max-width: 900px) {
   .cockpit-scroll {
     overflow-x: visible;
@@ -1415,6 +1421,7 @@
   }
 
   .cockpit-visual-stage__mascot {
+    display: block;
     left: -18px;
     right: auto;
     bottom: -22px;

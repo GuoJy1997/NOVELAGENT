@@ -10,5 +10,8 @@ describe('ProjectSidebar', () => {
     const { container } = render(<ProjectSidebar project={noveloraMockProject} />);
 
     expect(container.querySelector('.nova-scene')).not.toBeInTheDocument();
+    expect(
+      container.querySelector('img[alt=""][aria-hidden="true"][src*="mascot_nova_front.svg"]'),
+    ).not.toBeInTheDocument();
   });
 });

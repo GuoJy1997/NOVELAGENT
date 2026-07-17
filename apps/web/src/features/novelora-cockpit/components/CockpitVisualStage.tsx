@@ -30,12 +30,18 @@ export function CockpitVisualStage() {
         </picture>
       </div>
       <div className="cockpit-visual-stage__foreground">
-        <img
-          className="cockpit-visual-stage__mascot"
-          src={mascot}
-          alt=""
-          draggable={false}
-        />
+        <picture>
+          <source
+            media="(min-width: 901px) and (max-width: 1175px)"
+            srcSet={transparentPixel}
+          />
+          <img
+            className="cockpit-visual-stage__mascot"
+            src={mascot}
+            alt=""
+            draggable={false}
+          />
+        </picture>
       </div>
     </div>
   );
