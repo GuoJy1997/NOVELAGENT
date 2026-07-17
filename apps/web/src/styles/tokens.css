@@ -12,6 +12,7 @@
   --color-state-warning: #c58b2c;
   --color-state-danger: #d95c55;
 
+  /* Legacy color aliases for migration only; remove after components adopt the white-mint tokens. */
   --color-coral: var(--color-mint-primary);
   --color-mint: var(--color-mint-support);
   --color-sky: #42c98d;
@@ -19,7 +20,6 @@
   --color-lilac: #96d8b8;
   --color-line: var(--color-mint-line);
 
-  /* Compatibility aliases for the existing cockpit styles. */
   --color-bg-base: var(--color-canvas);
   --color-bg-panel: rgba(255, 255, 255, 0.66);
   --color-bg-card: rgba(255, 255, 255, 0.82);

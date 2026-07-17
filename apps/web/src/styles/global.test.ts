@@ -10,6 +10,9 @@ const logoSvg = readFileSync(
   'utf8',
 );
 
+const readSvgAttributes = (source: string) =>
+  Object.fromEntries(Array.from(source.matchAll(/([\w-]+)="([^"]*)"/g), ([, name, value]) => [name, value]));
+
 describe('global cockpit texture', () => {
   it('defines one white-mint visual language without the retired decorative palette', () => {
     expect(tokensCss).toMatch(/--color-canvas:\s*#f7fbf9;/i);
@@ -23,10 +26,37 @@ describe('global cockpit texture', () => {
     expect(tokensCss).toMatch(/--font-display:\s*var\(--font-ui\);/);
   });
 
-  it('uses the contracted three-stop white-mint logo gradient', () => {
-    expect(logoSvg).toMatch(
-      /<stop stop-color="#0AA85B"\/><stop offset="\.58" stop-color="#6FDDB1"\/><stop offset="1" stop-color="#C7F2DE"\/>/,
+  it('documents legacy color aliases as migration-only before their declarations', () => {
+    const migrationNoteIndex = tokensCss.search(/\/\*[^*]*migration[^*]*remove[^*]*\*\//i);
+
+    expect(migrationNoteIndex).toBeGreaterThan(-1);
+    expect(migrationNoteIndex).toBeLessThan(tokensCss.indexOf('--color-coral:'));
+  });
+
+  it('preserves the contracted white-mint logo asset', () => {
+    const stops = Array.from(logoSvg.matchAll(/<stop\b([^>]*)\/>/g), ([, attributes]) =>
+      readSvgAttributes(attributes),
     );
+    const rect = readSvgAttributes(logoSvg.match(/<rect\b([^>]*)\/>/)?.[1] ?? '');
+    const circle = readSvgAttributes(logoSvg.match(/<circle\b([^>]*)\/>/)?.[1] ?? '');
+    const texts = Array.from(logoSvg.matchAll(/<text\b([^>]*)>([^<]*)<\/text>/g), ([, attributes, content]) => ({
+      ...readSvgAttributes(attributes),
+      content,
+    }));
+
+    expect(stops).toEqual([
+      { 'stop-color': '#0AA85B' },
+      { offset: '.58', 'stop-color': '#6FDDB1' },
+      { offset: '1', 'stop-color': '#C7F2DE' },
+    ]);
+    expect(rect).toMatchObject({ fill: '#F7FBF9', stroke: '#CFE8DD' });
+    expect(circle).toMatchObject({ fill: '#F7FBF9' });
+    expect(texts).toEqual([
+      expect.objectContaining({ content: 'NOVELORA', 'font-family': 'Inter,Arial,sans-serif', fill: '#14261F' }),
+      expect.objectContaining({ content: 'AI WRITING STUDIO', 'font-family': 'Inter,Arial,sans-serif', fill: '#0AA85B' }),
+    ]);
+    expect(logoSvg).not.toMatch(/#ff6b57|#3a86ff|#8f67ff|Georgia|Times New Roman/i);
+    expect(logoSvg).not.toMatch(/(?:^|[,\s"])serif(?:[,\s"]|$)/i);
   });
 
   it('uses separate fixed backdrop and foreground layers around readable content', () => {
