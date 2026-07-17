@@ -222,6 +222,12 @@ describe('global cockpit texture', () => {
     expect(contrastRatio(focusRing, white)).toBeGreaterThanOrEqual(3);
     expect(contrastRatio(focusRing, canvas)).toBeGreaterThanOrEqual(3);
     expect(globalCss).toMatch(/:focus-visible\s*\{[^}]*outline:\s*3px\s+solid\s+var\(--color-focus-ring\);/s);
+    expect(finalTopLevelDeclaration(cockpitCss, '.workspace-search:focus-within', 'border-color')).toBe(
+      'var(--color-focus-ring)',
+    );
+    expect(finalTopLevelDeclaration(cockpitCss, '.workspace-search:focus-within', 'box-shadow')).toBe(
+      '0 0 0 3px color-mix(in srgb, var(--color-focus-ring) 22%, transparent)',
+    );
     expect(cockpitCss).not.toContain('var(--color-text-muted)');
   });
 

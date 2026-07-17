@@ -1040,8 +1040,8 @@
 }
 
 .workspace-search:focus-within {
-  border-color: var(--color-mint-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-mint-primary) 22%, transparent);
+  border-color: var(--color-focus-ring);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-focus-ring) 22%, transparent);
 }
 
 .topbar-icon-button,
