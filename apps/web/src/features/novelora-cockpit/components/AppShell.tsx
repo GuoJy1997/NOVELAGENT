@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { CockpitVisualStage } from './CockpitVisualStage';
 
 interface AppShellProps {
   sidebar: ReactNode;
@@ -11,6 +12,7 @@ export function AppShell({ sidebar, topbar, children, rightPanel }: AppShellProp
   return (
     <div className="cockpit-scroll">
       <div className="cockpit-shell">
+        <CockpitVisualStage />
         <aside className="cockpit-sidebar" aria-label="Project navigation">
           {sidebar}
         </aside>

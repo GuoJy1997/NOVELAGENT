@@ -4,6 +4,14 @@ import App from '../../../App';
 import { noveloraMockProject } from '../data/noveloraMockProject';
 
 describe('Novelora cockpit shell', () => {
+  it('mounts one visual stage without changing workspace landmarks', () => {
+    const { container } = render(<App />);
+
+    expect(container.querySelectorAll('.cockpit-visual-stage')).toHaveLength(1);
+    expect(screen.getByRole('complementary', { name: 'Workspace assistant' })).toBeTruthy();
+    expect(screen.getByRole('main', { name: 'Story workspace' })).toBeTruthy();
+  });
+
   it('renders the accessible project workspace entry points', () => {
     render(<App />);
 
