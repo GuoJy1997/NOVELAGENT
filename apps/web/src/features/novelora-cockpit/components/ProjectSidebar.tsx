@@ -5,7 +5,7 @@ import projectsIcon from '../../../assets/novelora/novelora_ui_asset_pack/03_ico
 import reviewIcon from '../../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/review.svg';
 import structureIcon from '../../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/structure.svg';
 import worldbuildingIcon from '../../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/worldbuilding.svg';
-import { logo, novaFront, projectCovers } from '../assetRegistry';
+import { logo, projectCovers } from '../assetRegistry';
 import type { NoveloraProject } from '../types';
 
 interface ProjectSidebarProps {
@@ -64,8 +64,6 @@ export function ProjectSidebar({ project }: ProjectSidebarProps) {
           <small>Keep your harbor burning.</small>
         </span>
       </section>
-
-      <img className="nova-scene" src={novaFront} alt="" aria-hidden="true" />
     </div>
   );
 }

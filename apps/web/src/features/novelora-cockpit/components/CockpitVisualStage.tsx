@@ -17,6 +17,8 @@ export function CockpitVisualStage() {
           alt=""
           draggable={false}
         />
+      </div>
+      <div className="cockpit-visual-stage__book-layer">
         <picture>
           <source media="(max-width: 900px)" srcSet={transparentPixel} />
           <img

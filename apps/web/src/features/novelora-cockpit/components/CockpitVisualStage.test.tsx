@@ -10,23 +10,27 @@ describe("CockpitVisualStage", () => {
 
     const stage = container.querySelector(".cockpit-visual-stage");
     const backdrop = stage?.querySelector(":scope > .cockpit-visual-stage__backdrop");
+    const bookLayer = stage?.querySelector(":scope > .cockpit-visual-stage__book-layer");
     const foreground = stage?.querySelector(":scope > .cockpit-visual-stage__foreground");
     const images = stage?.querySelectorAll("img");
 
     expect(stage).toHaveAttribute("aria-hidden", "true");
     expect(Array.from(stage?.children ?? [], (child) => child.className)).toEqual([
       "cockpit-visual-stage__backdrop",
+      "cockpit-visual-stage__book-layer",
       "cockpit-visual-stage__foreground",
     ]);
     expect(backdrop).toBeInTheDocument();
+    expect(bookLayer).toBeInTheDocument();
     expect(foreground).toBeInTheDocument();
     expect(images).toHaveLength(3);
     images?.forEach((image) => {
       expect(image).toHaveAttribute("alt", "");
       expect(image.getAttribute("src")).toMatch(/\.webp$/);
     });
-    expect(backdrop?.querySelector(".cockpit-visual-stage__book")).toBeInTheDocument();
+    expect(backdrop?.querySelector(".cockpit-visual-stage__book")).not.toBeInTheDocument();
     expect(backdrop?.querySelector(".cockpit-visual-stage__flow")).toBeInTheDocument();
+    expect(bookLayer?.querySelector(".cockpit-visual-stage__book")).toBeInTheDocument();
     expect(foreground?.querySelector(".cockpit-visual-stage__mascot")).toBeInTheDocument();
   });
 

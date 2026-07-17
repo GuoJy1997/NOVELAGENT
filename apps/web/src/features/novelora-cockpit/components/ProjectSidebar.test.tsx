@@ -1,0 +1,14 @@
+import '@testing-library/jest-dom/vitest';
+import { render } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+
+import { noveloraMockProject } from '../data/noveloraMockProject';
+import { ProjectSidebar } from './ProjectSidebar';
+
+describe('ProjectSidebar', () => {
+  it('does not render the retired two-dimensional Nova decoration', () => {
+    const { container } = render(<ProjectSidebar project={noveloraMockProject} />);
+
+    expect(container.querySelector('.nova-scene')).not.toBeInTheDocument();
+  });
+});

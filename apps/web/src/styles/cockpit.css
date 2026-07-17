@@ -23,6 +23,7 @@
 }
 
 .cockpit-visual-stage__backdrop,
+.cockpit-visual-stage__book-layer,
 .cockpit-visual-stage__foreground {
   position: fixed;
   inset: 0;
@@ -32,6 +33,10 @@
 
 .cockpit-visual-stage__backdrop {
   z-index: 0;
+}
+
+.cockpit-visual-stage__book-layer {
+  z-index: 4;
 }
 
 .cockpit-visual-stage__foreground {
@@ -68,8 +73,8 @@
 }
 
 .cockpit-visual-stage__book {
-  left: clamp(-118px, -6vw, -62px);
-  bottom: clamp(-116px, -8vh, -62px);
+  left: -8px;
+  bottom: -24px;
   z-index: 2;
   width: var(--visual-stage-book-width);
   filter: drop-shadow(0 30px 32px rgba(39, 104, 78, 0.18));
@@ -77,9 +82,9 @@
 }
 
 .cockpit-visual-stage__mascot {
-  right: clamp(-52px, -2.5vw, -22px);
-  bottom: clamp(-110px, -9vh, -58px);
-  width: var(--visual-stage-mascot-width);
+  right: 312px;
+  bottom: -34px;
+  width: 96px;
   filter: drop-shadow(0 28px 32px rgba(38, 97, 76, 0.2));
   animation: cockpit-mascot-enter var(--visual-stage-enter) 150ms both;
 }
@@ -999,14 +1004,6 @@
   font-weight: 700;
 }
 
-.nova-scene {
-  position: absolute;
-  right: -11px;
-  bottom: -14px;
-  width: 158px;
-  pointer-events: none;
-}
-
 .workspace-topbar-content {
   display: flex;
   align-items: center;
@@ -1364,6 +1361,10 @@
   .cockpit-shell {
     grid-template-columns: 256px minmax(520px, 1fr) 320px;
   }
+
+  .cockpit-visual-stage__mascot {
+    right: 272px;
+  }
 }
 
 @media (max-width: 1180px) {
@@ -1382,13 +1383,13 @@
   }
 
   .cockpit-visual-stage__book {
-    left: -130px;
-    width: 480px;
+    left: 0;
+    width: 460px;
   }
 
   .cockpit-visual-stage__mascot {
-    right: -64px;
-    width: 270px;
+    right: 272px;
+    width: 96px;
   }
 }
 
@@ -1414,10 +1415,11 @@
   }
 
   .cockpit-visual-stage__mascot {
-    right: -34px;
-    bottom: -54px;
-    width: 164px;
-    opacity: 0.9;
+    left: -18px;
+    right: auto;
+    bottom: -22px;
+    width: 64px;
+    opacity: 0.82;
   }
 
   .cockpit-sidebar,
@@ -1437,10 +1439,6 @@
 
   .project-navigation {
     grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
-  }
-
-  .nova-scene {
-    display: none;
   }
 }
 
