@@ -5,12 +5,18 @@
 }
 
 .cockpit-shell {
+  position: relative;
+  isolation: isolate;
   display: grid;
   grid-template-columns: 296px minmax(520px, 1fr) 360px;
   width: 100%;
   min-width: 1176px;
   min-height: 100svh;
   color: var(--color-ink);
+  background:
+    radial-gradient(circle at 11% 88%, rgba(143, 224, 193, 0.24), transparent 34%),
+    radial-gradient(circle at 91% 10%, rgba(255, 220, 174, 0.2), transparent 30%),
+    linear-gradient(145deg, #fffdf8 0%, #f8fff9 52%, #fffaf2 100%);
 }
 
 .cockpit-visual-stage {
@@ -20,10 +26,86 @@
   overflow: hidden;
 }
 
+.cockpit-visual-stage__ambient,
+.cockpit-visual-stage__flow,
+.cockpit-visual-stage__book,
+.cockpit-visual-stage__mascot {
+  position: absolute;
+  user-select: none;
+}
+
+.cockpit-visual-stage__ambient {
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 18% 76%, rgba(101, 207, 166, 0.14), transparent 31%),
+    radial-gradient(circle at 83% 21%, rgba(255, 197, 126, 0.12), transparent 28%);
+}
+
+.cockpit-visual-stage__flow {
+  left: -7vw;
+  bottom: -6vh;
+  z-index: 1;
+  width: clamp(1120px, 92vw, 1760px);
+  max-width: none;
+  opacity: var(--visual-stage-flow-opacity);
+  filter: saturate(0.88);
+  animation:
+    cockpit-flow-enter var(--visual-stage-enter) both,
+    cockpit-flow-breathe var(--visual-stage-breathe) 620ms;
+}
+
+.cockpit-visual-stage__book {
+  left: clamp(-118px, -6vw, -62px);
+  bottom: clamp(-116px, -8vh, -62px);
+  z-index: 2;
+  width: var(--visual-stage-book-width);
+  filter: drop-shadow(0 24px 34px rgba(46, 119, 91, 0.18));
+  animation: cockpit-book-enter var(--visual-stage-enter) both;
+}
+
+.cockpit-visual-stage__mascot {
+  right: clamp(-52px, -2.5vw, -22px);
+  bottom: clamp(-110px, -9vh, -58px);
+  z-index: 5;
+  width: var(--visual-stage-mascot-width);
+  filter: drop-shadow(0 24px 32px rgba(57, 91, 76, 0.18));
+  animation: cockpit-mascot-enter var(--visual-stage-enter) both;
+}
+
+@keyframes cockpit-flow-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(-24px, 16px, 0);
+  }
+}
+
+@keyframes cockpit-flow-breathe {
+  to {
+    opacity: calc(var(--visual-stage-flow-opacity) - 0.08);
+    transform: translate3d(10px, -5px, 0);
+  }
+}
+
+@keyframes cockpit-book-enter {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+}
+
+@keyframes cockpit-mascot-enter {
+  from {
+    opacity: 0;
+    transform: translate(18px, 20px) scale(0.96);
+  }
+}
+
 .cockpit-sidebar,
 .cockpit-right-panel {
   min-height: 100svh;
-  background: var(--color-surface);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(18px);
 }
 
 .cockpit-sidebar {
@@ -39,6 +121,15 @@
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   min-width: 0;
+  background: linear-gradient(180deg, rgba(255, 253, 248, 0.88), rgba(255, 255, 255, 0.76));
+  backdrop-filter: blur(6px);
+}
+
+.cockpit-sidebar,
+.cockpit-workspace,
+.cockpit-right-panel {
+  position: relative;
+  z-index: 3;
 }
 
 .cockpit-topbar {
@@ -1259,6 +1350,23 @@
   .cockpit-shell {
     min-width: 1176px;
   }
+
+  .cockpit-visual-stage__flow {
+    --visual-stage-flow-opacity: 0.48;
+    left: -160px;
+    width: 1280px;
+    opacity: 0.48;
+  }
+
+  .cockpit-visual-stage__book {
+    left: -130px;
+    width: 480px;
+  }
+
+  .cockpit-visual-stage__mascot {
+    right: -64px;
+    width: 270px;
+  }
 }
 
 @media (max-width: 900px) {
@@ -1269,6 +1377,25 @@
   .cockpit-shell {
     grid-template-columns: minmax(0, 1fr);
     min-width: 0;
+  }
+
+  .cockpit-visual-stage__book {
+    display: none;
+  }
+
+  .cockpit-visual-stage__flow {
+    --visual-stage-flow-opacity: 0.2;
+    left: -380px;
+    bottom: -40px;
+    width: 1080px;
+    opacity: 0.2;
+  }
+
+  .cockpit-visual-stage__mascot {
+    right: -34px;
+    bottom: -54px;
+    width: 164px;
+    opacity: 0.9;
   }
 
   .cockpit-sidebar,
@@ -1318,6 +1445,12 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .cockpit-visual-stage__flow,
+  .cockpit-visual-stage__book,
+  .cockpit-visual-stage__mascot {
+    animation: none;
+  }
+
   *,
   *::before,
   *::after {
