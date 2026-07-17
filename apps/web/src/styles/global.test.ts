@@ -7,6 +7,17 @@ const cockpitCss = readFileSync(resolve(process.cwd(), 'src/styles/cockpit.css')
 const tokensCss = readFileSync(resolve(process.cwd(), 'src/styles/tokens.css'), 'utf8');
 
 describe('global cockpit texture', () => {
+  it('defines one white-mint visual language without the retired decorative palette', () => {
+    expect(tokensCss).toMatch(/--color-canvas:\s*#f7fbf9;/i);
+    expect(tokensCss).toMatch(/--color-mint-primary:\s*#0aa85b;/i);
+    expect(tokensCss).toMatch(/--color-mint-support:\s*#6fddb1;/i);
+    expect(tokensCss).toMatch(/--color-mint-soft:\s*#ddf6ea;/i);
+    expect(tokensCss).toMatch(/--color-ink:\s*#14261f;/i);
+    expect(tokensCss).toMatch(/--color-text-muted:\s*#6c7d75;/i);
+    expect(tokensCss).not.toMatch(/#ff6b57|#3a86ff|#8f67ff|Georgia|Times New Roman/i);
+    expect(tokensCss).toMatch(/--font-display:\s*var\(--font-ui\);/);
+  });
+
   it('uses separate fixed backdrop and foreground layers around readable content', () => {
     const stageRule = cockpitCss.match(/(?:^|})\s*\.cockpit-visual-stage\s*\{([^}]*)\}/s)?.[1] ?? '';
     const sharedLayerRule = cockpitCss.match(/\.cockpit-visual-stage__backdrop,\s*\.cockpit-visual-stage__book-layer,\s*\.cockpit-visual-stage__foreground\s*\{([^}]*)\}/s)?.[1] ?? '';
@@ -48,11 +59,11 @@ describe('global cockpit texture', () => {
   });
 
   it('defines stable visual-stage sizing and motion tokens', () => {
-    expect(tokensCss).toMatch(/--visual-stage-flow-opacity:\s*0\.62;/);
-    expect(tokensCss).toMatch(/--visual-stage-book-width:\s*clamp\(430px,\s*34vw,\s*650px\);/);
+    expect(tokensCss).toMatch(/--visual-stage-flow-opacity:\s*0\.82;/);
+    expect(tokensCss).toMatch(/--visual-stage-book-width:\s*clamp\(340px,\s*27vw,\s*430px\);/);
     expect(tokensCss).not.toMatch(/--visual-stage-mascot-width:/);
-    expect(tokensCss).toMatch(/--visual-stage-enter:\s*620ms\s+cubic-bezier\(0\.22,\s*1,\s*0\.36,\s*1\);/);
-    expect(tokensCss).toMatch(/--visual-stage-breathe:\s*10s\s+ease-in-out\s+infinite\s+alternate;/);
+    expect(tokensCss).toMatch(/--visual-stage-enter:\s*560ms\s+cubic-bezier\(0\.22,\s*1,\s*0\.36,\s*1\);/);
+    expect(tokensCss).toMatch(/--visual-stage-breathe:\s*12s\s+ease-in-out\s+infinite\s+alternate;/);
   });
 
   it('uses a CSS paper texture behind the app without intercepting input', () => {
