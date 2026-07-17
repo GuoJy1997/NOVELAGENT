@@ -13,6 +13,21 @@ const logoSvg = readFileSync(
 const readSvgAttributes = (source: string) =>
   Object.fromEntries(Array.from(source.matchAll(/([\w-]+)="([^"]*)"/g), ([, name, value]) => [name, value]));
 
+const ruleBodies = (source: string, selector: RegExp) =>
+  Array.from(source.matchAll(new RegExp(`(?:^|[{}])\\s*${selector.source}\\s*\\{([^{}]*)\\}`, 'gs')), ([, body]) => body);
+
+const finalDeclaration = (source: string, selector: string, property: string) => {
+  const declarations = Array.from(source.matchAll(/([^{}]+)\{([^{}]*)\}/gs)).flatMap(([, selectors, body]) => {
+    const selectorList = selectors.split(',').map((candidate) => candidate.trim());
+
+    return selectorList.includes(selector)
+      ? Array.from(body.matchAll(new RegExp(`(?:^|;)\\s*${property}\\s*:\\s*([^;]+);`, 'g')), ([, value]) => value.trim())
+      : [];
+  });
+
+  return declarations.at(-1);
+};
+
 describe('global cockpit texture', () => {
   it('defines one white-mint visual language without the retired decorative palette', () => {
     expect(tokensCss).toMatch(/--color-canvas:\s*#f7fbf9;/i);
@@ -81,22 +96,29 @@ describe('global cockpit texture', () => {
     expect(drawerBackdropRule).toMatch(/z-index:\s*10;/);
   });
 
-  it('provides opaque reading-plane fallbacks before enabling supported blur', () => {
-    const sideFallback = cockpitCss.match(/\.cockpit-sidebar,\s*\.cockpit-right-panel\s*\{([^}]*)\}/s)?.[1] ?? '';
-    const workspaceFallback = cockpitCss.match(/(?:^|})\s*\.cockpit-workspace\s*\{([^}]*)\}/s)?.[1] ?? '';
+  it('keeps the mint atmosphere visible through a deliberate transparent surface hierarchy', () => {
     const supportsStart = cockpitCss.indexOf('@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))');
+    const supportedCss = cockpitCss.slice(supportsStart);
+    const supportedSidePanels = ruleBodies(supportedCss, /\.cockpit-sidebar,\s*\.cockpit-right-panel/).at(0) ?? '';
+    const workspaceRules = ruleBodies(cockpitCss, /\.cockpit-workspace/);
 
-    expect(sideFallback).toMatch(/background:\s*rgba\(255,\s*255,\s*255,\s*0\.9\d*\);/);
-    expect(sideFallback).not.toMatch(/backdrop-filter/);
-    expect(workspaceFallback).toMatch(/background:\s*linear-gradient\(/);
-    expect(workspaceFallback.match(/rgba\([^)]*,\s*(0\.\d+)\)/g)).toHaveLength(2);
-    for (const alpha of workspaceFallback.matchAll(/rgba\([^)]*,\s*(0\.\d+)\)/g)) {
-      expect(Number(alpha[1])).toBeGreaterThanOrEqual(0.9);
-    }
-    expect(workspaceFallback).not.toMatch(/backdrop-filter/);
+    expect(globalCss).not.toContain('bright_cockpit_background.png');
+    expect(finalDeclaration(cockpitCss, '.cockpit-shell', 'background')).toBe('transparent');
+    expect(finalDeclaration(cockpitCss, '.cockpit-workspace', 'background')).toBe('transparent');
     expect(supportsStart).toBeGreaterThan(cockpitCss.indexOf('.cockpit-workspace'));
-    expect(cockpitCss).toMatch(/@supports[\s\S]*?\.cockpit-workspace\s*\{[^}]*rgba\(255,\s*255,\s*255,\s*0\.34\)[^}]*rgba\(247,\s*252,\s*249,\s*0\.52\)[^}]*backdrop-filter:\s*blur\(/s);
-    expect(cockpitCss).toMatch(/@supports[\s\S]*?\.cockpit-sidebar,\s*\.cockpit-right-panel\s*\{[^}]*rgba\(255,\s*255,\s*255,\s*0\.72\)[^}]*backdrop-filter:\s*blur\(/s);
+    expect(supportedSidePanels).toMatch(/background:\s*rgba\(255,\s*255,\s*255,\s*0\.(?:52|54|56)\);/);
+    expect(supportedSidePanels).toMatch(/-webkit-backdrop-filter:\s*blur\((?:18|20|22|24)px\);/);
+    expect(supportedSidePanels).toMatch(/(?:^|\s)backdrop-filter:\s*blur\((?:18|20|22|24)px\);/);
+    expect(finalDeclaration(cockpitCss, '.structure-map', 'background')).toMatch(
+      /rgba\(255,\s*255,\s*255,\s*0\.(?:60|62|64|66)\)/,
+    );
+    expect(finalDeclaration(cockpitCss, '.chapter-swimlane', 'background')).toBe(
+      finalDeclaration(cockpitCss, '.structure-map', 'background'),
+    );
+    expect(workspaceRules).not.toHaveLength(0);
+    for (const workspaceRule of workspaceRules) {
+      expect(workspaceRule).not.toMatch(/(?:^|-)backdrop-filter\s*:/);
+    }
   });
 
   it('defines stable visual-stage sizing and motion tokens', () => {

@@ -13,9 +13,7 @@
   min-width: 1176px;
   min-height: 100svh;
   color: var(--color-ink);
-  background:
-    radial-gradient(circle at 30% 88%, rgba(88, 224, 169, 0.2), transparent 30%),
-    linear-gradient(135deg, rgba(255, 253, 248, 0.9), rgba(235, 248, 242, 0.82));
+  background: transparent;
 }
 
 .cockpit-visual-stage {
@@ -120,7 +118,7 @@
 .cockpit-sidebar,
 .cockpit-right-panel {
   min-height: 100svh;
-  background: rgba(255, 255, 255, 0.94);
+  background: rgba(255, 255, 255, 0.9);
 }
 
 .cockpit-sidebar {
@@ -136,7 +134,7 @@
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   min-width: 0;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(247, 252, 249, 0.96));
+  background: transparent;
 }
 
 .cockpit-sidebar,
@@ -149,22 +147,18 @@
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .cockpit-sidebar,
   .cockpit-right-panel {
-    background: rgba(255, 255, 255, 0.72);
-    -webkit-backdrop-filter: blur(18px);
-    backdrop-filter: blur(18px);
-  }
-
-  .cockpit-workspace {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(247, 252, 249, 0.52));
-    -webkit-backdrop-filter: blur(6px);
-    backdrop-filter: blur(6px);
+    background: rgba(255, 255, 255, 0.52);
+    -webkit-backdrop-filter: blur(22px);
+    backdrop-filter: blur(22px);
   }
 }
 
 .cockpit-topbar {
   padding: 24px 30px 20px;
   border-bottom: 1px solid var(--color-line);
-  background: color-mix(in srgb, var(--color-surface) 82%, transparent);
+  background: rgba(255, 255, 255, 0.54);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
 }
 
 .cockpit-main {
@@ -185,10 +179,12 @@
   min-width: 0;
   overflow-x: auto;
   padding: 24px;
-  border: 1px solid color-mix(in srgb, var(--color-line) 88%, white);
+  border: 1px solid rgba(180, 224, 205, 0.72);
   border-radius: var(--radius-panel);
-  background: color-mix(in srgb, var(--color-surface) 87%, transparent);
-  box-shadow: 0 14px 36px rgba(116, 91, 58, 0.045);
+  background: rgba(255, 255, 255, 0.64);
+  box-shadow: 0 16px 44px rgba(31, 112, 79, 0.07);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
 }
 
 .workspace-section-heading {
@@ -262,6 +258,8 @@
 .chapter-add-card {
   flex: 0 0 auto;
   border: 1px solid var(--color-line);
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 8px 24px rgba(31, 112, 79, 0.05);
   color: var(--color-ink);
   font: inherit;
   text-align: left;
@@ -276,7 +274,6 @@
   min-height: 230px;
   padding: 16px;
   border-radius: 20px;
-  background: var(--color-surface);
   cursor: pointer;
 }
 
@@ -404,7 +401,6 @@
   grid-template-rows: auto auto auto 1fr auto auto;
   gap: 10px;
   padding: 18px;
-  background: color-mix(in srgb, var(--color-surface) 92%, var(--color-bg-card));
   cursor: pointer;
 }
 
@@ -474,7 +470,6 @@
   gap: 10px;
   color: var(--color-text-muted);
   border-style: dashed;
-  background: color-mix(in srgb, var(--color-bg-card) 55%, transparent);
   cursor: not-allowed;
   font-size: 13px;
   font-weight: 750;
@@ -504,10 +499,12 @@
 .clue-attribution-flow {
   min-width: 0;
   padding: 24px;
-  border: 1px solid color-mix(in srgb, var(--color-line) 88%, white);
+  border: 1px solid rgba(180, 224, 205, 0.72);
   border-radius: var(--radius-panel);
-  background: color-mix(in srgb, var(--color-surface) 88%, transparent);
-  box-shadow: 0 14px 36px rgba(116, 91, 58, 0.045);
+  background: rgba(255, 255, 255, 0.64);
+  box-shadow: 0 16px 44px rgba(31, 112, 79, 0.07);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
 }
 
 .inspiration-vault__heading {
@@ -672,7 +669,8 @@
   border: 1px solid var(--color-line);
   border-radius: 16px;
   color: var(--color-ink);
-  background: color-mix(in srgb, var(--color-surface) 94%, var(--color-bg-card));
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 8px 24px rgba(31, 112, 79, 0.05);
   text-align: left;
 }
 
@@ -758,9 +756,10 @@
 
 .clue-flow-card {
   padding: 16px;
-  border: 1px solid color-mix(in srgb, var(--color-line) 85%, white);
+  border: 1px solid var(--color-line);
   border-radius: 18px;
-  background: color-mix(in srgb, var(--color-bg-card) 45%, var(--color-surface));
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 8px 24px rgba(31, 112, 79, 0.05);
 }
 
 .clue-flow-card h3 {
@@ -943,9 +942,11 @@
   gap: 10px;
   width: 100%;
   padding: 8px;
+  border: 1px solid var(--color-line);
   border-radius: var(--radius-sm);
   color: var(--color-ink);
-  background: var(--color-bg-card);
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 8px 24px rgba(31, 112, 79, 0.05);
   text-align: left;
 }
 
@@ -988,7 +989,8 @@
   padding: 13px;
   border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
-  background: var(--color-surface);
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 8px 24px rgba(31, 112, 79, 0.05);
 }
 
 .writing-streak__count {
@@ -1134,9 +1136,12 @@
 .nova-lead-card,
 .agent-panel__section,
 .focus-mode-toggle {
-  border: 1px solid color-mix(in srgb, var(--color-line) 84%, white);
+  border: 1px solid rgba(180, 224, 205, 0.72);
   border-radius: 18px;
-  background: color-mix(in srgb, var(--color-surface) 90%, var(--color-bg-card));
+  background: rgba(255, 255, 255, 0.64);
+  box-shadow: 0 16px 44px rgba(31, 112, 79, 0.07);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
 }
 
 .nova-lead-card {
