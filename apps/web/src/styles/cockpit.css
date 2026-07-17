@@ -19,10 +19,23 @@
 }
 
 .cockpit-visual-stage {
+  display: contents;
+}
+
+.cockpit-visual-stage__backdrop,
+.cockpit-visual-stage__foreground {
   position: fixed;
   inset: 0;
   pointer-events: none;
   overflow: hidden;
+}
+
+.cockpit-visual-stage__backdrop {
+  z-index: 0;
+}
+
+.cockpit-visual-stage__foreground {
+  z-index: 5;
 }
 
 .cockpit-visual-stage__ambient,
@@ -66,7 +79,6 @@
 .cockpit-visual-stage__mascot {
   right: clamp(-52px, -2.5vw, -22px);
   bottom: clamp(-110px, -9vh, -58px);
-  z-index: 5;
   width: var(--visual-stage-mascot-width);
   filter: drop-shadow(0 28px 32px rgba(38, 97, 76, 0.2));
   animation: cockpit-mascot-enter var(--visual-stage-enter) 150ms both;
@@ -103,8 +115,7 @@
 .cockpit-sidebar,
 .cockpit-right-panel {
   min-height: 100svh;
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(18px);
+  background: rgba(255, 255, 255, 0.94);
 }
 
 .cockpit-sidebar {
@@ -120,8 +131,7 @@
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   min-width: 0;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(247, 252, 249, 0.52));
-  backdrop-filter: blur(6px);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(247, 252, 249, 0.96));
 }
 
 .cockpit-sidebar,
@@ -129,6 +139,21 @@
 .cockpit-right-panel {
   position: relative;
   z-index: 3;
+}
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .cockpit-sidebar,
+  .cockpit-right-panel {
+    background: rgba(255, 255, 255, 0.72);
+    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(18px);
+  }
+
+  .cockpit-workspace {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(247, 252, 249, 0.52));
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+  }
 }
 
 .cockpit-topbar {
@@ -1354,7 +1379,6 @@
     --visual-stage-flow-opacity: 0.48;
     left: -160px;
     width: 1280px;
-    opacity: 0.48;
   }
 
   .cockpit-visual-stage__book {
@@ -1387,7 +1411,6 @@
     left: -380px;
     bottom: -40px;
     width: 1080px;
-    opacity: 0.2;
   }
 
   .cockpit-visual-stage__mascot {
