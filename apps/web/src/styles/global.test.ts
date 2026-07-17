@@ -104,6 +104,27 @@ const finalTopLevelDeclaration = (source: string, selector: string, property: st
 
 const declaresBackdropFilter = (body: string) => /(?:^|;)\s*(?:-webkit-)?backdrop-filter\s*:/.test(body);
 
+const readHexToken = (source: string, token: string) => {
+  const value = source.match(new RegExp(`--${token}:\\s*(#[0-9a-f]{6});`, 'i'))?.[1];
+  if (!value) throw new Error(`Expected a six-digit hex value for --${token}`);
+  return value;
+};
+
+const relativeLuminance = (hex: string) => {
+  const channels = hex
+    .slice(1)
+    .match(/.{2}/g)
+    ?.map((channel) => Number.parseInt(channel, 16) / 255)
+    .map((channel) => (channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4));
+  if (!channels) throw new Error(`Invalid hex color: ${hex}`);
+  return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+};
+
+const contrastRatio = (first: string, second: string) => {
+  const [lighter, darker] = [relativeLuminance(first), relativeLuminance(second)].sort((a, b) => b - a);
+  return (lighter + 0.05) / (darker + 0.05);
+};
+
 describe('global cockpit texture', () => {
   it('queries declarations only within their explicit CSS condition context', () => {
     const fixture = `
@@ -132,8 +153,76 @@ describe('global cockpit texture', () => {
     expect(tokensCss).toMatch(/--color-mint-soft:\s*#ddf6ea;/i);
     expect(tokensCss).toMatch(/--color-ink:\s*#14261f;/i);
     expect(tokensCss).toMatch(/--color-text-muted:\s*#6c7d75;/i);
+    expect(tokensCss).toMatch(/--color-text-subtle:\s*#62746c;/i);
+    expect(tokensCss).toMatch(/--color-focus-ring:\s*#087a44;/i);
+    expect(tokensCss).toMatch(/--color-text-secondary:\s*var\(--color-text-subtle\);/i);
     expect(tokensCss).not.toMatch(/#ff6b57|#3a86ff|#8f67ff|Georgia|Times New Roman/i);
     expect(tokensCss).toMatch(/--font-display:\s*var\(--font-ui\);/);
+  });
+
+  it('uses green for product interaction and reserves warm colors for semantic states', () => {
+    const activeSelectors = [
+      '.project-navigation__item.is-active',
+      '.act-card.is-selected',
+      '.chapter-card.is-selected',
+      '.chapter-details-button',
+      '.focus-mode-toggle.is-active',
+    ];
+
+    for (const selector of activeSelectors) {
+      expect(finalTopLevelDeclaration(cockpitCss, selector, 'border-color')).toBe('var(--color-mint-primary)');
+      expect(finalTopLevelDeclaration(cockpitCss, selector, 'color')).toBe('#087a44');
+      expect(finalTopLevelDeclaration(cockpitCss, selector, 'background')).toBe(
+        'color-mix(in srgb, var(--color-mint-soft) 78%, white)',
+      );
+      expect(finalTopLevelDeclaration(cockpitCss, selector, 'box-shadow')).toBe('0 10px 26px rgba(10, 168, 91, .12)');
+    }
+
+    expect(cockpitCss).not.toMatch(/\.act-card--(?:coral|mint|sky|amber)\.is-selected/);
+    expect(cockpitCss).not.toMatch(/var\(--color-(?:coral|sky|lilac)\)/);
+    expect(cockpitCss).not.toMatch(/#ff6b57|#3a86ff|#8f67ff|#ffe5dd/i);
+
+    expect(finalTopLevelDeclaration(cockpitCss, '.agent-status-chip--queued', 'color')).toBe('#875f19');
+    expect(finalTopLevelDeclaration(cockpitCss, '.agent-status-chip--queued', 'background')).toBe('#fff3d9');
+    expect(finalTopLevelDeclaration(cockpitCss, '.agent-status-chip--queued', 'border-color')).toBe(
+      'var(--color-state-warning)',
+    );
+    expect(finalTopLevelDeclaration(cockpitCss, '.agent-status-chip--running', 'color')).toBe('#28765b');
+    expect(finalTopLevelDeclaration(cockpitCss, '.agent-status-chip--running', 'background')).toBe('#def4e9');
+    expect(finalTopLevelDeclaration(cockpitCss, '.agent-status-chip--done', 'color')).toBe('#087a44');
+    expect(finalTopLevelDeclaration(cockpitCss, '.agent-status-chip--done', 'background')).toBe('var(--color-mint-soft)');
+    expect(finalTopLevelDeclaration(cockpitCss, '.agent-status-chip--blocked', 'color')).toBe('#a6413b');
+    expect(finalTopLevelDeclaration(cockpitCss, '.agent-status-chip--blocked', 'background')).toBe(
+      'color-mix(in srgb, var(--color-state-danger) 14%, white)',
+    );
+
+    expect(finalTopLevelDeclaration(cockpitCss, '.agent-task-progress', 'accent-color')).toBe(
+      'var(--color-mint-primary)',
+    );
+    expect(finalTopLevelDeclaration(cockpitCss, '.memory-health-meter span', 'background')).toBe(
+      'var(--color-mint-primary)',
+    );
+
+    ['#0aa85b', '#50bf8b', '#86d4ad', '#b7e7d0'].forEach((color, index) => {
+      expect(finalTopLevelDeclaration(cockpitCss, `.character-graph__edge--${index}`, 'stroke')).toBe(color);
+      expect(finalTopLevelDeclaration(cockpitCss, `.character-graph__legend-item--${index} > span`, 'background')).toBe(
+        color,
+      );
+    });
+  });
+
+  it('keeps subtle text and focus indicators above their WCAG contrast thresholds', () => {
+    const white = readHexToken(tokensCss, 'color-surface');
+    const canvas = readHexToken(tokensCss, 'color-canvas');
+    const subtle = readHexToken(tokensCss, 'color-text-subtle');
+    const focusRing = readHexToken(tokensCss, 'color-focus-ring');
+
+    expect(contrastRatio(subtle, white)).toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio(subtle, canvas)).toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio(focusRing, white)).toBeGreaterThanOrEqual(3);
+    expect(contrastRatio(focusRing, canvas)).toBeGreaterThanOrEqual(3);
+    expect(globalCss).toMatch(/:focus-visible\s*\{[^}]*outline:\s*3px\s+solid\s+var\(--color-focus-ring\);/s);
+    expect(cockpitCss).not.toContain('var(--color-text-muted)');
   });
 
   it('documents legacy color aliases as migration-only before their declarations', () => {
@@ -302,12 +391,12 @@ describe('global cockpit texture', () => {
     expect(cockpitCss).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{[\s\S]*?\.cockpit-visual-stage__flow,\s*\.cockpit-visual-stage__book,\s*\.cockpit-visual-stage__mascot\s*\{[^}]*animation:\s*none;/s);
   });
 
-  it('uses an opaque canonical sky color for custom cockpit focus outlines', () => {
+  it('uses the accessible focus-ring token for custom cockpit focus outlines', () => {
     const customFocusOutline = cockpitCss.match(
       /\.focus-mode-toggle:focus-visible,\s*\.chapter-details-button:focus-visible,\s*\.chapter-detail-drawer__close:focus-visible\s*\{([^}]*)\}/s,
     )?.[1];
 
-    expect(customFocusOutline).toMatch(/outline:\s*3px\s+solid\s+var\(--color-sky\);/);
+    expect(customFocusOutline).toMatch(/outline:\s*3px\s+solid\s+var\(--color-focus-ring\);/);
     expect(customFocusOutline).not.toMatch(/color-mix|rgba\(|hsla\(|opacity\s*:/);
   });
 });

@@ -8,6 +8,8 @@
   --color-mint-line: #cfe8dd;
   --color-ink: #14261f;
   --color-text-muted: #6c7d75;
+  --color-text-subtle: #62746c;
+  --color-focus-ring: #087a44;
   --color-state-info: #3d9d79;
   --color-state-warning: #c58b2c;
   --color-state-danger: #d95c55;
@@ -28,7 +30,7 @@
   --color-accent-brass: var(--color-mint-support);
   --color-accent-support: var(--color-mint-support);
   --color-text-primary: var(--color-ink);
-  --color-text-secondary: var(--color-text-muted);
+  --color-text-secondary: var(--color-text-subtle);
   --color-state-done: var(--color-mint-primary);
   --color-border-soft: rgba(20, 38, 31, 0.12);
 
