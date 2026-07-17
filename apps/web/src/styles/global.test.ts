@@ -13,26 +13,117 @@ const logoSvg = readFileSync(
 const readSvgAttributes = (source: string) =>
   Object.fromEntries(Array.from(source.matchAll(/([\w-]+)="([^"]*)"/g), ([, name, value]) => [name, value]));
 
-const styleRules = (source: string) =>
-  Array.from(source.matchAll(/([^{}]+)\{([^{}]*)\}/gs), ([, selectors, body]) => ({
-    selectors: selectors.split(',').map((candidate) => candidate.trim()),
-    body,
-  }));
+type CssBlock = { prelude: string; body: string };
+type ContextualStyleRule = CssBlock & { selectors: string[]; atRules: string[] };
 
-const ruleBodiesForSelector = (source: string, selector: string) =>
-  styleRules(source)
-    .filter((rule) => rule.selectors.includes(selector))
+const stripCssComments = (source: string) => source.replace(/\/\*[\s\S]*?\*\//g, '');
+
+const findClosingBrace = (source: string, openingBrace: number) => {
+  let depth = 0;
+  let quote = '';
+
+  for (let index = openingBrace; index < source.length; index += 1) {
+    const character = source[index];
+    if (quote) {
+      if (character === '\\') index += 1;
+      else if (character === quote) quote = '';
+    } else if (character === '"' || character === "'") {
+      quote = character;
+    } else if (character === '{') {
+      depth += 1;
+    } else if (character === '}' && --depth === 0) {
+      return index;
+    }
+  }
+
+  throw new Error(`Unclosed CSS block at offset ${openingBrace}`);
+};
+
+const topLevelBlocks = (source: string) => {
+  const css = stripCssComments(source);
+  const blocks: CssBlock[] = [];
+  let cursor = 0;
+
+  while (cursor < css.length) {
+    while (/\s|;/.test(css[cursor] ?? '')) cursor += 1;
+    if (cursor >= css.length) break;
+
+    let quote = '';
+    let boundary = cursor;
+    for (; boundary < css.length; boundary += 1) {
+      const character = css[boundary];
+      if (quote) {
+        if (character === '\\') boundary += 1;
+        else if (character === quote) quote = '';
+      } else if (character === '"' || character === "'") {
+        quote = character;
+      } else if (character === ';' || character === '{') {
+        break;
+      }
+    }
+
+    if (css[boundary] === ';') {
+      cursor = boundary + 1;
+      continue;
+    }
+    if (css[boundary] !== '{') break;
+
+    const closingBrace = findClosingBrace(css, boundary);
+    blocks.push({ prelude: css.slice(cursor, boundary).trim(), body: css.slice(boundary + 1, closingBrace) });
+    cursor = closingBrace + 1;
+  }
+
+  return blocks;
+};
+
+const contextualStyleRules = (source: string, atRules: string[] = []): ContextualStyleRule[] =>
+  topLevelBlocks(source).flatMap((block) =>
+    block.prelude.startsWith('@')
+      ? contextualStyleRules(block.body, [...atRules, block.prelude])
+      : [{ ...block, selectors: block.prelude.split(',').map((selector) => selector.trim()), atRules }],
+  );
+
+const exactAtRuleBody = (source: string, prelude: string) => {
+  const matches = topLevelBlocks(source).filter((block) => block.prelude === prelude);
+  if (matches.length !== 1) throw new Error(`Expected one exact CSS at-rule block for: ${prelude}`);
+  return matches[0].body;
+};
+
+const topLevelRuleBodiesForSelector = (source: string, selector: string) =>
+  contextualStyleRules(source)
+    .filter((rule) => rule.atRules.length === 0 && rule.selectors.includes(selector))
     .map((rule) => rule.body);
 
-const finalDeclaration = (source: string, selector: string, property: string) => {
-  const declarations = ruleBodiesForSelector(source, selector).flatMap((body) =>
+const finalTopLevelDeclaration = (source: string, selector: string, property: string) => {
+  const declarations = topLevelRuleBodiesForSelector(source, selector).flatMap((body) =>
     Array.from(body.matchAll(new RegExp(`(?:^|;)\\s*${property}\\s*:\\s*([^;]+);`, 'g')), ([, value]) => value.trim()),
   );
 
   return declarations.at(-1);
 };
 
+const declaresBackdropFilter = (body: string) => /(?:^|;)\s*(?:-webkit-)?backdrop-filter\s*:/.test(body);
+
 describe('global cockpit texture', () => {
+  it('queries declarations only within their explicit CSS condition context', () => {
+    const fixture = `
+      /* .surface { background: polluted; } */
+      .surface { background: white; }
+      @media (max-width: 800px) { .surface { background: black; } }
+      @supports (backdrop-filter: blur(1px)) {
+        /* selector context */
+        .surface { backdrop-filter: blur(20px); }
+      }
+    `;
+    const supportBody = exactAtRuleBody(fixture, '@supports (backdrop-filter: blur(1px))');
+
+    expect(finalTopLevelDeclaration(fixture, '.surface', 'background')).toBe('white');
+    expect(finalTopLevelDeclaration(supportBody, '.surface', 'backdrop-filter')).toBe('blur(20px)');
+    expect(contextualStyleRules(fixture).find((rule) => rule.body.includes('background: black'))?.atRules).toEqual([
+      '@media (max-width: 800px)',
+    ]);
+  });
+
   it('defines one white-mint visual language without the retired decorative palette', () => {
     expect(tokensCss).toMatch(/--color-canvas:\s*#f7fbf9;/i);
     expect(tokensCss).toMatch(/--color-surface:\s*#ffffff;/);
@@ -101,15 +192,16 @@ describe('global cockpit texture', () => {
   });
 
   it('keeps the mint atmosphere visible through a deliberate transparent surface hierarchy', () => {
-    const supportsStart = cockpitCss.indexOf('@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))');
-    const fallbackCss = cockpitCss.slice(0, supportsStart);
-    const supportedCss = cockpitCss.slice(supportsStart);
-    const mainPanelSelectors = [
+    const backdropSupport = '@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))';
+    const supportedCss = exactAtRuleBody(cockpitCss, backdropSupport);
+    const workspaceGlassSelectors = [
       '.structure-map',
       '.chapter-swimlane',
       '.inspiration-vault',
       '.character-graph',
       '.clue-attribution-flow',
+    ];
+    const rightPanelSurfaceSelectors = [
       '.nova-lead-card',
       '.agent-panel__section',
       '.focus-mode-toggle',
@@ -125,41 +217,55 @@ describe('global cockpit texture', () => {
     ];
 
     expect(globalCss).not.toContain('bright_cockpit_background.png');
-    expect(finalDeclaration(cockpitCss, '.cockpit-shell', 'background')).toBe('transparent');
-    expect(finalDeclaration(cockpitCss, '.cockpit-workspace', 'background')).toBe('transparent');
-    expect(supportsStart).toBeGreaterThan(cockpitCss.indexOf('.cockpit-workspace'));
-    expect(finalDeclaration(fallbackCss, '.cockpit-sidebar', 'background')).toBe('rgba(255, 255, 255, 0.9)');
-    expect(finalDeclaration(fallbackCss, '.cockpit-right-panel', 'background')).toBe('rgba(255, 255, 255, 0.9)');
-    expect(finalDeclaration(cockpitCss, '.cockpit-topbar', 'background')).toBe('rgba(255, 255, 255, 0.54)');
-    expect(finalDeclaration(cockpitCss, '.cockpit-topbar', '-webkit-backdrop-filter')).toBe('blur(20px)');
-    expect(finalDeclaration(cockpitCss, '.cockpit-topbar', 'backdrop-filter')).toBe('blur(20px)');
+    expect(finalTopLevelDeclaration(cockpitCss, '.cockpit-shell', 'background')).toBe('transparent');
+    expect(finalTopLevelDeclaration(cockpitCss, '.cockpit-workspace', 'background')).toBe('transparent');
+    expect(finalTopLevelDeclaration(cockpitCss, '.cockpit-sidebar', 'background')).toBe('rgba(255, 255, 255, 0.9)');
+    expect(finalTopLevelDeclaration(cockpitCss, '.cockpit-right-panel', 'background')).toBe('rgba(255, 255, 255, 0.9)');
+    expect(finalTopLevelDeclaration(cockpitCss, '.cockpit-topbar', 'background')).toBe('rgba(255, 255, 255, 0.54)');
+    expect(finalTopLevelDeclaration(cockpitCss, '.cockpit-topbar', '-webkit-backdrop-filter')).toBe('blur(20px)');
+    expect(finalTopLevelDeclaration(cockpitCss, '.cockpit-topbar', 'backdrop-filter')).toBe('blur(20px)');
 
     for (const selector of ['.cockpit-sidebar', '.cockpit-right-panel']) {
-      expect(finalDeclaration(supportedCss, selector, 'background')).toBe('rgba(255, 255, 255, 0.52)');
-      expect(finalDeclaration(supportedCss, selector, '-webkit-backdrop-filter')).toBe('blur(22px)');
-      expect(finalDeclaration(supportedCss, selector, 'backdrop-filter')).toBe('blur(22px)');
+      expect(finalTopLevelDeclaration(supportedCss, selector, 'background')).toBe('rgba(255, 255, 255, 0.52)');
+      expect(finalTopLevelDeclaration(supportedCss, selector, '-webkit-backdrop-filter')).toBe('blur(22px)');
+      expect(finalTopLevelDeclaration(supportedCss, selector, 'backdrop-filter')).toBe('blur(22px)');
+
+      const blurContexts = contextualStyleRules(cockpitCss)
+        .filter((rule) => rule.selectors.includes(selector) && declaresBackdropFilter(rule.body))
+        .map((rule) => rule.atRules);
+      expect(blurContexts).toEqual([[backdropSupport]]);
     }
 
-    for (const selector of mainPanelSelectors) {
-      expect(finalDeclaration(cockpitCss, selector, 'border')).toBe('1px solid rgba(180, 224, 205, 0.72)');
-      expect(finalDeclaration(cockpitCss, selector, 'background')).toBe('rgba(255, 255, 255, 0.64)');
-      expect(finalDeclaration(cockpitCss, selector, 'box-shadow')).toBe('0 16px 44px rgba(31, 112, 79, 0.07)');
-      expect(finalDeclaration(cockpitCss, selector, '-webkit-backdrop-filter')).toBe('blur(20px)');
-      expect(finalDeclaration(cockpitCss, selector, 'backdrop-filter')).toBe('blur(20px)');
+    for (const selector of [...workspaceGlassSelectors, ...rightPanelSurfaceSelectors]) {
+      expect(finalTopLevelDeclaration(cockpitCss, selector, 'border')).toBe('1px solid rgba(180, 224, 205, 0.72)');
+      expect(finalTopLevelDeclaration(cockpitCss, selector, 'background')).toBe('rgba(255, 255, 255, 0.64)');
+      expect(finalTopLevelDeclaration(cockpitCss, selector, 'box-shadow')).toBe('0 16px 44px rgba(31, 112, 79, 0.07)');
+    }
+
+    for (const selector of workspaceGlassSelectors) {
+      expect(finalTopLevelDeclaration(cockpitCss, selector, '-webkit-backdrop-filter')).toBe('blur(20px)');
+      expect(finalTopLevelDeclaration(cockpitCss, selector, 'backdrop-filter')).toBe('blur(20px)');
+    }
+
+    for (const selector of rightPanelSurfaceSelectors) {
+      const blurRules = contextualStyleRules(cockpitCss).filter(
+        (rule) => rule.selectors.includes(selector) && declaresBackdropFilter(rule.body),
+      );
+      expect(blurRules).toEqual([]);
     }
 
     for (const selector of innerCardSelectors) {
       expect(['1px solid var(--color-line)', '1px solid var(--color-mint-line)']).toContain(
-        finalDeclaration(cockpitCss, selector, 'border'),
+        finalTopLevelDeclaration(cockpitCss, selector, 'border'),
       );
-      expect(finalDeclaration(cockpitCss, selector, 'background')).toBe('rgba(255, 255, 255, 0.84)');
-      expect(finalDeclaration(cockpitCss, selector, 'box-shadow')).toBe('0 8px 24px rgba(31, 112, 79, 0.05)');
+      expect(finalTopLevelDeclaration(cockpitCss, selector, 'background')).toBe('rgba(255, 255, 255, 0.84)');
+      expect(finalTopLevelDeclaration(cockpitCss, selector, 'box-shadow')).toBe('0 8px 24px rgba(31, 112, 79, 0.05)');
     }
 
-    const workspaceRules = ruleBodiesForSelector(cockpitCss, '.cockpit-workspace');
+    const workspaceRules = contextualStyleRules(cockpitCss).filter((rule) => rule.selectors.includes('.cockpit-workspace'));
     expect(workspaceRules).not.toHaveLength(0);
     for (const workspaceRule of workspaceRules) {
-      expect(workspaceRule).not.toMatch(/(?:^|-)backdrop-filter\s*:/);
+      expect(declaresBackdropFilter(workspaceRule.body)).toBe(false);
     }
   });
 
