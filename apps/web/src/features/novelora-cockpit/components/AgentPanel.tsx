@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { novaAvatar } from '../assetRegistry';
+import mascot from '../../../assets/novelora/visual-stage/cockpit-mascot.webp';
 import type { AgentTask, NoveloraProject } from '../types';
 
 interface AgentPanelProps {
@@ -19,7 +19,9 @@ export function AgentPanel({ project }: AgentPanelProps) {
   return (
     <div className="agent-panel">
       <section className="nova-lead-card" aria-labelledby="nova-lead-title">
-        <img src={novaAvatar} alt="Nova" />
+        <span className="nova-lead-card__portrait">
+          <img src={mascot} alt="Nova" />
+        </span>
         <div>
           <p className="workspace-eyebrow">Lead agent</p>
           <h2 id="nova-lead-title">Nova</h2>

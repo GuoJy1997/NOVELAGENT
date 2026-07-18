@@ -49,22 +49,26 @@ describe("CockpitVisualStage", () => {
     );
   });
 
-  it("uses a transparent picture source instead of the mascot asset across the scroll breakpoint", () => {
+  it("avoids downloading the mascot asset at both non-desktop breakpoints", () => {
     const { container } = render(<CockpitVisualStage />);
 
     const mascot = container.querySelector(".cockpit-visual-stage__mascot");
-    const scrollBreakpointSource = mascot?.closest("picture")?.querySelector("source");
+    const responsiveSources = Array.from(
+      mascot?.closest("picture")?.querySelectorAll("source") ?? [],
+    );
 
     expect(mascot).toHaveAttribute("draggable", "false");
     expect(mascot).toHaveAttribute("src", expect.stringMatching(/cockpit-mascot.*\.webp$/));
-    expect(scrollBreakpointSource).toHaveAttribute(
-      "media",
-      "(min-width: 901px) and (max-width: 1175px)",
-    );
-    const srcSet = scrollBreakpointSource?.getAttribute("srcset") ?? "";
-    expect(srcSet).toMatch(/^data:image\/svg\+xml,/);
-    expect(decodeURIComponent(srcSet.split(",")[1] ?? "")).toBe(
-      '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>',
-    );
+    expect(responsiveSources.map((source) => source.getAttribute("media"))).toEqual([
+      "(max-width: 900px)",
+      "(min-width: 901px) and (max-width: 1179px)",
+    ]);
+    responsiveSources.forEach((source) => {
+      const srcSet = source.getAttribute("srcset") ?? "";
+      expect(srcSet).toMatch(/^data:image\/svg\+xml,/);
+      expect(decodeURIComponent(srcSet.split(",")[1] ?? "")).toBe(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>',
+      );
+    });
   });
 });

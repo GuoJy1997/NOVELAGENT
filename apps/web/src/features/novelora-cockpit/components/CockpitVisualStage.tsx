@@ -31,8 +31,9 @@ export function CockpitVisualStage() {
       </div>
       <div className="cockpit-visual-stage__foreground">
         <picture>
+          <source media="(max-width: 900px)" srcSet={transparentPixel} />
           <source
-            media="(min-width: 901px) and (max-width: 1175px)"
+            media="(min-width: 901px) and (max-width: 1179px)"
             srcSet={transparentPixel}
           />
           <img

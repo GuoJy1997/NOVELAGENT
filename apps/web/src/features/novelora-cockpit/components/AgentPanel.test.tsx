@@ -5,6 +5,15 @@ import { noveloraMockProject } from '../data/noveloraMockProject';
 import { AgentPanel } from './AgentPanel';
 
 describe('AgentPanel', () => {
+  it('uses the shared 3D mascot artwork for Nova', () => {
+    render(<AgentPanel project={noveloraMockProject} />);
+
+    const novaPortrait = screen.getByRole('img', { name: 'Nova' });
+
+    expect(novaPortrait.getAttribute('src')).toMatch(/cockpit-mascot.*\.webp$/);
+    expect(novaPortrait.getAttribute('src')).not.toMatch(/mascot_nova_avatar\.svg$/);
+  });
+
   it('shows fixture-backed task and memory data', () => {
     render(<AgentPanel project={noveloraMockProject} />);
 

@@ -332,9 +332,35 @@ describe('global cockpit texture', () => {
     expect(sharedLayerRule).toMatch(/overflow:\s*hidden;/);
     expect(backdropRule).toMatch(/z-index:\s*0;/);
     expect(cockpitCss).toMatch(/\.cockpit-sidebar,\s*\.cockpit-workspace,\s*\.cockpit-right-panel\s*\{[^}]*z-index:\s*3;/s);
-    expect(bookLayerRule).toMatch(/z-index:\s*4;/);
+    expect(bookLayerRule).toMatch(/z-index:\s*2;/);
     expect(foregroundRule).toMatch(/z-index:\s*5;/);
     expect(drawerBackdropRule).toMatch(/z-index:\s*10;/);
+  });
+
+  it('anchors the desktop brand stage to the left without intercepting input', () => {
+    const mascotRule = topLevelRuleBodiesForSelector(cockpitCss, '.cockpit-visual-stage__mascot').at(-1) ?? '';
+    const groundingRule = topLevelRuleBodiesForSelector(
+      cockpitCss,
+      '.cockpit-visual-stage__foreground::before',
+    ).at(-1) ?? '';
+
+    expect(mascotRule).toMatch(/display:\s*block;/);
+    expect(mascotRule).toMatch(/left:\s*[^;]+;/);
+    expect(mascotRule).toMatch(/right:\s*auto;/);
+    expect(mascotRule).not.toMatch(/right:\s*(?:-?\d|clamp|var)/);
+    expect(groundingRule).toMatch(/pointer-events:\s*none;/);
+    expect(groundingRule).toMatch(/(?:radial-gradient|linear-gradient)/);
+  });
+
+  it('crops the shared 3D Nova artwork inside a dedicated portrait frame', () => {
+    const portraitRule = topLevelRuleBodiesForSelector(cockpitCss, '.nova-lead-card__portrait').at(-1) ?? '';
+    const portraitImageRule = topLevelRuleBodiesForSelector(cockpitCss, '.nova-lead-card__portrait img').at(-1) ?? '';
+
+    expect(portraitRule).toMatch(/overflow:\s*hidden;/);
+    expect(portraitRule).toMatch(/align-self:\s*(?:start|flex-start);/);
+    expect(portraitRule).toMatch(/border:\s*1px solid rgba\(111,\s*221,\s*177,\s*0\.55\);/);
+    expect(portraitImageRule).toMatch(/max-width:\s*none;/);
+    expect(portraitImageRule).toMatch(/transform:\s*translateY\(-4px\);/);
   });
 
   it('keeps the mint atmosphere visible through a deliberate transparent surface hierarchy', () => {
@@ -440,8 +466,9 @@ describe('global cockpit texture', () => {
     expect(cockpitCss).toMatch(/@media\s*\(max-width:\s*1180px\)\s*\{[\s\S]*?\.cockpit-visual-stage__flow\s*\{[^}]*--visual-stage-flow-opacity:\s*0\.48;[^}]*\}/s);
     expect(cockpitCss).toMatch(/@media\s*\(max-width:\s*900px\)\s*\{[\s\S]*?\.cockpit-shell\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\);[\s\S]*?\.cockpit-sidebar,\s*\.cockpit-right-panel,\s*\.project-sidebar-content\s*\{[^}]*min-height:\s*auto;/s);
     expect(cockpitCss).toMatch(/@media\s*\(max-width:\s*900px\)\s*\{[\s\S]*?\.cockpit-visual-stage__book\s*\{[^}]*display:\s*none;/s);
-    expect(cockpitCss).toMatch(/@media\s*\(min-width:\s*901px\)\s*and\s*\(max-width:\s*1175px\)\s*\{[\s\S]*?\.cockpit-visual-stage__mascot\s*\{[^}]*display:\s*none;/s);
-    expect(cockpitCss).toMatch(/@media\s*\(max-width:\s*900px\)\s*\{[\s\S]*?\.cockpit-visual-stage__mascot\s*\{[^}]*display:\s*block;[^}]*left:\s*-18px;[^}]*right:\s*auto;[^}]*bottom:\s*-22px;[^}]*width:\s*64px;/s);
+    expect(cockpitCss).toMatch(/@media\s*\(min-width:\s*901px\)\s*and\s*\(max-width:\s*1179px\)\s*\{[\s\S]*?\.cockpit-visual-stage__mascot\s*\{[^}]*display:\s*none;/s);
+    expect(cockpitCss).toMatch(/@media\s*\(max-width:\s*900px\)\s*\{[\s\S]*?\.cockpit-visual-stage__mascot\s*\{[^}]*display:\s*none;/s);
+    expect(cockpitCss).toMatch(/@media\s*\(min-width:\s*1180px\)\s*and\s*\(max-width:\s*1439px\)\s*\{[\s\S]*?\.cockpit-visual-stage__mascot\s*\{[^}]*display:\s*block;/s);
     expect(mediumFlowRule).not.toMatch(/(?:^|\s)opacity:/);
     expect(narrowFlowRule).not.toMatch(/(?:^|\s)opacity:/);
     expect(cockpitCss).toMatch(/@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{[\s\S]*?transition-duration:\s*0\.01ms\s*!important;/s);
