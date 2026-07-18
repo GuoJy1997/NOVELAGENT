@@ -9,7 +9,6 @@ import { describe, expect, it } from 'vitest';
 import * as assetRegistry from './assetRegistry';
 import {
   appIcon,
-  brightCockpitBackground,
   characterPortraits,
   clueNodes,
   inspirationThumbnails,
@@ -21,6 +20,24 @@ import {
 
 const pngSignature = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
 const textDecoder = new TextDecoder();
+const approvedRuntimeUiPalette = new Set([
+  '#0AA85B',
+  '#6FDDB1',
+  '#14261F',
+  '#60726A',
+  '#DDF6EA',
+  '#CFE8DD',
+  '#F7FBF9',
+]);
+const navigationSourcePaths = [
+  '../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/home.svg',
+  '../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/characters.svg',
+  '../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/inspiration.svg',
+  '../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/projects.svg',
+  '../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/review.svg',
+  '../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/structure.svg',
+  '../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/worldbuilding.svg',
+] as const;
 
 function assetUrlToFilePath(assetUrl: string) {
   const url = new URL(assetUrl);
@@ -53,6 +70,41 @@ function normalizeSvg(contents: Uint8Array) {
 }
 
 describe('novelora asset registry', () => {
+  it('keeps the runtime navigation and clue-node SVGs inside the white-mint palette', () => {
+    const clueNodeAssets = [
+      [clueNodes.origin, '../../assets/novelora/novelora_ui_asset_pack/08_graph_nodes/node_clue_origin.svg'],
+      [clueNodes.trigger, '../../assets/novelora/novelora_ui_asset_pack/08_graph_nodes/node_trigger.svg'],
+      [clueNodes.receiver, '../../assets/novelora/novelora_ui_asset_pack/08_graph_nodes/node_receiver.svg'],
+      [clueNodes.payoff, '../../assets/novelora/novelora_ui_asset_pack/08_graph_nodes/node_payoff.svg'],
+      [clueNodes.memory, '../../assets/novelora/novelora_ui_asset_pack/08_graph_nodes/node_memory.svg'],
+    ] as const;
+    const runtimeSvgSources = [
+      ...navigationSourcePaths.map((sourcePath) => ({ asset: undefined, sourcePath })),
+      ...clueNodeAssets.map(([asset, sourcePath]) => ({ asset, sourcePath })),
+    ];
+
+    expect(navigationSourcePaths).toHaveLength(7);
+    expect(clueNodeAssets).toHaveLength(5);
+
+    runtimeSvgSources.forEach(({ asset, sourcePath }) => {
+      const sourceContents = readFileSync(fileURLToPath(new URL(sourcePath, import.meta.url)), 'utf8');
+      const hexColors = sourceContents.match(/#[0-9a-f]{6}\b/gi) ?? [];
+
+      expect(sourceContents).toContain('<svg');
+      expect(hexColors.length).toBeGreaterThan(0);
+      expect(
+        hexColors.filter((color) => !approvedRuntimeUiPalette.has(color.toUpperCase())),
+        `${sourcePath} contains colors outside the approved runtime UI palette`,
+      ).toEqual([]);
+
+      if (asset) {
+        expect(normalizeSvg(readResolvedAsset(asset))).toBe(
+          normalizeSvg(new TextEncoder().encode(sourceContents)),
+        );
+      }
+    });
+  });
+
   it('resolves every cockpit asset URL to a valid, non-empty image file', () => {
     const assets = [
       [logo, '../../assets/novelora/novelora_ui_asset_pack/01_logo/novelora_logo_horizontal.svg'],
@@ -71,7 +123,6 @@ describe('novelora asset registry', () => {
       [inspirationThumbnails.observatory, '../../assets/novelora/novelora_ui_asset_pack/07_inspiration_thumbnails/inspiration_observatory.svg'],
       [inspirationThumbnails.ruins, '../../assets/novelora/novelora_ui_asset_pack/07_inspiration_thumbnails/inspiration_ruins.svg'],
       [inspirationThumbnails.portal, '../../assets/novelora/novelora_ui_asset_pack/07_inspiration_thumbnails/inspiration_portal.svg'],
-      [brightCockpitBackground, '../../assets/novelora/novelora_ui_asset_pack/09_textures_backgrounds/bright_cockpit_background.png'],
       [clueNodes.origin, '../../assets/novelora/novelora_ui_asset_pack/08_graph_nodes/node_clue_origin.svg'],
       [clueNodes.trigger, '../../assets/novelora/novelora_ui_asset_pack/08_graph_nodes/node_trigger.svg'],
       [clueNodes.receiver, '../../assets/novelora/novelora_ui_asset_pack/08_graph_nodes/node_receiver.svg'],
@@ -79,7 +130,7 @@ describe('novelora asset registry', () => {
       [clueNodes.memory, '../../assets/novelora/novelora_ui_asset_pack/08_graph_nodes/node_memory.svg'],
     ];
 
-    expect(assets).toHaveLength(22);
+    expect(assets).toHaveLength(21);
     expect(assets.every(([asset]) => asset.length > 0)).toBe(true);
 
     assets.forEach(([asset, sourcePath]) => {
@@ -134,6 +185,28 @@ describe('novelora asset registry', () => {
 
     const paperGrainSource = fileURLToPath(new URL(expectedSourcePath, import.meta.url));
     const contents = new Uint8Array(readFileSync(paperGrainSource));
+
+    expect(contents.byteLength).toBeGreaterThan(0);
+    expect(contents.subarray(0, pngSignature.length)).toEqual(pngSignature);
+  });
+
+  it('keeps the bright cockpit background auditable without turning it into a runtime Vite URL', () => {
+    const registry = assetRegistry as {
+      brightCockpitBackground?: string;
+      brightCockpitBackgroundSourcePath?: string;
+    };
+    const expectedSourcePath = '../../assets/novelora/novelora_ui_asset_pack/09_textures_backgrounds/bright_cockpit_background.png';
+    const registrySource = readFileSync(
+      resolve(process.cwd(), 'src/features/novelora-cockpit/assetRegistry.ts'),
+      'utf8',
+    );
+
+    expect(registry.brightCockpitBackground).toBeUndefined();
+    expect(registry.brightCockpitBackgroundSourcePath).toBe(expectedSourcePath);
+    expect(registrySource).not.toMatch(/new URL\(\s*['"][^'"]*bright_cockpit_background\.png/);
+
+    const backgroundSource = fileURLToPath(new URL(expectedSourcePath, import.meta.url));
+    const contents = new Uint8Array(readFileSync(backgroundSource));
 
     expect(contents.byteLength).toBeGreaterThan(0);
     expect(contents.subarray(0, pngSignature.length)).toEqual(pngSignature);

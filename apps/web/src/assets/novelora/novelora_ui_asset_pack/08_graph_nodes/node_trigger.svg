@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="160" height="64" viewBox="0 0 160 64" fill="none">
 
-<rect x="1" y="1" width="158" height="62" rx="18" fill="#F1ECFF" stroke="#8F67FF" stroke-width="1.6"/>
-<rect x="14" y="14" width="34" height="34" rx="10" fill="#FFFDF8" stroke="#8F67FF" stroke-width="1.5"/>
-<path d="M24 31h14M31 24v14" stroke="#8F67FF" stroke-width="2" stroke-linecap="round"/>
-<text x="60" y="29" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="800" fill="#8F67FF">Trigger</text>
-<text x="60" y="47" font-family="Inter,Arial,sans-serif" font-size="10" fill="#6F6A63">Reusable node asset</text>
+<rect x="1" y="1" width="158" height="62" rx="18" fill="#F7FBF9" stroke="#CFE8DD" stroke-width="1.6"/>
+<rect x="14" y="14" width="34" height="34" rx="10" fill="#DDF6EA" stroke="#CFE8DD" stroke-width="1.5"/>
+<path d="M24 31h14M31 24v14" stroke="#0AA85B" stroke-width="2" stroke-linecap="round"/>
+<text x="60" y="29" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="800" fill="#0AA85B">Trigger</text>
+<text x="60" y="47" font-family="Inter,Arial,sans-serif" font-size="10" fill="#60726A">Reusable node asset</text>
 
 </svg>

@@ -73,11 +73,8 @@ export const inspirationThumbnails = {
   ).href,
 } as const;
 
-export const brightCockpitBackground = new URL(
-  '../../assets/novelora/novelora_ui_asset_pack/09_textures_backgrounds/bright_cockpit_background.png',
-  import.meta.url,
-).href;
-// Kept for source-pack auditing only; CSS provides the runtime paper texture.
+// Kept for source-pack auditing only; CSS provides the runtime backgrounds and textures.
+export const brightCockpitBackgroundSourcePath = '../../assets/novelora/novelora_ui_asset_pack/09_textures_backgrounds/bright_cockpit_background.png';
 export const paperGrainSourcePath = '../../assets/novelora/novelora_ui_asset_pack/09_textures_backgrounds/paper_grain_overlay.png';
 
 export const clueNodes = {
