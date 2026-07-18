@@ -110,17 +110,31 @@ const readHexToken = (source: string, token: string) => {
   return value;
 };
 
-const relativeLuminance = (hex: string) => {
-  const channels = hex
-    .slice(1)
-    .match(/.{2}/g)
-    ?.map((channel) => Number.parseInt(channel, 16) / 255)
+type SrgbColor = string | readonly [number, number, number];
+
+const srgbChannels = (color: SrgbColor): [number, number, number] => {
+  if (typeof color !== 'string') return [...color];
+  const channels = color.slice(1).match(/.{2}/g)?.map((channel) => Number.parseInt(channel, 16));
+  if (!channels || channels.length !== 3) throw new Error(`Invalid hex color: ${color}`);
+  return channels as [number, number, number];
+};
+
+const mixSrgb = (first: SrgbColor, firstWeight: number, second: SrgbColor): [number, number, number] => {
+  const firstChannels = srgbChannels(first);
+  const secondChannels = srgbChannels(second);
+  return firstChannels.map(
+    (channel, index) => channel * firstWeight + secondChannels[index] * (1 - firstWeight),
+  ) as [number, number, number];
+};
+
+const relativeLuminance = (color: SrgbColor) => {
+  const channels = srgbChannels(color)
+    .map((channel) => channel / 255)
     .map((channel) => (channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4));
-  if (!channels) throw new Error(`Invalid hex color: ${hex}`);
   return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
 };
 
-const contrastRatio = (first: string, second: string) => {
+const contrastRatio = (first: SrgbColor, second: SrgbColor) => {
   const [lighter, darker] = [relativeLuminance(first), relativeLuminance(second)].sort((a, b) => b - a);
   return (lighter + 0.05) / (darker + 0.05);
 };
@@ -153,7 +167,7 @@ describe('global cockpit texture', () => {
     expect(tokensCss).toMatch(/--color-mint-soft:\s*#ddf6ea;/i);
     expect(tokensCss).toMatch(/--color-ink:\s*#14261f;/i);
     expect(tokensCss).toMatch(/--color-text-muted:\s*#6c7d75;/i);
-    expect(tokensCss).toMatch(/--color-text-subtle:\s*#62746c;/i);
+    expect(tokensCss).toMatch(/--color-text-subtle:\s*#60726a;/i);
     expect(tokensCss).toMatch(/--color-focus-ring:\s*#087a44;/i);
     expect(tokensCss).toMatch(/--color-text-secondary:\s*var\(--color-text-subtle\);/i);
     expect(tokensCss).not.toMatch(/#ff6b57|#3a86ff|#8f67ff|Georgia|Times New Roman/i);
@@ -202,33 +216,70 @@ describe('global cockpit texture', () => {
     expect(finalTopLevelDeclaration(cockpitCss, '.memory-health-meter span', 'background')).toBe(
       'var(--color-mint-primary)',
     );
+  });
 
-    ['#0aa85b', '#50bf8b', '#86d4ad', '#b7e7d0'].forEach((color, index) => {
-      expect(finalTopLevelDeclaration(cockpitCss, `.character-graph__edge--${index}`, 'stroke')).toBe(color);
-      expect(finalTopLevelDeclaration(cockpitCss, `.character-graph__legend-item--${index} > span`, 'background')).toBe(
-        color,
-      );
-    });
+  it('double-encodes graph relationships with opaque contrasting colors, lines, and shapes', () => {
+    const white = readHexToken(tokensCss, 'color-surface');
+    const canvas = readHexToken(tokensCss, 'color-canvas');
+    const glass = mixSrgb(white, 0.64, canvas);
+    const relationColors = ['#087a44', '#146b5c', '#3b7655', '#596f4d'];
+    const dashPatterns: string[] = [];
+    const markerShapes: string[] = [];
+
+    expect(finalTopLevelDeclaration(cockpitCss, '.character-graph__edge', 'opacity')).toBeUndefined();
+
+    for (let index = 0; index < 4; index += 1) {
+      const token = `color-relation-${index + 1}`;
+      const color = readHexToken(tokensCss, token);
+      const edgeSelector = `.character-graph__edge--${index}`;
+      const markerSelector = `.character-graph__legend-item--${index} > span`;
+
+      expect(color).toBe(relationColors[index]);
+      expect(contrastRatio(color, white)).toBeGreaterThanOrEqual(3);
+      expect(contrastRatio(color, glass)).toBeGreaterThanOrEqual(3);
+      expect(finalTopLevelDeclaration(cockpitCss, edgeSelector, 'stroke')).toBe(`var(--${token})`);
+      expect(finalTopLevelDeclaration(cockpitCss, markerSelector, 'background')).toBe(`var(--${token})`);
+
+      dashPatterns.push(finalTopLevelDeclaration(cockpitCss, edgeSelector, 'stroke-dasharray') ?? '');
+      markerShapes.push(finalTopLevelDeclaration(cockpitCss, markerSelector, 'border-radius') ?? '');
+    }
+
+    expect(dashPatterns).not.toContain('');
+    expect(dashPatterns).toContain('none');
+    expect(new Set(dashPatterns).size).toBe(4);
+    expect(markerShapes).not.toContain('');
+    expect(new Set(markerShapes).size).toBe(4);
   });
 
   it('keeps subtle text and focus indicators above their WCAG contrast thresholds', () => {
     const white = readHexToken(tokensCss, 'color-surface');
     const canvas = readHexToken(tokensCss, 'color-canvas');
+    const mintSoft = readHexToken(tokensCss, 'color-mint-soft');
     const subtle = readHexToken(tokensCss, 'color-text-subtle');
     const focusRing = readHexToken(tokensCss, 'color-focus-ring');
+    const activeBackground = mixSrgb(mintSoft, 0.78, white);
 
     expect(contrastRatio(subtle, white)).toBeGreaterThanOrEqual(4.5);
     expect(contrastRatio(subtle, canvas)).toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio(subtle, activeBackground)).toBeGreaterThanOrEqual(4.5);
     expect(contrastRatio(focusRing, white)).toBeGreaterThanOrEqual(3);
     expect(contrastRatio(focusRing, canvas)).toBeGreaterThanOrEqual(3);
     expect(globalCss).toMatch(/:focus-visible\s*\{[^}]*outline:\s*3px\s+solid\s+var\(--color-focus-ring\);/s);
+    expect(cockpitCss).not.toContain('var(--color-text-muted)');
+  });
+
+  it('uses an opaque focus ring for the actual search focus indicator', () => {
     expect(finalTopLevelDeclaration(cockpitCss, '.workspace-search:focus-within', 'border-color')).toBe(
       'var(--color-focus-ring)',
     );
-    expect(finalTopLevelDeclaration(cockpitCss, '.workspace-search:focus-within', 'box-shadow')).toBe(
-      '0 0 0 3px color-mix(in srgb, var(--color-focus-ring) 22%, transparent)',
+    expect(finalTopLevelDeclaration(cockpitCss, '.workspace-search:focus-within', 'outline')).toBe(
+      '3px solid var(--color-focus-ring)',
     );
-    expect(cockpitCss).not.toContain('var(--color-text-muted)');
+    expect(finalTopLevelDeclaration(cockpitCss, '.workspace-search:focus-within', 'outline-offset')).toBe('2px');
+    expect(finalTopLevelDeclaration(cockpitCss, '.workspace-search:focus-within', 'box-shadow')).toBeUndefined();
+    expect(topLevelRuleBodiesForSelector(cockpitCss, '.workspace-search:focus-within').join('\n')).not.toMatch(
+      /color-mix|rgba\(|hsla\(|opacity\s*:/,
+    );
   });
 
   it('documents legacy color aliases as migration-only before their declarations', () => {

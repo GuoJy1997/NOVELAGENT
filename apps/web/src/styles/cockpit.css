@@ -607,13 +607,12 @@
 .character-graph__edge {
   stroke-width: 4;
   stroke-linecap: round;
-  opacity: 0.58;
 }
 
-.character-graph__edge--0 { stroke: #0aa85b; }
-.character-graph__edge--1 { stroke: #50bf8b; }
-.character-graph__edge--2 { stroke: #86d4ad; }
-.character-graph__edge--3 { stroke: #b7e7d0; }
+.character-graph__edge--0 { stroke: var(--color-relation-1); stroke-dasharray: none; }
+.character-graph__edge--1 { stroke: var(--color-relation-2); stroke-dasharray: 10 5; }
+.character-graph__edge--2 { stroke: var(--color-relation-3); stroke-dasharray: 3 5; }
+.character-graph__edge--3 { stroke: var(--color-relation-4); stroke-dasharray: 12 4 3 4; }
 
 .character-graph__nodes {
   position: relative;
@@ -715,10 +714,10 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.character-graph__legend-item--0 > span { background: #0aa85b; }
-.character-graph__legend-item--1 > span { background: #50bf8b; }
-.character-graph__legend-item--2 > span { background: #86d4ad; }
-.character-graph__legend-item--3 > span { background: #b7e7d0; }
+.character-graph__legend-item--0 > span { border-radius: 50%; background: var(--color-relation-1); }
+.character-graph__legend-item--1 > span { border-radius: 2px; background: var(--color-relation-2); }
+.character-graph__legend-item--2 > span { border-radius: 50% 0; background: var(--color-relation-3); }
+.character-graph__legend-item--3 > span { border-radius: 0; background: var(--color-relation-4); }
 
 .clue-attribution-flow__list {
   display: grid;
@@ -1041,7 +1040,8 @@
 
 .workspace-search:focus-within {
   border-color: var(--color-focus-ring);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-focus-ring) 22%, transparent);
+  outline: 3px solid var(--color-focus-ring);
+  outline-offset: 2px;
 }
 
 .topbar-icon-button,

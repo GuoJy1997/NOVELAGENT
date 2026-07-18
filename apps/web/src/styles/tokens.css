@@ -8,8 +8,12 @@
   --color-mint-line: #cfe8dd;
   --color-ink: #14261f;
   --color-text-muted: #6c7d75;
-  --color-text-subtle: #62746c;
+  --color-text-subtle: #60726a;
   --color-focus-ring: #087a44;
+  --color-relation-1: #087a44;
+  --color-relation-2: #146b5c;
+  --color-relation-3: #3b7655;
+  --color-relation-4: #596f4d;
   --color-state-info: #3d9d79;
   --color-state-warning: #c58b2c;
   --color-state-danger: #d95c55;
