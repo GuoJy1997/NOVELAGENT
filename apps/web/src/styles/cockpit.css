@@ -34,7 +34,7 @@
 }
 
 .cockpit-visual-stage__book-layer {
-  z-index: 2;
+  z-index: 4;
 }
 
 .cockpit-visual-stage__foreground {
@@ -1493,6 +1493,12 @@
   .cockpit-main {
     padding-right: 22px;
     padding-left: 22px;
+  }
+}
+
+@media (max-width: 480px) {
+  .project-navigation {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

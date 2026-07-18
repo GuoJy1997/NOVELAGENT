@@ -315,7 +315,7 @@ describe('global cockpit texture', () => {
     expect(logoSvg).not.toMatch(/(?:^|[,\s"])serif(?:[,\s"]|$)/i);
   });
 
-  it('uses separate fixed backdrop and foreground layers around readable content', () => {
+  it('keeps the book and mascot visible above readable content while the atmosphere stays behind it', () => {
     const stageRule = cockpitCss.match(/(?:^|})\s*\.cockpit-visual-stage\s*\{([^}]*)\}/s)?.[1] ?? '';
     const sharedLayerRule = cockpitCss.match(/\.cockpit-visual-stage__backdrop,\s*\.cockpit-visual-stage__book-layer,\s*\.cockpit-visual-stage__foreground\s*\{([^}]*)\}/s)?.[1] ?? '';
     const backdropRule = cockpitCss.match(/(?:^|})\s*\.cockpit-visual-stage__backdrop\s*\{([^}]*)\}/s)?.[1] ?? '';
@@ -332,7 +332,7 @@ describe('global cockpit texture', () => {
     expect(sharedLayerRule).toMatch(/overflow:\s*hidden;/);
     expect(backdropRule).toMatch(/z-index:\s*0;/);
     expect(cockpitCss).toMatch(/\.cockpit-sidebar,\s*\.cockpit-workspace,\s*\.cockpit-right-panel\s*\{[^}]*z-index:\s*3;/s);
-    expect(bookLayerRule).toMatch(/z-index:\s*2;/);
+    expect(bookLayerRule).toMatch(/z-index:\s*4;/);
     expect(foregroundRule).toMatch(/z-index:\s*5;/);
     expect(drawerBackdropRule).toMatch(/z-index:\s*10;/);
   });
@@ -465,6 +465,7 @@ describe('global cockpit texture', () => {
     expect(cockpitCss).toMatch(/@media\s*\(max-width:\s*1180px\)\s*\{[\s\S]*?\.cockpit-shell\s*\{[^}]*min-width:\s*1176px;/);
     expect(cockpitCss).toMatch(/@media\s*\(max-width:\s*1180px\)\s*\{[\s\S]*?\.cockpit-visual-stage__flow\s*\{[^}]*--visual-stage-flow-opacity:\s*0\.48;[^}]*\}/s);
     expect(cockpitCss).toMatch(/@media\s*\(max-width:\s*900px\)\s*\{[\s\S]*?\.cockpit-shell\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\);[\s\S]*?\.cockpit-sidebar,\s*\.cockpit-right-panel,\s*\.project-sidebar-content\s*\{[^}]*min-height:\s*auto;/s);
+    expect(cockpitCss).toMatch(/@media\s*\(max-width:\s*480px\)\s*\{[\s\S]*?\.project-navigation\s*\{[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\);/s);
     expect(cockpitCss).toMatch(/@media\s*\(max-width:\s*900px\)\s*\{[\s\S]*?\.cockpit-visual-stage__book\s*\{[^}]*display:\s*none;/s);
     expect(cockpitCss).toMatch(/@media\s*\(min-width:\s*901px\)\s*and\s*\(max-width:\s*1179px\)\s*\{[\s\S]*?\.cockpit-visual-stage__mascot\s*\{[^}]*display:\s*none;/s);
     expect(cockpitCss).toMatch(/@media\s*\(max-width:\s*900px\)\s*\{[\s\S]*?\.cockpit-visual-stage__mascot\s*\{[^}]*display:\s*none;/s);
