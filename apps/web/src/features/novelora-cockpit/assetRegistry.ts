@@ -7,6 +7,57 @@ export const appIcon = new URL(
   import.meta.url,
 ).href;
 
+export const navigationIcons = {
+  home: new URL(
+    '../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/home.svg',
+    import.meta.url,
+  ).href,
+  structure: new URL(
+    '../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/structure.svg',
+    import.meta.url,
+  ).href,
+  characters: new URL(
+    '../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/characters.svg',
+    import.meta.url,
+  ).href,
+  worldbuilding: new URL(
+    '../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/worldbuilding.svg',
+    import.meta.url,
+  ).href,
+  inspiration: new URL(
+    '../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/inspiration.svg',
+    import.meta.url,
+  ).href,
+  review: new URL(
+    '../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/review.svg',
+    import.meta.url,
+  ).href,
+  projects: new URL(
+    '../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/projects.svg',
+    import.meta.url,
+  ).href,
+} as const;
+
+export const actionIcons = {
+  search: new URL(
+    '../../assets/novelora/novelora_ui_asset_pack/03_icons/actions/search.svg',
+    import.meta.url,
+  ).href,
+  bell: new URL(
+    '../../assets/novelora/novelora_ui_asset_pack/03_icons/actions/bell.svg',
+    import.meta.url,
+  ).href,
+} as const;
+
+export const echoHeroBackground = new URL(
+  '../../assets/echo/hero-background-clean.png',
+  import.meta.url,
+).href;
+export const echoAssistantCard = new URL(
+  '../../assets/echo/echo-assistant-card.png',
+  import.meta.url,
+).href;
+
 export const novaFront = new URL(
   '../../assets/novelora/novelora_ui_asset_pack/02_mascot/mascot_nova_front.svg',
   import.meta.url,

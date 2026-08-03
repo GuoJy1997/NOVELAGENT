@@ -1,4 +1,3 @@
-import { clueNodes } from '../assetRegistry';
 import type { ClueFlow, CockpitChapter } from '../types';
 
 interface ClueAttributionFlowProps {
@@ -7,15 +6,19 @@ interface ClueAttributionFlowProps {
   selectedChapterId: string;
 }
 
-const stages = [
-  { key: 'provider', label: 'Provider', image: 'origin' },
-  { key: 'trigger', label: 'Trigger', image: 'trigger' },
-  { key: 'receiver', label: 'Receiver', image: 'receiver' },
-  { key: 'payoff', label: 'Payoff', image: 'payoff' },
-] as const;
+const flowStages = ['provider', 'trigger', 'receiver', 'payoff'] as const;
+
+function firstById<T extends { id: string }>(items: T[]) {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    if (seen.has(item.id)) return false;
+    seen.add(item.id);
+    return true;
+  });
+}
 
 function isRelatedToChapter(flow: ClueFlow, chapterId: string) {
-  return stages.some(({ key }) => flow[key].chapterId === chapterId);
+  return flowStages.some((stage) => flow[stage].chapterId === chapterId);
 }
 
 function chapterLabel(chapters: CockpitChapter[], chapterId: string) {
@@ -23,33 +26,9 @@ function chapterLabel(chapters: CockpitChapter[], chapterId: string) {
   return chapter ? `Chapter ${chapter.order}` : chapterId;
 }
 
-function stageContent(flow: ClueFlow, key: (typeof stages)[number]['key']) {
-  switch (key) {
-    case 'provider':
-      return {
-        chapterId: flow.provider.chapterId,
-        responsibility: `Provided by ${flow.provider.providedBy}`,
-        detail: flow.provider.clue,
-      };
-    case 'trigger':
-      return {
-        chapterId: flow.trigger.chapterId,
-        responsibility: `Triggered by ${flow.trigger.triggeredBy}`,
-        detail: flow.trigger.consequence,
-      };
-    case 'receiver':
-      return {
-        chapterId: flow.receiver.chapterId,
-        responsibility: `Received by ${flow.receiver.receivedBy}`,
-        detail: flow.receiver.interpretation,
-      };
-    case 'payoff':
-      return {
-        chapterId: flow.payoff.chapterId,
-        responsibility: `Paid off by ${flow.payoff.paidOffBy}`,
-        detail: flow.payoff.resolution,
-      };
-  }
+function connectorPath(index: number) {
+  const y = 37 + index * 74;
+  return `M 132 ${y} C 153 ${y - 8} 167 ${y + 8} 188 ${y}`;
 }
 
 export function ClueAttributionFlow({
@@ -57,48 +36,83 @@ export function ClueAttributionFlow({
   chapters,
   selectedChapterId,
 }: ClueAttributionFlowProps) {
-  const relatedFlows = clueFlows.filter((flow) => isRelatedToChapter(flow, selectedChapterId));
+  const relatedFlows = firstById(clueFlows).filter((flow) =>
+    isRelatedToChapter(flow, selectedChapterId),
+  );
   const selectedChapter = chapterLabel(chapters, selectedChapterId);
+  const canvasHeight = Math.max(150, relatedFlows.length * 74);
 
   return (
     <section className="clue-attribution-flow" aria-labelledby="clue-attribution-flow-title">
-      <div className="workspace-section-heading">
-        <div>
-          <p className="workspace-eyebrow">Traceable story logic</p>
-          <h2 id="clue-attribution-flow-title">Clue attribution flow</h2>
-        </div>
-        <p className="workspace-section-note">{`Evidence connected to ${selectedChapter}.`}</p>
-      </div>
+      <header className="clue-attribution-flow__heading">
+        <h2 id="clue-attribution-flow-title">Clue Attribution Flow</h2>
+        <p>{`Evidence connected to ${selectedChapter}.`}</p>
+      </header>
 
       {relatedFlows.length === 0 ? (
         <p className="clue-attribution-flow__empty" role="status">
           No traceable clues are connected to {selectedChapter} yet.
         </p>
       ) : (
-        <div className="clue-attribution-flow__list">
-          {relatedFlows.map((flow) => (
-            <article key={flow.id} className="clue-flow-card" aria-label={flow.title}>
-              <h3>{flow.title}</h3>
-              <div className="clue-flow-card__stages">
-                {stages.map(({ key, label, image }, index) => {
-                  const stage = stageContent(flow, key);
+        <div
+          className="clue-attribution-flow__canvas"
+          role="region"
+          tabIndex={0}
+          aria-label="Clue flow connections"
+        >
+          <svg
+            className="clue-attribution-flow__connectors"
+            viewBox={`0 0 320 ${canvasHeight}`}
+            preserveAspectRatio="none"
+            style={{ height: `${canvasHeight}px` }}
+            aria-hidden="true"
+          >
+            {relatedFlows.map((flow, index) => (
+              <path key={flow.id} data-flow-id={flow.id} d={connectorPath(index)} />
+            ))}
+          </svg>
 
-                  return (
-                    <div key={key} className="clue-stage">
-                      {index > 0 ? <span className="clue-stage__arrow" aria-hidden="true">→</span> : null}
-                      <img src={clueNodes[image]} alt="" />
-                      <div>
-                        <span className="clue-stage__label">{label}</span>
-                        <p className="clue-stage__responsibility">{stage.responsibility}</p>
-                        <p className="clue-stage__detail">{stage.detail}</p>
-                        <span className="clue-stage__chapter">{chapterLabel(chapters, stage.chapterId)}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </article>
-          ))}
+          <div className="clue-attribution-flow__columns">
+            <section aria-labelledby="clue-sources-title">
+              <h3 id="clue-sources-title">Clue sources</h3>
+              <ul aria-label="Clue sources">
+                {relatedFlows.map((flow) => (
+                  <li key={flow.id}>
+                    <article
+                      className="clue-source-card"
+                      data-flow-id={flow.id}
+                      aria-label={flow.title}
+                    >
+                      <strong>{flow.title}</strong>
+                      <p>{flow.provider.clue}</p>
+                      <small>{`Provided by ${flow.provider.providedBy}`}</small>
+                      <small>{`Triggered by ${flow.trigger.triggeredBy}`}</small>
+                    </article>
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            <section aria-labelledby="clue-recipients-title">
+              <h3 id="clue-recipients-title">Revealed to</h3>
+              <ul aria-label="Revealed to">
+                {relatedFlows.map((flow) => (
+                  <li key={flow.id}>
+                    <article
+                      className="clue-recipient-card"
+                      data-flow-id={flow.id}
+                      aria-label={`${flow.title} recipient`}
+                    >
+                      <strong>{`Received by ${flow.receiver.receivedBy}`}</strong>
+                      <p>{flow.receiver.interpretation}</p>
+                      <small>{`Paid off by ${flow.payoff.paidOffBy}`}</small>
+                      <small>{flow.payoff.resolution}</small>
+                    </article>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </div>
         </div>
       )}
     </section>

@@ -14,24 +14,28 @@ export const noveloraMockProject: NoveloraProject = {
       title: 'Act I — The Ash Tide',
       summary: 'An exiled tide-runner returns when the harbor starts remembering forbidden routes.',
       chapterIds: ['chapter-1', 'chapter-2'],
+      narrativeMarkers: [],
     },
     {
       id: 'act-ii',
       title: 'Act II — The Drowned Map',
       summary: 'The crew follows a salt map into a conspiracy lit by a false beacon.',
       chapterIds: ['chapter-3', 'chapter-4'],
+      narrativeMarkers: [{ label: 'Core conflict', tone: 'conflict' }],
     },
     {
       id: 'act-iii',
       title: 'Act III — The Black-Water Forge',
       summary: 'Old vows are tested where ember ore and the tide meet beneath the city.',
       chapterIds: ['chapter-5'],
+      narrativeMarkers: [{ label: 'Climax', tone: 'climax' }],
     },
     {
       id: 'epilogue',
       title: 'Epilogue — A Harbor Rewritten',
       summary: 'The surviving crew chooses which stories the rebuilt harbor may keep.',
       chapterIds: ['chapter-6'],
+      narrativeMarkers: [],
     },
   ],
   chapters: [
@@ -157,6 +161,7 @@ export const noveloraMockProject: NoveloraProject = {
       toCharacterId: 'liora',
       label: 'uneasy allies',
       tension: 'Liora trusts Kael with the map but not its final destination.',
+      kind: 'ally',
     },
     {
       id: 'liora-arden',
@@ -164,6 +169,7 @@ export const noveloraMockProject: NoveloraProject = {
       toCharacterId: 'arden',
       label: 'political adversaries',
       tension: 'Arden needs Liora to preserve the harbor history he has altered.',
+      kind: 'rival',
     },
     {
       id: 'kael-vex',
@@ -171,6 +177,7 @@ export const noveloraMockProject: NoveloraProject = {
       toCharacterId: 'vex',
       label: 'fractured loyalty',
       tension: 'Vex knows the debt Kael left behind at sea.',
+      kind: 'neutral',
     },
     {
       id: 'selene-arden',
@@ -178,6 +185,15 @@ export const noveloraMockProject: NoveloraProject = {
       toCharacterId: 'arden',
       label: 'old bargain',
       tension: 'Selene holds the memory Arden traded for his office.',
+      kind: 'neutral',
+    },
+    {
+      id: 'vex-selene',
+      fromCharacterId: 'vex',
+      toCharacterId: 'selene',
+      label: 'unspoken debt',
+      tension: 'Selene knows what Vex traded to the reef, and Vex knows she knows.',
+      kind: 'unknown',
     },
   ],
   clueFlows: [
@@ -237,6 +253,7 @@ export const noveloraMockProject: NoveloraProject = {
       state: 'done',
       owner: 'Story Architect',
       focus: 'Keep the tide-map reveal decisive without resolving the mystery.',
+      progressPercent: 100,
     },
     {
       id: 'continuity-scan',
@@ -244,6 +261,7 @@ export const noveloraMockProject: NoveloraProject = {
       state: 'running',
       owner: 'Lore Keeper',
       focus: 'Compare the ledger, map, and beacon chronology.',
+      progressPercent: 60,
     },
     {
       id: 'memory-review',
@@ -251,6 +269,7 @@ export const noveloraMockProject: NoveloraProject = {
       state: 'queued',
       owner: 'Character Gardener',
       focus: 'Clarify the price of the oracle bargain before Chapter 4.',
+      progressPercent: 18,
     },
     {
       id: 'clue-dependency',
@@ -258,6 +277,7 @@ export const noveloraMockProject: NoveloraProject = {
       state: 'blocked',
       owner: 'Clue Weaver',
       focus: 'Await a decision on whether Arden knowingly staged the trap.',
+      progressPercent: 36,
     },
   ],
   subagents: [
@@ -334,4 +354,15 @@ export const noveloraMockProject: NoveloraProject = {
       relatedChapterIds: ['chapter-4', 'chapter-6'],
     },
   ],
+  lastSavedLabel: '2 min ago',
+  focusModes: [
+    { id: 'deep-work', label: 'Deep Work', hint: 'Minimize distractions. Maximize creativity.' },
+    { id: 'sprint-25', label: 'Sprint 25', hint: 'Short timed bursts with stretch breaks.' },
+  ],
+  activeFocusModeId: 'deep-work',
+  writingQuote: { text: 'Every great story begins with a single brave sentence.' },
+  agentGreeting: {
+    headline: "Hello, I'm Nova.",
+    body: 'Your writing partner and story architect.',
+  },
 };

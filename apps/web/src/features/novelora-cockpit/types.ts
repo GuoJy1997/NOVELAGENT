@@ -8,6 +8,19 @@ export type InspirationType = 'image' | 'quote' | 'location' | 'research';
 
 export type AgentTaskState = 'queued' | 'running' | 'done' | 'blocked';
 export type SkillCategory = 'writing' | 'review' | 'planning' | 'memory';
+export type NarrativeMarkerTone = 'conflict' | 'climax' | 'resolution';
+export type RelationshipKind = 'ally' | 'neutral' | 'rival' | 'unknown';
+
+export interface NarrativeMarker {
+  label: string;
+  tone: NarrativeMarkerTone;
+}
+
+export interface FocusModeOption {
+  id: string;
+  label: string;
+  hint: string;
+}
 
 type ProjectCoverAssetKey = keyof typeof projectCovers;
 type CharacterPortraitAssetKey = keyof typeof characterPortraits;
@@ -18,6 +31,7 @@ export interface Act {
   title: string;
   summary: string;
   chapterIds: string[];
+  narrativeMarkers: NarrativeMarker[];
 }
 
 export interface CockpitChapter {
@@ -55,6 +69,7 @@ export interface CharacterRelationship {
   toCharacterId: string;
   label: string;
   tension: string;
+  kind: RelationshipKind;
 }
 
 export interface ClueFlow {
@@ -88,6 +103,7 @@ export interface AgentTask {
   state: AgentTaskState;
   owner: string;
   focus: string;
+  progressPercent: number;
 }
 
 export interface SubagentProfile {
@@ -138,4 +154,9 @@ export interface NoveloraProject {
   skills: SkillBadge[];
   reviewChecklist: ReviewChecklistItem[];
   memorySources: MemorySource[];
+  lastSavedLabel: string;
+  focusModes: FocusModeOption[];
+  activeFocusModeId: string;
+  writingQuote: { text: string };
+  agentGreeting: { headline: string; body: string };
 }

@@ -1,68 +1,88 @@
-import homeIcon from '../../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/home.svg';
-import charactersIcon from '../../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/characters.svg';
-import inspirationIcon from '../../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/inspiration.svg';
-import projectsIcon from '../../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/projects.svg';
-import reviewIcon from '../../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/review.svg';
-import structureIcon from '../../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/structure.svg';
-import worldbuildingIcon from '../../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/worldbuilding.svg';
-import { logo, projectCovers } from '../assetRegistry';
+import { appIcon, navigationIcons } from '../assetRegistry';
 import type { NoveloraProject } from '../types';
 
-interface ProjectSidebarProps {
-  project: NoveloraProject;
+export interface ProjectSidebarProps {
+  activeItem?: string;
+  onSelectItem?: (label: string) => void;
+  onNewProject?: () => void;
+  /** Temporary compatibility for App until the controlled shell is wired. */
+  project?: NoveloraProject;
 }
 
-const navigationItems: ReadonlyArray<{ label: string; icon: string; active?: boolean }> = [
-  { label: 'Home', icon: homeIcon },
-  { label: 'Story Map', icon: structureIcon, active: true },
-  { label: 'Characters', icon: charactersIcon },
-  { label: 'Worldbuilding', icon: worldbuildingIcon },
-  { label: 'Projects', icon: projectsIcon },
-  { label: 'Inspiration', icon: inspirationIcon },
-  { label: 'Review', icon: reviewIcon },
+const navigationItems: ReadonlyArray<{ label: string; icon: string }> = [
+  { label: 'Home', icon: navigationIcons.home },
+  { label: 'Structure', icon: navigationIcons.structure },
+  { label: 'Characters', icon: navigationIcons.characters },
+  { label: 'Worldbuilding', icon: navigationIcons.worldbuilding },
+  { label: 'Inspiration', icon: navigationIcons.inspiration },
+  { label: 'AI Review', icon: navigationIcons.review },
+  { label: 'Projects', icon: navigationIcons.projects },
 ];
 
-export function ProjectSidebar({ project }: ProjectSidebarProps) {
+const doNothing = () => undefined;
+
+export function ProjectSidebar({
+  activeItem = 'Home',
+  onSelectItem = doNothing,
+  onNewProject = doNothing,
+}: ProjectSidebarProps) {
   return (
     <div className="project-sidebar-content">
-      <img className="novelora-logo" src={logo} alt="Novelora" />
+      <div className="echo-brand">
+        <img className="echo-brand__mark" src={appIcon} alt="Echo" />
+        <span className="echo-brand__copy">
+          <strong>echo</strong>
+          <small>AI Writing Studio</small>
+        </span>
+      </div>
+
+      <button className="echo-new-project" type="button" onClick={onNewProject}>
+        <span aria-hidden="true">+</span>
+        <span>New Project</span>
+        <span aria-hidden="true">→</span>
+      </button>
 
       <nav aria-label="Workspace navigation" className="project-navigation">
-        {navigationItems.map(({ label, icon, active }) => (
-          <button
-            className={`project-navigation__item${active ? ' is-active' : ''}`}
-            type="button"
-            aria-pressed={active ?? false}
-            key={label}
-          >
-            <img src={icon} alt="" aria-hidden="true" />
-            <span>{label}</span>
-          </button>
-        ))}
+        {navigationItems.map(({ label, icon }) => {
+          const isActive = activeItem === label;
+
+          return (
+            <button
+              className={`project-navigation__item${isActive ? ' is-active' : ''}`}
+              type="button"
+              aria-pressed={isActive}
+              key={label}
+              onClick={() => onSelectItem(label)}
+            >
+              <img src={icon} alt="" aria-hidden="true" />
+              <span>{label}</span>
+            </button>
+          );
+        })}
       </nav>
 
-      <section className="project-mini-list" aria-labelledby="project-list-title">
-        <div className="sidebar-section-heading">
-          <h2 id="project-list-title">Current project</h2>
-          <button type="button" aria-label="Add project" className="sidebar-add-project">
-            +
-          </button>
-        </div>
-        <button type="button" className="project-mini-card" aria-label={`Open ${project.title}`}>
-          <img src={projectCovers[project.coverAssetKey]} alt="" />
-          <span>
-            <strong>{project.title}</strong>
-            <small>{project.chapters.length} chapters</small>
-          </span>
+      <div className="echo-sidebar-utilities" aria-label="Workspace utilities">
+        <button className="echo-utility-button" type="button" aria-label="Settings">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z" />
+            <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.86 2.86-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21H9.55v-.1A1.7 1.7 0 0 0 8.5 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.86-2.86.06-.06A1.7 1.7 0 0 0 4.1 15a1.7 1.7 0 0 0-.6-1A1.7 1.7 0 0 0 2.4 13.6H2V9.55h.4A1.7 1.7 0 0 0 4.1 8.5a1.7 1.7 0 0 0-.34-1.88l-.06-.06L6.56 3.7l.06.06A1.7 1.7 0 0 0 8.5 4.1a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V2h4.05v.4a1.7 1.7 0 0 0 1 1.7 1.7 1.7 0 0 0 1.88-.34l.06-.06 2.86 2.86-.06.06A1.7 1.7 0 0 0 19.35 8.5a1.7 1.7 0 0 0 .6 1 1.7 1.7 0 0 0 1.1.4H21v4.05h-.1a1.7 1.7 0 0 0-1.5 1.05Z" />
+          </svg>
         </button>
-      </section>
+        <button className="echo-utility-button" type="button" aria-label="Theme">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42" />
+          </svg>
+        </button>
+      </div>
 
-      <section className="writing-streak" aria-label="Writing streak">
-        <span className="writing-streak__count">12</span>
-        <span>
-          <strong>day writing streak</strong>
-          <small>Keep your harbor burning.</small>
-        </span>
+      <section className="echo-progress-card" aria-labelledby="echo-progress-title">
+        <h2 id="echo-progress-title">Today's Progress</h2>
+        <div className="echo-progress-card__ring" aria-label="72 percent complete" role="img">
+          <strong>72%</strong>
+        </div>
+        <p><strong>2,436</strong> / 3,400 words</p>
+        <button type="button">View Details</button>
       </section>
     </div>
   );

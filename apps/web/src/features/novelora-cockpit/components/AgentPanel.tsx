@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import mascot from '../../../assets/novelora/visual-stage/cockpit-mascot.webp';
+import { writingCompanion } from '../legacyAssetRegistry';
 import type { AgentTask, NoveloraProject } from '../types';
 
 interface AgentPanelProps {
@@ -20,7 +20,7 @@ export function AgentPanel({ project }: AgentPanelProps) {
     <div className="agent-panel">
       <section className="nova-lead-card" aria-labelledby="nova-lead-title">
         <span className="nova-lead-card__portrait">
-          <img src={mascot} alt="Nova" />
+          <img src={writingCompanion} alt="Nova" />
         </span>
         <div>
           <p className="workspace-eyebrow">Lead agent</p>
@@ -50,9 +50,12 @@ export function AgentPanel({ project }: AgentPanelProps) {
               <div className="agent-task-row__meta">
                 <span>Owner: {task.owner}</span>
               </div>
-              {task.state === 'running' ? (
-                <progress className="agent-task-progress" aria-label={`${task.title} progress`} />
-              ) : null}
+              <progress
+                className="agent-task-progress"
+                aria-label={`${task.title} progress`}
+                max={100}
+                value={task.progressPercent}
+              />
             </li>
           ))}
         </ul>

@@ -2,17 +2,23 @@
 
 import { render, screen } from '@testing-library/react';
 import { createElement } from 'react';
+import { Buffer } from 'node:buffer';
+import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import * as assetRegistry from './assetRegistry';
 import {
+  actionIcons,
   appIcon,
   characterPortraits,
   clueNodes,
+  echoAssistantCard,
+  echoHeroBackground,
   inspirationThumbnails,
   logo,
+  navigationIcons,
   novaAvatar,
   novaFront,
   projectCovers,
@@ -70,6 +76,61 @@ function normalizeSvg(contents: Uint8Array) {
 }
 
 describe('novelora asset registry', () => {
+  it('registers typed navigation and action icon groups as local SVG assets', () => {
+    expect(Object.keys(navigationIcons)).toEqual([
+      'home',
+      'structure',
+      'characters',
+      'worldbuilding',
+      'inspiration',
+      'review',
+      'projects',
+    ]);
+    expect(Object.keys(actionIcons)).toEqual(['search', 'bell']);
+
+    for (const asset of [...Object.values(navigationIcons), ...Object.values(actionIcons)]) {
+      expect(asset).toMatch(/^(?:data:image\/svg\+xml.*|.*\.svg(?:\?.*)?)$/);
+      expect(textDecoder.decode(readResolvedAsset(asset))).toContain('<svg');
+    }
+  });
+
+  it('registers the approved Echo hero background', () => {
+    expect(echoHeroBackground).toContain('hero-background-clean');
+    expect(echoHeroBackground).toMatch(/\.png(?:\?|$)/);
+  });
+
+  it('registers a compact 192 square Echo assistant card raster', () => {
+    const sourcePath = '../../assets/echo/echo-assistant-card.png';
+    const assetPath = fileURLToPath(new URL(sourcePath, import.meta.url));
+    const sourceContents = new Uint8Array(readFileSync(assetPath));
+    const resolvedContents = readResolvedAsset(echoAssistantCard);
+    const dimensions = new DataView(
+      sourceContents.buffer,
+      sourceContents.byteOffset,
+      sourceContents.byteLength,
+    );
+
+    expect(echoAssistantCard).toMatch(/echo-assistant-card.*\.png$/);
+    expect(sourceContents.subarray(0, pngSignature.length)).toEqual(pngSignature);
+    expect(textDecoder.decode(sourceContents.subarray(12, 16))).toBe('IHDR');
+    expect(dimensions.getUint32(16)).toBe(192);
+    expect(dimensions.getUint32(20)).toBe(192);
+    expect(sourceContents.byteLength).toBeLessThanOrEqual(200 * 1024);
+    expect(Buffer.compare(resolvedContents, sourceContents)).toBe(0);
+  });
+
+  it('keeps legacy book-origin rasters out of the active registry module', () => {
+    const registrySource = readFileSync(
+      resolve(process.cwd(), 'src/features/novelora-cockpit/assetRegistry.ts'),
+      'utf8',
+    );
+
+    expect(assetRegistry).not.toHaveProperty('bookOriginBackground');
+    expect(assetRegistry).not.toHaveProperty('writingCompanion');
+    expect(registrySource).not.toContain('book_background.png');
+    expect(registrySource).not.toContain('writing_companion.png');
+  });
+
   it('keeps the runtime navigation and clue-node SVGs inside the white-mint palette', () => {
     const clueNodeAssets = [
       [clueNodes.origin, '../../assets/novelora/novelora_ui_asset_pack/08_graph_nodes/node_clue_origin.svg'],
@@ -109,8 +170,19 @@ describe('novelora asset registry', () => {
     const assets = [
       [logo, '../../assets/novelora/novelora_ui_asset_pack/01_logo/novelora_logo_horizontal.svg'],
       [appIcon, '../../assets/novelora/novelora_ui_asset_pack/01_logo/app_icon_star.svg'],
+      [echoAssistantCard, '../../assets/echo/echo-assistant-card.png'],
+      [echoHeroBackground, '../../assets/echo/hero-background-clean.png'],
       [novaFront, '../../assets/novelora/novelora_ui_asset_pack/02_mascot/mascot_nova_front.svg'],
       [novaAvatar, '../../assets/novelora/novelora_ui_asset_pack/02_mascot/mascot_nova_avatar.svg'],
+      [navigationIcons.home, '../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/home.svg'],
+      [navigationIcons.structure, '../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/structure.svg'],
+      [navigationIcons.characters, '../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/characters.svg'],
+      [navigationIcons.worldbuilding, '../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/worldbuilding.svg'],
+      [navigationIcons.inspiration, '../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/inspiration.svg'],
+      [navigationIcons.review, '../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/review.svg'],
+      [navigationIcons.projects, '../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/projects.svg'],
+      [actionIcons.search, '../../assets/novelora/novelora_ui_asset_pack/03_icons/actions/search.svg'],
+      [actionIcons.bell, '../../assets/novelora/novelora_ui_asset_pack/03_icons/actions/bell.svg'],
       [projectCovers.eclipseOfEchoes, '../../assets/novelora/novelora_ui_asset_pack/05_project_covers/cover_eclipse_of_echoes.svg'],
       [projectCovers.whispersVale, '../../assets/novelora/novelora_ui_asset_pack/05_project_covers/cover_whispers_vale.svg'],
       [projectCovers.chroniclesLumin, '../../assets/novelora/novelora_ui_asset_pack/05_project_covers/cover_chronicles_lumin.svg'],
@@ -130,7 +202,7 @@ describe('novelora asset registry', () => {
       [clueNodes.memory, '../../assets/novelora/novelora_ui_asset_pack/08_graph_nodes/node_memory.svg'],
     ];
 
-    expect(assets).toHaveLength(21);
+    expect(assets).toHaveLength(32);
     expect(assets.every(([asset]) => asset.length > 0)).toBe(true);
 
     assets.forEach(([asset, sourcePath]) => {
@@ -149,6 +221,13 @@ describe('novelora asset registry', () => {
       } else {
         expect(contents.subarray(0, pngSignature.length)).toEqual(pngSignature);
         expect(resolvedContents.subarray(0, pngSignature.length)).toEqual(pngSignature);
+
+        if (sourcePath === '../../assets/echo/hero-background-clean.png') {
+          expect(Buffer.compare(resolvedContents, contents)).toBe(0);
+          expect(createHash('sha256').update(contents).digest('hex')).toBe(
+            'abe1dd54dc4f5c587c406c8e567593f5b63fda0672568621e2320b9f2d3be9df',
+          );
+        }
       }
     });
 

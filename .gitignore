@@ -10,3 +10,6 @@ apps/web/node_modules/
 apps/web/dist/
 coverage/
 .worktrees/
+.runtime/
+*.log
+debug.log

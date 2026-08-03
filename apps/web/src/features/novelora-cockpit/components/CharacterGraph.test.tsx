@@ -1,14 +1,90 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { noveloraMockProject } from '../data/noveloraMockProject';
+import type { CharacterNode, CharacterRelationship } from '../types';
 import { CharacterGraph } from './CharacterGraph';
 
-const cockpitCss = readFileSync(resolve(process.cwd(), 'src/styles/cockpit.css'), 'utf8');
+const finitePathPattern = /^M\s*-?\d+(?:\.\d+)?\s+-?\d+(?:\.\d+)?\s+C\s+-?\d+(?:\.\d+)?\s+-?\d+(?:\.\d+)?\s+-?\d+(?:\.\d+)?\s+-?\d+(?:\.\d+)?\s+-?\d+(?:\.\d+)?\s+-?\d+(?:\.\d+)?$/;
+const echoCss = readFileSync(resolve(process.cwd(), 'src/styles/echo.css'), 'utf8');
 
 describe('CharacterGraph', () => {
-  it('renders passive named character nodes and relationship endpoints in the legend', () => {
+  it('renders a named graph and one curved path for every known relationship', () => {
+    const { container } = render(
+      <CharacterGraph
+        characters={noveloraMockProject.characters}
+        relationships={noveloraMockProject.characterRelationships}
+      />,
+    );
+
+    expect(screen.getByRole('heading', { name: 'Character Relationship Graph' })).toBeTruthy();
+    const graph = screen.getByRole('region', { name: 'Character relationship graph' });
+    const paths = graph.querySelectorAll('path[data-relationship-id]');
+    expect(paths).toHaveLength(noveloraMockProject.characterRelationships.length);
+    expect(container.querySelectorAll('line')).toHaveLength(0);
+
+    for (const relationship of noveloraMockProject.characterRelationships) {
+      const path = graph.querySelector(`path[data-relationship-id="${relationship.id}"]`);
+      expect(path).toHaveAttribute('data-relationship-kind', relationship.kind);
+      expect(path?.getAttribute('d')).toMatch(finitePathPattern);
+      expect(path?.getAttribute('d')).toContain('C');
+    }
+  });
+
+  it('omits relationships with unknown endpoints', () => {
+    const unknownRelationship: CharacterRelationship = {
+      ...noveloraMockProject.characterRelationships[0],
+      id: 'missing-kael',
+      toCharacterId: 'missing',
+    };
+    const { container } = render(
+      <CharacterGraph
+        characters={noveloraMockProject.characters.slice(0, 2)}
+        relationships={[noveloraMockProject.characterRelationships[0], unknownRelationship]}
+      />,
+    );
+
+    expect(container.querySelector('[data-relationship-id="kael-liora"]')).toBeTruthy();
+    expect(container.querySelector('[data-relationship-id="missing-kael"]')).toBeNull();
+  });
+
+  it('derives finite coordinates for arbitrary character order and count', () => {
+    const reorderedCharacters = [
+      noveloraMockProject.characters[4],
+      noveloraMockProject.characters[0],
+      noveloraMockProject.characters[3],
+    ];
+    const relationship: CharacterRelationship = {
+      ...noveloraMockProject.characterRelationships[0],
+      id: 'vex-selene-custom',
+      fromCharacterId: 'vex',
+      toCharacterId: 'selene',
+    };
+    const { container, rerender } = render(
+      <CharacterGraph characters={reorderedCharacters} relationships={[relationship]} />,
+    );
+
+    expect(
+      container.querySelector('[data-relationship-id="vex-selene-custom"]')?.getAttribute('d'),
+    ).toMatch(finitePathPattern);
+    for (const node of container.querySelectorAll<HTMLElement>('.character-graph__node')) {
+      expect(node.getAttribute('style')).not.toMatch(/NaN|Infinity/);
+    }
+
+    rerender(<CharacterGraph characters={[]} relationships={[relationship]} />);
+    expect(container.querySelectorAll('path')).toHaveLength(0);
+    expect(screen.getByRole('list', { name: 'Character nodes' }).children).toHaveLength(0);
+
+    rerender(
+      <CharacterGraph characters={[noveloraMockProject.characters[0]]} relationships={[]} />,
+    );
+    expect(container.querySelector('.character-graph__node')?.getAttribute('style')).not.toMatch(
+      /NaN|Infinity/,
+    );
+  });
+
+  it('keeps one accessible named list item per character', () => {
     render(
       <CharacterGraph
         characters={noveloraMockProject.characters}
@@ -16,12 +92,28 @@ describe('CharacterGraph', () => {
       />,
     );
 
-    expect(screen.queryAllByRole('button')).toHaveLength(0);
-    expect(screen.getByRole('listitem', { name: 'Kael, Exiled tide-runner' })).toBeTruthy();
-    expect(screen.getByText('Kael — Liora · uneasy allies')).toBeTruthy();
+    const nodes = screen.getByRole('list', { name: 'Character nodes' });
+    expect(within(nodes).getAllByRole('listitem')).toHaveLength(
+      noveloraMockProject.characters.length,
+    );
+    expect(within(nodes).getByRole('listitem', { name: 'Kael, Exiled tide-runner' })).toBeTruthy();
   });
 
-  it('keeps the SVG edges and node grid in the fixed 620 by 255 stage coordinate system', () => {
+  it('keeps the node stage in the same 320-unit coordinate system as its SVG', () => {
+    const { container } = render(
+      <CharacterGraph characters={noveloraMockProject.characters} relationships={[]} />,
+    );
+    const stageRule = echoCss.match(
+      /\.cockpit-scroll \.character-graph__stage\s*\{([^}]*)\}/,
+    )?.[1];
+
+    expect(container.querySelector('svg')).toHaveAttribute('viewBox', '0 0 320 104');
+    expect(stageRule).toMatch(/width:\s*320px;/);
+    expect(stageRule).toMatch(/height:\s*var\(--character-graph-height\);/);
+    expect(stageRule).not.toMatch(/max-width:/);
+  });
+
+  it('exposes resolved relationship meaning for every known relationship', () => {
     render(
       <CharacterGraph
         characters={noveloraMockProject.characters}
@@ -29,14 +121,114 @@ describe('CharacterGraph', () => {
       />,
     );
 
-    expect(document.querySelector('.character-graph__stage')).toBeTruthy();
-    expect(document.querySelector('.character-graph__edges')?.getAttribute('viewBox')).toBe('0 0 620 255');
-    expect(cockpitCss).toMatch(/\.character-graph__stage\s*\{[^}]*width:\s*620px;[^}]*height:\s*255px;/s);
+    const relationshipList = screen.getByRole('list', { name: 'Character relationships' });
+    expect(relationshipList).toHaveAttribute('tabindex', '0');
+    expect(within(relationshipList).getAllByRole('listitem')).toHaveLength(
+      noveloraMockProject.characterRelationships.length,
+    );
+    expect(
+      within(relationshipList).getByRole('listitem', {
+        name: 'Kael to Liora, ally, uneasy allies. Liora trusts Kael with the map but not its final destination.',
+      }),
+    ).toBeTruthy();
+    expect(within(relationshipList).getByText('uneasy allies')).toBeTruthy();
+    expect(
+      within(relationshipList).getByText(
+        'Liora trusts Kael with the map but not its final destination.',
+      ),
+    ).toBeTruthy();
+    const relationshipListRule = echoCss.match(
+      /\.cockpit-scroll \.character-graph__relationships\s*\{([^}]*)\}/,
+    )?.[1];
+    const relationshipItemRule = echoCss.match(
+      /\.cockpit-scroll \.character-graph__relationships li\s*\{([^}]*)\}/,
+    )?.[1];
+    expect(relationshipListRule).toMatch(/max-height:\s*48px;/);
+    expect(relationshipListRule).toMatch(/overflow-y:\s*auto;/);
+    expect(relationshipItemRule).toMatch(/font-size:\s*10px;/);
+    const relationshipFocusRule = echoCss.match(
+      /\.cockpit-scroll \.character-graph__relationships:focus-visible[^{}]*\{([^}]*)\}/,
+    )?.[1];
+    expect(relationshipFocusRule).toMatch(/outline:\s*3px solid var\(--echo-blue-600\);/);
+    expect(relationshipFocusRule).toMatch(/outline-offset:\s*-3px;/);
   });
 
-  it('stacks the knowledge workspace before its graph can be obscured at 1440 pixels', () => {
-    expect(cockpitCss).toMatch(
-      /@media\s*\(max-width:\s*1440px\)\s*\{\s*\.knowledge-workspace-grid\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\);/s,
+  it('lays out eight characters without overlapping node bounds', () => {
+    const characters: CharacterNode[] = Array.from({ length: 8 }, (_, index) => ({
+      ...noveloraMockProject.characters[index % noveloraMockProject.characters.length],
+      id: `character-${index}`,
+      name: `Character ${index}`,
+    }));
+    const { container } = render(<CharacterGraph characters={characters} relationships={[]} />);
+    const nodes = [...container.querySelectorAll<HTMLElement>('.character-graph__node')];
+    const centers = nodes.map((node) => {
+      const style = node.getAttribute('style') ?? '';
+      return {
+        x: Number(style.match(/--character-x:\s*([\d.]+)px/)?.[1]),
+        y: Number(style.match(/--character-y:\s*([\d.]+)px/)?.[1]),
+      };
+    });
+
+    expect(container.querySelector('svg')).toHaveAttribute('viewBox', '0 0 320 132');
+    expect(container.querySelector('.character-graph__stage')).toHaveStyle({
+      '--character-graph-height': '132px',
+      height: '132px',
+    });
+    for (let first = 0; first < centers.length; first += 1) {
+      for (let second = first + 1; second < centers.length; second += 1) {
+        expect(
+          Math.abs(centers[first].x - centers[second].x) >= 82 ||
+            Math.abs(centers[first].y - centers[second].y) >= 35,
+        ).toBe(true);
+      }
+    }
+  });
+
+  it('draws a finite non-degenerate loop for a self relationship', () => {
+    const selfRelationship: CharacterRelationship = {
+      ...noveloraMockProject.characterRelationships[0],
+      id: 'kael-self',
+      toCharacterId: 'kael',
+    };
+    const { container } = render(
+      <CharacterGraph
+        characters={[noveloraMockProject.characters[0]]}
+        relationships={[selfRelationship]}
+      />,
     );
+    const path = container.querySelector('[data-relationship-id="kael-self"]');
+    const numbers = path?.getAttribute('d')?.match(/-?\d+(?:\.\d+)?/g)?.map(Number) ?? [];
+
+    expect(path?.getAttribute('d')).toMatch(finitePathPattern);
+    expect(numbers.slice(0, 2)).toEqual(numbers.slice(-2));
+    expect(numbers.slice(2, 4)).not.toEqual(numbers.slice(0, 2));
+    expect(numbers.slice(4, 6)).not.toEqual(numbers.slice(2, 4));
+  });
+
+  it('keeps the first character and relationship for duplicate business IDs', () => {
+    const character = noveloraMockProject.characters[0];
+    const relationship = noveloraMockProject.characterRelationships[0];
+    const { container } = render(
+      <CharacterGraph
+        characters={[
+          character,
+          { ...character, name: 'Duplicate Kael' },
+          noveloraMockProject.characters[1],
+        ]}
+        relationships={[
+          relationship,
+          { ...relationship, kind: 'rival', label: 'duplicate relationship' },
+        ]}
+      />,
+    );
+
+    expect(screen.getAllByRole('listitem', { name: 'Kael, Exiled tide-runner' })).toHaveLength(1);
+    expect(screen.queryByText('Duplicate Kael')).toBeNull();
+    expect(container.querySelectorAll('[data-relationship-id="kael-liora"]')).toHaveLength(1);
+    expect(container.querySelector('[data-relationship-id="kael-liora"]')).toHaveAttribute(
+      'data-relationship-kind',
+      'ally',
+    );
+    expect(screen.queryByText('duplicate relationship')).toBeNull();
   });
 });

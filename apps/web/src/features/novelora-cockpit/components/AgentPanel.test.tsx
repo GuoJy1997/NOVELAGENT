@@ -5,12 +5,12 @@ import { noveloraMockProject } from '../data/noveloraMockProject';
 import { AgentPanel } from './AgentPanel';
 
 describe('AgentPanel', () => {
-  it('uses the shared 3D mascot artwork for Nova', () => {
+  it('uses the approved writing companion artwork for Nova', () => {
     render(<AgentPanel project={noveloraMockProject} />);
 
     const novaPortrait = screen.getByRole('img', { name: 'Nova' });
 
-    expect(novaPortrait.getAttribute('src')).toMatch(/cockpit-mascot.*\.webp$/);
+    expect(novaPortrait.getAttribute('src')).toMatch(/writing_companion.*\.png$/);
     expect(novaPortrait.getAttribute('src')).not.toMatch(/mascot_nova_avatar\.svg$/);
   });
 
@@ -32,6 +32,17 @@ describe('AgentPanel', () => {
 
     for (const source of noveloraMockProject.memorySources) {
       expect(screen.getByText(source.label)).toBeTruthy();
+    }
+  });
+
+  it('shows determinate progress for every fixture-backed task', () => {
+    render(<AgentPanel project={noveloraMockProject} />);
+
+    for (const task of noveloraMockProject.agentTasks) {
+      const progress = screen.getByRole('progressbar', { name: `${task.title} progress` });
+
+      expect(progress.getAttribute('max')).toBe('100');
+      expect(progress.getAttribute('value')).toBe(String(task.progressPercent));
     }
   });
 

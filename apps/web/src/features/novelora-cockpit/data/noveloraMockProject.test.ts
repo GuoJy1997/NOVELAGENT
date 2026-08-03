@@ -182,4 +182,42 @@ describe('noveloraMockProject', () => {
     );
     expect(noveloraMockProject.subagents.every((subagent) => subagent.avatarLabel.length > 0)).toBe(true);
   });
+
+  it('supplies narrative markers, save state, focus modes, quote, and greeting for the reference chrome', () => {
+    const tones = new Set(['conflict', 'climax', 'resolution']);
+    for (const act of noveloraMockProject.acts) {
+      for (const marker of act.narrativeMarkers) {
+        expect(marker.label).toMatch(/\S/);
+        expect(tones.has(marker.tone)).toBe(true);
+      }
+    }
+    expect(
+      noveloraMockProject.acts.flatMap((act) => act.narrativeMarkers).length,
+    ).toBeGreaterThanOrEqual(2);
+
+    expect(noveloraMockProject.lastSavedLabel).toMatch(/\S/);
+    expect(noveloraMockProject.writingQuote.text).toMatch(/\S/);
+    expect(noveloraMockProject.agentGreeting.headline).toMatch(/\S/);
+    expect(noveloraMockProject.agentGreeting.body).toMatch(/\S/);
+
+    const focusModeIds = noveloraMockProject.focusModes.map((mode) => mode.id);
+    expect(focusModeIds.length).toBeGreaterThanOrEqual(1);
+    expect(focusModeIds).toContain(noveloraMockProject.activeFocusModeId);
+  });
+
+  it('tracks agent task progress and typed relationships', () => {
+    for (const task of noveloraMockProject.agentTasks) {
+      expect(task.progressPercent).toBeGreaterThanOrEqual(0);
+      expect(task.progressPercent).toBeLessThanOrEqual(100);
+    }
+
+    const kinds = new Set(['ally', 'neutral', 'rival', 'unknown']);
+    for (const relationship of noveloraMockProject.characterRelationships) {
+      expect(kinds.has(relationship.kind)).toBe(true);
+    }
+    expect(
+      new Set(noveloraMockProject.characterRelationships.map((relationship) => relationship.kind))
+        .size,
+    ).toBe(4);
+  });
 });

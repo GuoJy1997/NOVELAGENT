@@ -1,18 +1,18 @@
 import type { ReactNode } from 'react';
-import { CockpitVisualStage } from './CockpitVisualStage';
+import { EchoHeroBackground } from './EchoHeroBackground';
 
 interface AppShellProps {
   sidebar: ReactNode;
   topbar: ReactNode;
+  hero: ReactNode;
   children: ReactNode;
-  rightPanel: ReactNode;
 }
 
-export function AppShell({ sidebar, topbar, children, rightPanel }: AppShellProps) {
+export function AppShell({ sidebar, topbar, hero, children }: AppShellProps) {
   return (
-    <div className="cockpit-scroll">
+    <div className="echo-page cockpit-scroll">
+      <EchoHeroBackground />
       <div className="cockpit-shell">
-        <CockpitVisualStage />
         <aside className="cockpit-sidebar" aria-label="Project navigation">
           {sidebar}
         </aside>
@@ -20,13 +20,11 @@ export function AppShell({ sidebar, topbar, children, rightPanel }: AppShellProp
           <header className="cockpit-topbar" aria-label="Project controls">
             {topbar}
           </header>
+          <div className="echo-hero-slot">{hero}</div>
           <main className="cockpit-main" aria-label="Story workspace">
             {children}
           </main>
         </section>
-        <aside className="cockpit-right-panel" aria-label="Workspace assistant">
-          {rightPanel}
-        </aside>
       </div>
     </div>
   );

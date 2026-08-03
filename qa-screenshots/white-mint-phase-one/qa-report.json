@@ -1,0 +1,551 @@
+{
+  "generatedAt": "2026-07-18T07:44:19.747Z",
+  "baseUrl": "http://127.0.0.1:4177/",
+  "viewports": {
+    "1728x1117": {
+      "httpStatus": 200,
+      "screenshot": "D:\\novelAgent\\qa-screenshots\\white-mint-phase-one\\viewport-1728x1117.png",
+      "evidence": {
+        "title": "web",
+        "readyState": "complete",
+        "rootOverflow": {
+          "htmlClientWidth": 1728,
+          "htmlScrollWidth": 1728,
+          "bodyClientWidth": 1728,
+          "bodyScrollWidth": 1728
+        },
+        "cockpitScroller": {
+          "clientWidth": 1728,
+          "scrollWidth": 1728,
+          "overflowX": "auto",
+          "scrollLeft": 0
+        },
+        "chapterLane": {
+          "clientWidth": 962,
+          "scrollWidth": 962,
+          "overflowX": "auto"
+        },
+        "stage": {
+          "flow": {
+            "display": "block",
+            "visibility": "visible",
+            "opacity": "0.818097",
+            "width": 1624.31,
+            "height": 914.16,
+            "left": -68.87,
+            "top": 247.4,
+            "currentSrc": "http://127.0.0.1:4177/assets/cockpit-mint-flow-C18lAJvY.webp",
+            "src": "http://127.0.0.1:4177/assets/cockpit-mint-flow-C18lAJvY.webp",
+            "naturalWidth": 1672
+          },
+          "book": {
+            "display": "block",
+            "visibility": "visible",
+            "opacity": "1",
+            "width": 430,
+            "height": 242,
+            "left": -54,
+            "top": 899,
+            "currentSrc": "http://127.0.0.1:4177/assets/cockpit-book-hero-2XhcmQVO.webp",
+            "src": "http://127.0.0.1:4177/assets/cockpit-book-hero-2XhcmQVO.webp",
+            "naturalWidth": 1672
+          },
+          "mascot": {
+            "display": "block",
+            "visibility": "visible",
+            "opacity": "1",
+            "width": 220,
+            "height": 293.33,
+            "left": 72,
+            "top": 805.67,
+            "currentSrc": "http://127.0.0.1:4177/assets/cockpit-mascot-h_OEQFz8.webp",
+            "src": "http://127.0.0.1:4177/assets/cockpit-mascot-h_OEQFz8.webp",
+            "naturalWidth": 1086
+          }
+        },
+        "agentPortrait": {
+          "display": "block",
+          "visibility": "visible",
+          "opacity": "1",
+          "width": 118,
+          "height": 157.33,
+          "left": 1387,
+          "top": 40,
+          "currentSrc": "http://127.0.0.1:4177/assets/cockpit-mascot-h_OEQFz8.webp",
+          "src": "http://127.0.0.1:4177/assets/cockpit-mascot-h_OEQFz8.webp",
+          "naturalWidth": 1086
+        },
+        "portraitAlt": "Nova",
+        "selectedAct": "Act II — The Drowned Map",
+        "selectedChapter": "Salt Map, Ember Mark"
+      },
+      "internalScroll": null,
+      "relevantResources": [
+        {
+          "url": "http://127.0.0.1:4177/assets/cockpit-mint-flow-C18lAJvY.webp",
+          "status": 200,
+          "resourceType": "image"
+        },
+        {
+          "url": "http://127.0.0.1:4177/assets/cockpit-book-hero-2XhcmQVO.webp",
+          "status": 200,
+          "resourceType": "image"
+        },
+        {
+          "url": "http://127.0.0.1:4177/assets/cockpit-mascot-h_OEQFz8.webp",
+          "status": 200,
+          "resourceType": "image"
+        }
+      ],
+      "errors": {
+        "consoleErrors": [],
+        "pageErrors": [],
+        "requestErrors": [],
+        "httpErrors": []
+      }
+    },
+    "1440x900": {
+      "httpStatus": 200,
+      "screenshot": "D:\\novelAgent\\qa-screenshots\\white-mint-phase-one\\viewport-1440x900.png",
+      "evidence": {
+        "title": "web",
+        "readyState": "complete",
+        "rootOverflow": {
+          "htmlClientWidth": 1440,
+          "htmlScrollWidth": 1440,
+          "bodyClientWidth": 1440,
+          "bodyScrollWidth": 1440
+        },
+        "cockpitScroller": {
+          "clientWidth": 1440,
+          "scrollWidth": 1440,
+          "overflowX": "auto",
+          "scrollLeft": 0
+        },
+        "chapterLane": {
+          "clientWidth": 754,
+          "scrollWidth": 800,
+          "overflowX": "auto"
+        },
+        "stage": {
+          "flow": {
+            "display": "block",
+            "visibility": "visible",
+            "opacity": "0.818761",
+            "width": 1353.59,
+            "height": 761.8,
+            "left": -57.44,
+            "top": 174.13,
+            "currentSrc": "http://127.0.0.1:4177/assets/cockpit-mint-flow-C18lAJvY.webp",
+            "src": "http://127.0.0.1:4177/assets/cockpit-mint-flow-C18lAJvY.webp",
+            "naturalWidth": 1672
+          },
+          "book": {
+            "display": "block",
+            "visibility": "visible",
+            "opacity": "1",
+            "width": 388.8,
+            "height": 218.81,
+            "left": -54,
+            "top": 705.19,
+            "currentSrc": "http://127.0.0.1:4177/assets/cockpit-book-hero-2XhcmQVO.webp",
+            "src": "http://127.0.0.1:4177/assets/cockpit-book-hero-2XhcmQVO.webp",
+            "naturalWidth": 1672
+          },
+          "mascot": {
+            "display": "block",
+            "visibility": "visible",
+            "opacity": "1",
+            "width": 187.19,
+            "height": 249.58,
+            "left": 72,
+            "top": 632.42,
+            "currentSrc": "http://127.0.0.1:4177/assets/cockpit-mascot-h_OEQFz8.webp",
+            "src": "http://127.0.0.1:4177/assets/cockpit-mascot-h_OEQFz8.webp",
+            "naturalWidth": 1086
+          }
+        },
+        "agentPortrait": {
+          "display": "block",
+          "visibility": "visible",
+          "opacity": "1",
+          "width": 118,
+          "height": 157.33,
+          "left": 1139,
+          "top": 40,
+          "currentSrc": "http://127.0.0.1:4177/assets/cockpit-mascot-h_OEQFz8.webp",
+          "src": "http://127.0.0.1:4177/assets/cockpit-mascot-h_OEQFz8.webp",
+          "naturalWidth": 1086
+        },
+        "portraitAlt": "Nova",
+        "selectedAct": "Act II — The Drowned Map",
+        "selectedChapter": "Salt Map, Ember Mark"
+      },
+      "internalScroll": null,
+      "relevantResources": [
+        {
+          "url": "http://127.0.0.1:4177/assets/cockpit-mint-flow-C18lAJvY.webp",
+          "status": 200,
+          "resourceType": "image"
+        },
+        {
+          "url": "http://127.0.0.1:4177/assets/cockpit-book-hero-2XhcmQVO.webp",
+          "status": 200,
+          "resourceType": "image"
+        },
+        {
+          "url": "http://127.0.0.1:4177/assets/cockpit-mascot-h_OEQFz8.webp",
+          "status": 200,
+          "resourceType": "image"
+        }
+      ],
+      "errors": {
+        "consoleErrors": [],
+        "pageErrors": [],
+        "requestErrors": [],
+        "httpErrors": []
+      }
+    },
+    "1180x900": {
+      "httpStatus": 200,
+      "screenshot": "D:\\novelAgent\\qa-screenshots\\white-mint-phase-one\\viewport-1180x900.png",
+      "evidence": {
+        "title": "web",
+        "readyState": "complete",
+        "rootOverflow": {
+          "htmlClientWidth": 1180,
+          "htmlScrollWidth": 1180,
+          "bodyClientWidth": 1180,
+          "bodyScrollWidth": 1180
+        },
+        "cockpitScroller": {
+          "clientWidth": 1180,
+          "scrollWidth": 1180,
+          "overflowX": "auto",
+          "scrollLeft": 0
+        },
+        "chapterLane": {
+          "clientWidth": 494,
+          "scrollWidth": 800,
+          "overflowX": "auto"
+        },
+        "stage": {
+          "flow": {
+            "display": "block",
+            "visibility": "visible",
+            "opacity": "0.478839",
+            "width": 1280,
+            "height": 720.38,
+            "left": -159.85,
+            "top": 215.55,
+            "currentSrc": "http://127.0.0.1:4177/assets/cockpit-mint-flow-C18lAJvY.webp",
+            "src": "http://127.0.0.1:4177/assets/cockpit-mint-flow-C18lAJvY.webp",
+            "naturalWidth": 1672
+          },
+          "book": {
+            "display": "block",
+            "visibility": "visible",
+            "opacity": "1",
+            "width": 330,
+            "height": 185.72,
+            "left": -54,
+            "top": 738.28,
+            "currentSrc": "http://127.0.0.1:4177/assets/cockpit-book-hero-2XhcmQVO.webp",
+            "src": "http://127.0.0.1:4177/assets/cockpit-book-hero-2XhcmQVO.webp",
+            "naturalWidth": 1672
+          },
+          "mascot": {
+            "display": "block",
+            "visibility": "visible",
+            "opacity": "1",
+            "width": 150,
+            "height": 200,
+            "left": 48,
+            "top": 682,
+            "currentSrc": "http://127.0.0.1:4177/assets/cockpit-mascot-h_OEQFz8.webp",
+            "src": "http://127.0.0.1:4177/assets/cockpit-mascot-h_OEQFz8.webp",
+            "naturalWidth": 1086
+          }
+        },
+        "agentPortrait": {
+          "display": "block",
+          "visibility": "visible",
+          "opacity": "1",
+          "width": 118,
+          "height": 157.33,
+          "left": 879,
+          "top": 40,
+          "currentSrc": "http://127.0.0.1:4177/assets/cockpit-mascot-h_OEQFz8.webp",
+          "src": "http://127.0.0.1:4177/assets/cockpit-mascot-h_OEQFz8.webp",
+          "naturalWidth": 1086
+        },
+        "portraitAlt": "Nova",
+        "selectedAct": "Act II — The Drowned Map",
+        "selectedChapter": "Salt Map, Ember Mark"
+      },
+      "internalScroll": null,
+      "relevantResources": [
+        {
+          "url": "http://127.0.0.1:4177/assets/cockpit-mint-flow-C18lAJvY.webp",
+          "status": 200,
+          "resourceType": "image"
+        },
+        {
+          "url": "http://127.0.0.1:4177/assets/cockpit-book-hero-2XhcmQVO.webp",
+          "status": 200,
+          "resourceType": "image"
+        },
+        {
+          "url": "http://127.0.0.1:4177/assets/cockpit-mascot-h_OEQFz8.webp",
+          "status": 200,
+          "resourceType": "image"
+        }
+      ],
+      "errors": {
+        "consoleErrors": [],
+        "pageErrors": [],
+        "requestErrors": [],
+        "httpErrors": []
+      }
+    },
+    "1024x900": {
+      "httpStatus": 200,
+      "screenshot": "D:\\novelAgent\\qa-screenshots\\white-mint-phase-one\\viewport-1024x900.png",
+      "evidence": {
+        "title": "web",
+        "readyState": "complete",
+        "rootOverflow": {
+          "htmlClientWidth": 1024,
+          "htmlScrollWidth": 1024,
+          "bodyClientWidth": 1024,
+          "bodyScrollWidth": 1024
+        },
+        "cockpitScroller": {
+          "clientWidth": 1024,
+          "scrollWidth": 1176,
+          "overflowX": "auto",
+          "scrollLeft": 0
+        },
+        "chapterLane": {
+          "clientWidth": 490,
+          "scrollWidth": 800,
+          "overflowX": "auto"
+        },
+        "stage": {
+          "flow": {
+            "display": "block",
+            "visibility": "visible",
+            "opacity": "0.478949",
+            "width": 1280,
+            "height": 720.38,
+            "left": -159.87,
+            "top": 215.56,
+            "currentSrc": "http://127.0.0.1:4177/assets/cockpit-mint-flow-C18lAJvY.webp",
+            "src": "http://127.0.0.1:4177/assets/cockpit-mint-flow-C18lAJvY.webp",
+            "naturalWidth": 1672
+          },
+          "book": {
+            "display": "block",
+            "visibility": "visible",
+            "opacity": "1",
+            "width": 300,
+            "height": 168.83,
+            "left": -54,
+            "top": 755.17,
+            "currentSrc": "http://127.0.0.1:4177/assets/cockpit-book-hero-2XhcmQVO.webp",
+            "src": "http://127.0.0.1:4177/assets/cockpit-book-hero-2XhcmQVO.webp",
+            "naturalWidth": 1672
+          },
+          "mascot": {
+            "display": "none",
+            "visibility": "visible",
+            "opacity": "1",
+            "width": 0,
+            "height": 0,
+            "left": 0,
+            "top": 0,
+            "currentSrc": "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221%22%20height%3D%221%22%2F%3E",
+            "src": "http://127.0.0.1:4177/assets/cockpit-mascot-h_OEQFz8.webp",
+            "naturalWidth": 1
+          }
+        },
+        "agentPortrait": {
+          "display": "block",
+          "visibility": "visible",
+          "opacity": "1",
+          "width": 118,
+          "height": 157.33,
+          "left": 875,
+          "top": 40,
+          "currentSrc": "http://127.0.0.1:4177/assets/cockpit-mascot-h_OEQFz8.webp",
+          "src": "http://127.0.0.1:4177/assets/cockpit-mascot-h_OEQFz8.webp",
+          "naturalWidth": 1086
+        },
+        "portraitAlt": "Nova",
+        "selectedAct": "Act II — The Drowned Map",
+        "selectedChapter": "Salt Map, Ember Mark"
+      },
+      "internalScroll": {
+        "before": 0,
+        "after": 152,
+        "max": 152
+      },
+      "relevantResources": [
+        {
+          "url": "http://127.0.0.1:4177/assets/cockpit-mint-flow-C18lAJvY.webp",
+          "status": 200,
+          "resourceType": "image"
+        },
+        {
+          "url": "http://127.0.0.1:4177/assets/cockpit-book-hero-2XhcmQVO.webp",
+          "status": 200,
+          "resourceType": "image"
+        },
+        {
+          "url": "http://127.0.0.1:4177/assets/cockpit-mascot-h_OEQFz8.webp",
+          "status": 200,
+          "resourceType": "image"
+        }
+      ],
+      "errors": {
+        "consoleErrors": [],
+        "pageErrors": [],
+        "requestErrors": [],
+        "httpErrors": []
+      }
+    },
+    "390x844": {
+      "httpStatus": 200,
+      "screenshot": "D:\\novelAgent\\qa-screenshots\\white-mint-phase-one\\viewport-390x844.png",
+      "evidence": {
+        "title": "web",
+        "readyState": "complete",
+        "rootOverflow": {
+          "htmlClientWidth": 390,
+          "htmlScrollWidth": 390,
+          "bodyClientWidth": 390,
+          "bodyScrollWidth": 390
+        },
+        "cockpitScroller": {
+          "clientWidth": 390,
+          "scrollWidth": 747,
+          "overflowX": "visible",
+          "scrollLeft": 0
+        },
+        "chapterLane": {
+          "clientWidth": 296,
+          "scrollWidth": 800,
+          "overflowX": "auto"
+        },
+        "stage": {
+          "flow": {
+            "display": "block",
+            "visibility": "visible",
+            "opacity": "0.198556",
+            "width": 1080,
+            "height": 607.81,
+            "left": -379.82,
+            "top": 276.1,
+            "currentSrc": "http://127.0.0.1:4177/assets/cockpit-mint-flow-C18lAJvY.webp",
+            "src": "http://127.0.0.1:4177/assets/cockpit-mint-flow-C18lAJvY.webp",
+            "naturalWidth": 1672
+          },
+          "book": {
+            "display": "none",
+            "visibility": "visible",
+            "opacity": "1",
+            "width": 0,
+            "height": 0,
+            "left": 0,
+            "top": 0,
+            "currentSrc": "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221%22%20height%3D%221%22%2F%3E",
+            "src": "http://127.0.0.1:4177/assets/cockpit-book-hero-2XhcmQVO.webp",
+            "naturalWidth": 1
+          },
+          "mascot": {
+            "display": "none",
+            "visibility": "visible",
+            "opacity": "1",
+            "width": 0,
+            "height": 0,
+            "left": 0,
+            "top": 0,
+            "currentSrc": "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221%22%20height%3D%221%22%2F%3E",
+            "src": "http://127.0.0.1:4177/assets/cockpit-mascot-h_OEQFz8.webp",
+            "naturalWidth": 1
+          }
+        },
+        "agentPortrait": {
+          "display": "block",
+          "visibility": "visible",
+          "opacity": "1",
+          "width": 118,
+          "height": 157.33,
+          "left": 19,
+          "top": 3363.08,
+          "currentSrc": "http://127.0.0.1:4177/assets/cockpit-mascot-h_OEQFz8.webp",
+          "src": "http://127.0.0.1:4177/assets/cockpit-mascot-h_OEQFz8.webp",
+          "naturalWidth": 1086
+        },
+        "portraitAlt": "Nova",
+        "selectedAct": "Act II — The Drowned Map",
+        "selectedChapter": "Salt Map, Ember Mark"
+      },
+      "internalScroll": null,
+      "relevantResources": [
+        {
+          "url": "http://127.0.0.1:4177/assets/cockpit-mint-flow-C18lAJvY.webp",
+          "status": 200,
+          "resourceType": "image"
+        },
+        {
+          "url": "http://127.0.0.1:4177/assets/cockpit-mascot-h_OEQFz8.webp",
+          "status": 200,
+          "resourceType": "image"
+        }
+      ],
+      "errors": {
+        "consoleErrors": [],
+        "pageErrors": [],
+        "requestErrors": [],
+        "httpErrors": []
+      }
+    }
+  },
+  "behavior": {
+    "selectedAct": "true",
+    "selectedChapter": "true",
+    "focusBefore": "Focus ModeOff",
+    "focusAfter": "Focus ModeOn",
+    "initialFocus": "Close chapter details",
+    "shiftTabFocus": "Close chapter details",
+    "tabWrapFocus": "Close chapter details",
+    "portalAndLayer": {
+      "backdropParentIsBody": true,
+      "backdropZIndex": "10",
+      "topElementClass": "",
+      "topElementInsideDrawer": true,
+      "visualAssetInHitStack": false
+    },
+    "drawerScreenshot": "D:\\novelAgent\\qa-screenshots\\white-mint-phase-one\\drawer-1440x900.png",
+    "escapeClosed": true,
+    "focusReturned": true,
+    "errors": {
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestErrors": [],
+      "httpErrors": []
+    }
+  },
+  "reducedMotion": {
+    "flow": "none",
+    "book": "none",
+    "mascot": "none",
+    "errors": {
+      "consoleErrors": [],
+      "pageErrors": [],
+      "requestErrors": [],
+      "httpErrors": []
+    }
+  }
+}
