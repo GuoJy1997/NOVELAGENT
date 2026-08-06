@@ -1,4 +1,12 @@
-import type { Clue, ClueBeat, ClueChain, ClueSystemState, Foreshadowing, RiskLevel } from '../types';
+import type {
+  Clue,
+  ClueBeat,
+  ClueChain,
+  ClueChainStatus,
+  ClueSystemState,
+  Foreshadowing,
+  RiskLevel,
+} from '../types';
 import { isForeshadowingOpen } from './attribution';
 
 export interface TimelineConflict {
@@ -58,4 +66,63 @@ export function findTimelineConflicts(chain: ClueChain, beats: ClueBeat[]): Time
     }
   }
   return conflicts;
+}
+
+export interface KnowledgeConflict {
+  informationStateId: string;
+  characterId: string;
+  reason: 'unknownButAttributed' | 'knowsBeforePlant';
+}
+
+export function findKnowledgeConflicts(
+  state: ClueSystemState,
+  novelId: string,
+): KnowledgeConflict[] {
+  const conflicts: KnowledgeConflict[] = [];
+
+  for (const infoState of state.informationStates) {
+    if (infoState.novelId !== novelId || infoState.objectType !== 'clue') continue;
+    const clue = state.clues.find((candidate) => candidate.clueId === infoState.objectId);
+    if (!clue) continue;
+
+    for (const entry of infoState.characterKnowledge) {
+      const attributed =
+        clue.attribution.providerCharacterId === entry.characterId ||
+        clue.attribution.triggerCharacterId === entry.characterId ||
+        clue.attribution.receiverCharacterId === entry.characterId;
+
+      if (entry.knowledgeState === 'unknown' && attributed) {
+        conflicts.push({
+          informationStateId: infoState.informationStateId,
+          characterId: entry.characterId,
+          reason: 'unknownButAttributed',
+        });
+      }
+      if (
+        (entry.knowledgeState === 'knowsTruth' || entry.knowledgeState === 'conceals') &&
+        clue.status === 'draft'
+      ) {
+        conflicts.push({
+          informationStateId: infoState.informationStateId,
+          characterId: entry.characterId,
+          reason: 'knowsBeforePlant',
+        });
+      }
+    }
+  }
+  return conflicts;
+}
+
+export function deriveChainStatus(chain: ClueChain, beats: ClueBeat[]): ClueChainStatus {
+  if (chain.status === 'draft' || chain.status === 'abandoned') return chain.status;
+
+  const chainBeats = beats.filter((beat) => beat.chainId === chain.chainId);
+  const hasPlant = chainBeats.some((beat) => beat.type === 'plant');
+  const hasPayoff = chainBeats.some((beat) => beat.type === 'payoff');
+
+  if (chain.status === 'complete' && (!hasPlant || !hasPayoff)) return 'inconsistent';
+  if (!hasPayoff && (chain.status === 'active' || chain.status === 'needsPayoff')) {
+    return 'needsPayoff';
+  }
+  return chain.status;
 }

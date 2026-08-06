@@ -1,8 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import type { Clue, ClueBeat, ClueChain, ClueSystemState, Foreshadowing } from '../types';
+import type {
+  Clue,
+  ClueBeat,
+  ClueChain,
+  ClueSystemState,
+  Foreshadowing,
+  InformationState,
+} from '../types';
 import {
   computeClueRisk,
   computeForeshadowingRisk,
+  deriveChainStatus,
+  findKnowledgeConflicts,
   findTimelineConflicts,
   findUnpaidForeshadowings,
 } from './risk';
@@ -211,5 +220,110 @@ describe('findTimelineConflicts', () => {
       makeBeat({ beatId: 'b-payoff', type: 'payoff', order: 1 }),
     ];
     expect(findTimelineConflicts(chain, beats)).toEqual([]);
+  });
+});
+
+function makeInformationState(overrides: Partial<InformationState>): InformationState {
+  return {
+    informationStateId: 'info-x',
+    novelId: 'novel-x',
+    objectType: 'clue',
+    objectId: 'clue-x',
+    chapterId: null,
+    eventNodeId: null,
+    readerKnowledge: 'unknown',
+    authorKnowledge: 'confirmed',
+    characterKnowledge: [],
+    notes: '',
+    createdAt: '2026-08-01T00:00:00.000Z',
+    ...overrides,
+  };
+}
+
+describe('findKnowledgeConflicts', () => {
+  it('flags characters marked unknown who are attributed on the clue', () => {
+    const clue = makeClue({
+      clueId: 'clue-x',
+      attribution: { ...makeClue({}).attribution, receiverCharacterId: 'kael' },
+    });
+    const infoState = makeInformationState({
+      characterKnowledge: [{ characterId: 'kael', knowledgeState: 'unknown', evidence: '' }],
+    });
+    const state = makeState({ clues: [clue], informationStates: [infoState] });
+
+    expect(findKnowledgeConflicts(state, 'novel-x')).toEqual([
+      {
+        informationStateId: 'info-x',
+        characterId: 'kael',
+        reason: 'unknownButAttributed',
+      },
+    ]);
+  });
+
+  it('flags characters knowing truth while the clue is still a draft', () => {
+    const clue = makeClue({ clueId: 'clue-x', status: 'draft' });
+    const infoState = makeInformationState({
+      characterKnowledge: [{ characterId: 'liora', knowledgeState: 'knowsTruth', evidence: '' }],
+    });
+    const state = makeState({ clues: [clue], informationStates: [infoState] });
+
+    expect(findKnowledgeConflicts(state, 'novel-x')).toEqual([
+      {
+        informationStateId: 'info-x',
+        characterId: 'liora',
+        reason: 'knowsBeforePlant',
+      },
+    ]);
+  });
+
+  it('ignores other novels, non-clue objects and dangling references', () => {
+    const infoState = makeInformationState({
+      informationStateId: 'info-dangling',
+      objectId: 'missing-clue',
+      characterKnowledge: [{ characterId: 'kael', knowledgeState: 'unknown', evidence: '' }],
+    });
+    const otherNovel = makeInformationState({
+      informationStateId: 'info-other',
+      novelId: 'novel-y',
+      characterKnowledge: [{ characterId: 'kael', knowledgeState: 'unknown', evidence: '' }],
+    });
+    const threadState = makeInformationState({
+      informationStateId: 'info-thread',
+      objectType: 'hiddenThread',
+      characterKnowledge: [{ characterId: 'kael', knowledgeState: 'unknown', evidence: '' }],
+    });
+    const state = makeState({ informationStates: [infoState, otherNovel, threadState] });
+
+    expect(findKnowledgeConflicts(state, 'novel-x')).toEqual([]);
+  });
+});
+
+describe('deriveChainStatus', () => {
+  it('keeps draft and abandoned untouched', () => {
+    expect(deriveChainStatus(makeChain({ status: 'draft' }), [])).toBe('draft');
+    expect(deriveChainStatus(makeChain({ status: 'abandoned' }), [])).toBe('abandoned');
+  });
+
+  it('downgrades complete to inconsistent when plant or payoff beats are missing', () => {
+    const chain = makeChain({ status: 'complete' });
+    expect(deriveChainStatus(chain, [makeBeat({ type: 'plant' })])).toBe('inconsistent');
+    expect(deriveChainStatus(chain, [makeBeat({ type: 'payoff' })])).toBe('inconsistent');
+    expect(
+      deriveChainStatus(chain, [
+        makeBeat({ type: 'plant' }),
+        makeBeat({ beatId: 'b-2', type: 'payoff', order: 2 }),
+      ]),
+    ).toBe('complete');
+  });
+
+  it('forces needsPayoff on active chains without a payoff beat', () => {
+    const chain = makeChain({ status: 'active' });
+    expect(deriveChainStatus(chain, [makeBeat({ type: 'plant' })])).toBe('needsPayoff');
+    expect(
+      deriveChainStatus(chain, [
+        makeBeat({ type: 'plant' }),
+        makeBeat({ beatId: 'b-2', type: 'payoff', order: 2 }),
+      ]),
+    ).toBe('active');
   });
 });
