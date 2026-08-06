@@ -1,10 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import type { ClueChainStatus, ClueStatus, ForeshadowingStatus } from '../types';
+import type {
+  Clue,
+  ClueAttribution,
+  ClueBeat,
+  ClueChain,
+  ClueChainStatus,
+  ClueStatus,
+  Foreshadowing,
+  ForeshadowingStatus,
+} from '../types';
 import {
   canTransitionChain,
   canTransitionClue,
   canTransitionForeshadowing,
+  checkChainTransition,
+  checkClueTransition,
+  checkForeshadowingTransition,
 } from './stateMachines';
+import { emptyAttribution } from './attribution';
 
 const CLUE_STATUSES: ClueStatus[] = [
   'draft', 'planted', 'active', 'misleading', 'revealed', 'paidOff', 'discarded',
@@ -109,5 +122,221 @@ describe('canTransitionChain', () => {
     for (const status of CHAIN_STATUSES) {
       expect(canTransitionChain(status, status)).toBe(false);
     }
+  });
+});
+
+function makeAttribution(overrides: Partial<ClueAttribution>): ClueAttribution {
+  return { ...emptyAttribution(), ...overrides };
+}
+
+function makeClueForTransition(overrides: {
+  status: ClueStatus;
+  attribution?: ClueAttribution;
+}): Clue {
+  return {
+    clueId: 'clue-x',
+    novelId: 'novel-x',
+    title: 'Clue',
+    content: 'Content',
+    type: 'evidence',
+    status: overrides.status,
+    credibility: 'unknown',
+    readerVisibility: 'visible',
+    firstAppearanceChapterId: null,
+    firstAppearanceNodeId: null,
+    currentChainId: null,
+    attribution: overrides.attribution ?? makeAttribution({}),
+    relatedCharacterIds: [],
+    relatedWorldItemIds: [],
+    relatedForeshadowingIds: [],
+    sourceInspirationIds: [],
+    sourceEventNodeIds: [],
+    missingFields: [],
+    riskLevel: 'none',
+    createdAt: '2026-08-01T00:00:00.000Z',
+    updatedAt: '2026-08-01T00:00:00.000Z',
+  };
+}
+
+const FULL_ATTRIBUTION = makeAttribution({
+  providerCharacterId: 'kael',
+  triggerCharacterId: 'liora',
+  receiverCharacterId: 'vex',
+  payoffChapterId: 'chapter-6',
+});
+
+describe('checkClueTransition', () => {
+  it('rejects transitions the state machine forbids', () => {
+    const result = checkClueTransition(makeClueForTransition({ status: 'draft' }), 'active');
+    expect(result).toEqual({ allowed: false, reason: 'invalidTransition' });
+  });
+
+  it('blocks planting a clue without provider, trigger and receiver', () => {
+    const result = checkClueTransition(makeClueForTransition({ status: 'draft' }), 'planted');
+    expect(result).toEqual({ allowed: false, reason: 'missingAttribution' });
+  });
+
+  it('allows planting a fully attributed clue', () => {
+    const clue = makeClueForTransition({ status: 'draft', attribution: FULL_ATTRIBUTION });
+    expect(checkClueTransition(clue, 'planted')).toEqual({ allowed: true, reason: null });
+  });
+
+  it('blocks paidOff without a payoff location even with full roles', () => {
+    const clue = makeClueForTransition({
+      status: 'revealed',
+      attribution: makeAttribution({
+        providerCharacterId: 'kael',
+        triggerCharacterId: 'liora',
+        receiverCharacterId: 'vex',
+      }),
+    });
+    expect(checkClueTransition(clue, 'paidOff')).toEqual({
+      allowed: false,
+      reason: 'missingPayoffLocation',
+    });
+  });
+
+  it('allows discard without attribution', () => {
+    const clue = makeClueForTransition({ status: 'active' });
+    expect(checkClueTransition(clue, 'discarded')).toEqual({ allowed: true, reason: null });
+  });
+});
+
+function makeForeshadowingForTransition(overrides: Partial<Foreshadowing>): Foreshadowing {
+  return {
+    foreshadowingId: 'foreshadowing-x',
+    novelId: 'novel-x',
+    title: 'Foreshadowing',
+    content: 'Content',
+    status: 'draft',
+    plantingChapterId: null,
+    plantingNodeId: null,
+    expectedPayoffChapterId: null,
+    expectedPayoffNodeId: null,
+    actualPayoffChapterId: null,
+    actualPayoffNodeId: null,
+    visibility: 'hinted',
+    subtletyLevel: 3,
+    relatedClueIds: [],
+    chainId: null,
+    sourceInspirationIds: [],
+    missingFields: [],
+    riskLevel: 'none',
+    createdAt: '2026-08-01T00:00:00.000Z',
+    updatedAt: '2026-08-01T00:00:00.000Z',
+    ...overrides,
+  };
+}
+
+describe('checkForeshadowingTransition', () => {
+  it('blocks planting without a planting location', () => {
+    const result = checkForeshadowingTransition(
+      makeForeshadowingForTransition({}),
+      'planted',
+    );
+    expect(result).toEqual({ allowed: false, reason: 'missingPlantLocation' });
+  });
+
+  it('allows planting with a planting chapter', () => {
+    const result = checkForeshadowingTransition(
+      makeForeshadowingForTransition({ plantingChapterId: 'chapter-2' }),
+      'planted',
+    );
+    expect(result).toEqual({ allowed: true, reason: null });
+  });
+
+  it('blocks paidOff without an actual payoff location', () => {
+    const result = checkForeshadowingTransition(
+      makeForeshadowingForTransition({ status: 'readyForPayoff', plantingChapterId: 'chapter-2' }),
+      'paidOff',
+    );
+    expect(result).toEqual({ allowed: false, reason: 'missingPayoffLocation' });
+  });
+
+  it('allows abandon without locations', () => {
+    const result = checkForeshadowingTransition(makeForeshadowingForTransition({}), 'abandoned');
+    expect(result).toEqual({ allowed: true, reason: null });
+  });
+});
+
+function makeChain(overrides: Partial<ClueChain>): ClueChain {
+  return {
+    chainId: 'chain-x',
+    novelId: 'novel-x',
+    title: 'Chain',
+    type: 'clue',
+    status: 'draft',
+    arcIds: [],
+    chapterIds: [],
+    clueIds: [],
+    foreshadowingIds: [],
+    allowFlashback: false,
+    ownerSubagentId: null,
+    riskLevel: 'none',
+    missingFields: [],
+    createdAt: '2026-08-01T00:00:00.000Z',
+    updatedAt: '2026-08-01T00:00:00.000Z',
+    ...overrides,
+  };
+}
+
+function makeBeat(overrides: Partial<ClueBeat>): ClueBeat {
+  return {
+    beatId: 'beat-x',
+    novelId: 'novel-x',
+    clueId: null,
+    foreshadowingId: null,
+    chainId: 'chain-x',
+    type: 'plant',
+    chapterId: null,
+    sceneId: null,
+    eventNodeId: null,
+    order: 1,
+    summary: 'Beat',
+    readerVisibility: 'visible',
+    informationDelta: '',
+    createdAt: '2026-08-01T00:00:00.000Z',
+    ...overrides,
+  };
+}
+
+describe('checkChainTransition', () => {
+  it('blocks completing a chain without a plant beat', () => {
+    const chain = makeChain({ status: 'needsPayoff' });
+    const beats = [makeBeat({ type: 'payoff' })];
+    expect(checkChainTransition(chain, beats, 'complete')).toEqual({
+      allowed: false,
+      reason: 'missingPlantBeat',
+    });
+  });
+
+  it('blocks completing a chain without a payoff beat', () => {
+    const chain = makeChain({ status: 'needsPayoff' });
+    const beats = [makeBeat({ type: 'plant' })];
+    expect(checkChainTransition(chain, beats, 'complete')).toEqual({
+      allowed: false,
+      reason: 'missingPayoffBeat',
+    });
+  });
+
+  it('ignores beats from other chains', () => {
+    const chain = makeChain({ status: 'needsPayoff' });
+    const beats = [
+      makeBeat({ type: 'plant', chainId: 'other-chain' }),
+      makeBeat({ type: 'payoff', chainId: 'other-chain' }),
+    ];
+    expect(checkChainTransition(chain, beats, 'complete')).toEqual({
+      allowed: false,
+      reason: 'missingPlantBeat',
+    });
+  });
+
+  it('allows completing a chain with both beat kinds', () => {
+    const chain = makeChain({ status: 'needsPayoff' });
+    const beats = [makeBeat({ type: 'plant' }), makeBeat({ type: 'payoff', order: 2 })];
+    expect(checkChainTransition(chain, beats, 'complete')).toEqual({
+      allowed: true,
+      reason: null,
+    });
   });
 });
