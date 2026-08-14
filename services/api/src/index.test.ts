@@ -117,6 +117,17 @@ describe('api routes', () => {
       payload: { chapterNum: 1 },
     });
     assert.equal(accept.statusCode, 404);
+    assert.match(accept.json().error, /unknown draft/i);
+  });
+
+  it('returns a task 404 not a draft 404 when accepting a missing taskId', async () => {
+    const accept = await app.inject({
+      method: 'POST', url: '/projects/default-project/tasks/missing-task-id/accept',
+      payload: { chapterNum: 1 },
+    });
+    assert.equal(accept.statusCode, 404);
+    assert.match(accept.json().error, /unknown task/i);
+    assert.doesNotMatch(accept.json().error, /draft/i);
   });
 
   it('returns 400 for bad document and task bodies and 404 for missing records', async () => {

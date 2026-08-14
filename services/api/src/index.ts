@@ -31,12 +31,6 @@ function isCharacterFile(body: unknown): body is CharacterFile {
   return Array.isArray(file.characters) && Array.isArray(file.relationships);
 }
 
-function isNotFound(err: unknown): boolean {
-  if (!(err instanceof Error)) return false;
-  if ('code' in err && err.code === 'ENOENT') return true;
-  return /unknown|draft/i.test(err.message);
-}
-
 export async function buildServer() {
   const app = Fastify({ logger: true });
   const projectRoot = (id: string) => join(DATA_ROOT, id);
@@ -196,12 +190,19 @@ export async function buildServer() {
     const root = projectRoot(id);
     try {
       await readProject(root);
+    } catch {
+      return reply.code(404).send({ error: `Unknown project ${id}` });
+    }
+    try {
       await readTask(root, taskId);
+    } catch {
+      return reply.code(404).send({ error: `Unknown task ${taskId}` });
+    }
+    try {
       await acceptDraft(root, taskId, body.chapterNum);
       return { ok: true };
-    } catch (err) {
-      if (isNotFound(err)) return reply.code(404).send({ error: `Unknown draft ${taskId}` });
-      return reply.code(404).send({ error: `Unknown task ${taskId}` });
+    } catch {
+      return reply.code(404).send({ error: `Unknown draft ${taskId}` });
     }
   });
 
@@ -214,12 +215,19 @@ export async function buildServer() {
     const root = projectRoot(id);
     try {
       await readProject(root);
+    } catch {
+      return reply.code(404).send({ error: `Unknown project ${id}` });
+    }
+    try {
       await readTask(root, taskId);
+    } catch {
+      return reply.code(404).send({ error: `Unknown task ${taskId}` });
+    }
+    try {
       await discardDraft(root, taskId, body.chapterNum);
       return { ok: true };
-    } catch (err) {
-      if (isNotFound(err)) return reply.code(404).send({ error: `Unknown draft ${taskId}` });
-      return reply.code(404).send({ error: `Unknown task ${taskId}` });
+    } catch {
+      return reply.code(404).send({ error: `Unknown draft ${taskId}` });
     }
   });
 
