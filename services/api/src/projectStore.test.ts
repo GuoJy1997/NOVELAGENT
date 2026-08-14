@@ -59,4 +59,20 @@ describe('projectStore', () => {
   it('refuses to write relations.md directly', async () => {
     await assert.rejects(writeDocument(root, 'relations', 'nope'), /relations/);
   });
+
+  it('overwrites characters.json and relations.md on second write', async () => {
+    await writeCharacters(root, {
+      characters: [{ id: 'liora', name: 'Liora', role: 'archivist' }],
+      relationships: [],
+    });
+    await writeCharacters(root, {
+      characters: [{ id: 'kael', name: 'Kael', role: 'scout' }],
+      relationships: [{ id: 'r1', fromCharacterId: 'kael', toCharacterId: 'liora', label: 'ally', tension: 'low', kind: 'ally' }],
+    });
+    const file = await readCharacters(root);
+    assert.equal(file.characters[0].id, 'kael');
+    const md = await readDocument(root, 'relations');
+    assert.match(md, /id: kael/);
+    assert.doesNotMatch(md, /id: liora/);
+  });
 });

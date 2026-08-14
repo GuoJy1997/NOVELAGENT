@@ -1,4 +1,4 @@
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { CharacterFile, DocumentName } from './projectTypes.ts';
 
@@ -23,8 +23,10 @@ const chapterFile = (num: number) => `ch_${String(num).padStart(2, '0')}.md`;
 const documentFile = (name: DocumentName) => `${name}.md`;
 
 async function atomicWrite(target: string, content: string): Promise<void> {
-  await writeFile(`${target}.tmp`, content, 'utf8');
-  await rename(`${target}.tmp`, target);
+  const tmp = `${target}.tmp`;
+  await writeFile(tmp, content, 'utf8');
+  await rm(target, { force: true });
+  await rename(tmp, target);
 }
 
 async function readProjectFile(root: string): Promise<ProjectFile> {
@@ -61,8 +63,11 @@ export async function writeDocument(root: string, name: DocumentName, content: s
 export async function readCharacters(root: string): Promise<CharacterFile> {
   try {
     return JSON.parse(await readFile(join(root, 'characters.json'), 'utf8')) as CharacterFile;
-  } catch {
-    return { characters: [], relationships: [] };
+  } catch (err) {
+    if (err instanceof Error && 'code' in err && err.code === 'ENOENT') {
+      return { characters: [], relationships: [] };
+    }
+    throw err;
   }
 }
 
