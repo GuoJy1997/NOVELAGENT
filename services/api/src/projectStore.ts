@@ -22,7 +22,7 @@ export function countWords(text: string): number {
 const chapterFile = (num: number) => `ch_${String(num).padStart(2, '0')}.md`;
 const documentFile = (name: DocumentName) => `${name}.md`;
 
-async function atomicWrite(target: string, content: string): Promise<void> {
+export async function atomicWrite(target: string, content: string): Promise<void> {
   const tmp = `${target}.tmp`;
   await writeFile(tmp, content, 'utf8');
   await rm(target, { force: true });
