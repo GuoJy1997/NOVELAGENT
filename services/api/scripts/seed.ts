@@ -100,13 +100,46 @@ interface ProjectMeta {
   chapters: { num: number; title: string; status: string; actId: string }[];
 }
 
+type StoredChapter = { num: number; title: string; status: string; actId?: string };
+type StoredProjectMeta = Partial<Omit<ProjectMeta, 'chapters'>> & { chapters: StoredChapter[] };
+
 async function writeProjectMeta(path: string, meta: ProjectMeta): Promise<void> {
   try {
-    const existing = JSON.parse(await readFile(path, 'utf8')) as ProjectMeta;
+    const existing = JSON.parse(await readFile(path, 'utf8')) as StoredProjectMeta;
+    let changed = false;
+
+    if (!Array.isArray(existing.volumes) || existing.volumes.length === 0) {
+      existing.volumes = meta.volumes;
+      changed = true;
+    }
+    if (!Array.isArray(existing.acts) || existing.acts.length === 0) {
+      existing.acts = meta.acts;
+      changed = true;
+    }
+    if (!Array.isArray(existing.recipes) || existing.recipes.length === 0) {
+      existing.recipes = meta.recipes;
+      changed = true;
+    }
+    if (typeof existing.defaultModel !== 'string' || existing.defaultModel.length === 0) {
+      existing.defaultModel = meta.defaultModel;
+      changed = true;
+    }
+
     const present = new Set(existing.chapters.map((chapter) => chapter.num));
     const missing = meta.chapters.filter((chapter) => !present.has(chapter.num));
     if (missing.length > 0) {
       existing.chapters = [...existing.chapters, ...missing].sort((a, b) => a.num - b.num);
+      changed = true;
+    }
+
+    for (const chapter of existing.chapters) {
+      if (!chapter.actId) {
+        chapter.actId = actIdForChapter(chapter.num);
+        changed = true;
+      }
+    }
+
+    if (changed) {
       await writeFile(path, JSON.stringify(existing, null, 2), 'utf8');
     }
   } catch {

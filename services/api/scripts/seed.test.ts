@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, it, after } from 'node:test';
@@ -17,6 +17,7 @@ describe('seedProject', () => {
       const relations = await readFile(join(root, 'default-project/relations.md'), 'utf8');
       assert.match(relations, /# Characters/);
       assert.doesNotMatch(relations, /\bx:/);
+      assert.doesNotMatch(relations, /\by:/);
       assert.equal(meta.chapters.length, 6);
       assert.equal(meta.currentChapter, 3);
       assert.equal(meta.chapters[1].status, 'review');
@@ -55,6 +56,47 @@ describe('seedProject', () => {
       assert.equal(merged.chapters[1].status, 'complete');
       assert.equal(merged.currentChapter, 3);
       assert.equal(await readFile(join(root, 'default-project/chapters/ch_06.md'), 'utf8'), 'user ch6 draft');
+      assert.ok(Array.isArray(merged.volumes));
+      assert.ok(Array.isArray(merged.acts));
+      assert.equal(merged.recipes[0], 'chapter');
+      assert.equal(merged.defaultModel, 'hermes-agent');
+      assert.equal(merged.chapters[0].actId, 'act-1');
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it('backfills volume/act tree when re-seeding old-shape project.json', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'novelora-seed-'));
+    try {
+      const projectDir = join(root, 'default-project');
+      await mkdir(join(projectDir, 'chapters'), { recursive: true });
+      await writeFile(join(projectDir, 'project.json'), JSON.stringify({
+        id: 'default-project',
+        title: 'Tides of Embers',
+        currentChapter: 3,
+        chapters: [
+          { num: 1, title: 'Ash on the Morning Tide', status: 'complete' },
+          { num: 2, title: 'The Vow Beneath Glass', status: 'review' },
+          { num: 3, title: 'Salt Map, Ember Mark', status: 'drafting' },
+          { num: 4, title: 'The Queen of Broken Buoys', status: 'planned' },
+          { num: 5, title: 'Voren Lights the False Star', status: 'planned' },
+        ],
+      }, null, 2), 'utf8');
+      await seedProject(root);
+      const meta = JSON.parse(await readFile(join(projectDir, 'project.json'), 'utf8'));
+      assert.ok(Array.isArray(meta.volumes));
+      assert.ok(Array.isArray(meta.acts));
+      assert.equal(meta.recipes[0], 'chapter');
+      assert.equal(meta.defaultModel, 'hermes-agent');
+      assert.equal(meta.chapters.length, 6);
+      for (const chapter of meta.chapters) {
+        assert.ok(chapter.actId);
+      }
+      const relations = await readFile(join(projectDir, 'relations.md'), 'utf8');
+      assert.match(relations, /# Characters/);
+      assert.doesNotMatch(relations, /\bx:/);
+      assert.doesNotMatch(relations, /\by:/);
     } finally {
       await rm(root, { recursive: true, force: true });
     }
