@@ -7,13 +7,13 @@ import { noveloraMockProject } from '../data/noveloraMockProject';
 import { ProjectSidebar } from './ProjectSidebar';
 
 const navigationLabels = [
-  'Home',
-  'Structure',
-  'Characters',
-  'Worldbuilding',
-  'Inspiration',
-  'AI Review',
-  'Projects',
+  '首页',
+  '写作',
+  '大纲',
+  '人物',
+  '关系',
+  '世界观',
+  '任务',
 ];
 
 describe('ProjectSidebar', () => {
@@ -29,7 +29,7 @@ describe('ProjectSidebar', () => {
     expect(within(navigation).getAllByRole('button').map((button) => button.textContent)).toEqual(
       navigationLabels,
     );
-    expect(within(navigation).getByRole('button', { name: 'Home' })).toHaveAttribute(
+    expect(within(navigation).getByRole('button', { name: '首页' })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
@@ -48,22 +48,22 @@ describe('ProjectSidebar', () => {
 
     render(
       <ProjectSidebar
-        activeItem="Characters"
+        activeItem="characters"
         onSelectItem={onSelectItem}
         onNewProject={onNewProject}
       />,
     );
 
-    expect(screen.getByRole('button', { name: 'Characters' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: '人物' })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
-    expect(screen.getByRole('button', { name: 'Home' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: '首页' })).toHaveAttribute('aria-pressed', 'false');
 
-    await user.click(screen.getByRole('button', { name: 'Home' }));
+    await user.click(screen.getByRole('button', { name: '首页' }));
     await user.click(screen.getByRole('button', { name: 'New Project' }));
 
-    expect(onSelectItem).toHaveBeenCalledWith('Home');
+    expect(onSelectItem).toHaveBeenCalledWith('home');
     expect(onNewProject).toHaveBeenCalledOnce();
   });
 });

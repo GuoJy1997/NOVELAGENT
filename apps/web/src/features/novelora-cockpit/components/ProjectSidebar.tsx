@@ -1,28 +1,29 @@
 import { appIcon, navigationIcons } from '../assetRegistry';
+import { NAV_ITEMS, type NavId } from '../nav';
 import type { NoveloraProject } from '../types';
 
 export interface ProjectSidebarProps {
-  activeItem?: string;
-  onSelectItem?: (label: string) => void;
+  activeItem?: NavId;
+  onSelectItem?: (id: NavId) => void;
   onNewProject?: () => void;
   /** Temporary compatibility for App until the controlled shell is wired. */
   project?: NoveloraProject;
 }
 
-const navigationItems: ReadonlyArray<{ label: string; icon: string }> = [
-  { label: 'Home', icon: navigationIcons.home },
-  { label: 'Structure', icon: navigationIcons.structure },
-  { label: 'Characters', icon: navigationIcons.characters },
-  { label: 'Worldbuilding', icon: navigationIcons.worldbuilding },
-  { label: 'Inspiration', icon: navigationIcons.inspiration },
-  { label: 'AI Review', icon: navigationIcons.review },
-  { label: 'Projects', icon: navigationIcons.projects },
-];
+const navIcons: Record<NavId, string> = {
+  home: navigationIcons.home,
+  writing: navigationIcons.inspiration,
+  outline: navigationIcons.structure,
+  characters: navigationIcons.characters,
+  relations: navigationIcons.projects,
+  world: navigationIcons.worldbuilding,
+  tasks: navigationIcons.review,
+};
 
 const doNothing = () => undefined;
 
 export function ProjectSidebar({
-  activeItem = 'Home',
+  activeItem = 'home',
   onSelectItem = doNothing,
   onNewProject = doNothing,
 }: ProjectSidebarProps) {
@@ -43,18 +44,18 @@ export function ProjectSidebar({
       </button>
 
       <nav aria-label="Workspace navigation" className="project-navigation">
-        {navigationItems.map(({ label, icon }) => {
-          const isActive = activeItem === label;
+        {NAV_ITEMS.map(({ id, label }) => {
+          const isActive = activeItem === id;
 
           return (
             <button
               className={`project-navigation__item${isActive ? ' is-active' : ''}`}
               type="button"
               aria-pressed={isActive}
-              key={label}
-              onClick={() => onSelectItem(label)}
+              key={id}
+              onClick={() => onSelectItem(id)}
             >
-              <img src={icon} alt="" aria-hidden="true" />
+              <img src={navIcons[id]} alt="" aria-hidden="true" />
               <span>{label}</span>
             </button>
           );

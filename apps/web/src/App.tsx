@@ -1,41 +1,31 @@
-import { useEffect, useRef, useState } from 'react';
-import { AIWritingPartner } from './features/novelora-cockpit/components/AIWritingPartner';
-import { AgentDetailsDrawer } from './features/novelora-cockpit/components/AgentDetailsDrawer';
+import { useEffect, useState } from 'react';
 import { AppShell } from './features/novelora-cockpit/components/AppShell';
-import { ChapterDetailDrawer } from './features/novelora-cockpit/components/ChapterDetailDrawer';
-import { ChapterSwimlane } from './features/novelora-cockpit/components/ChapterSwimlane';
-import { CharacterGraph } from './features/novelora-cockpit/components/CharacterGraph';
-import { ClueAttributionFlow } from './features/novelora-cockpit/components/ClueAttributionFlow';
 import { EchoHeroCopy } from './features/novelora-cockpit/components/EchoHeroCopy';
-import { InspirationVault } from './features/novelora-cockpit/components/InspirationVault';
-import { MemoryLayer } from './features/novelora-cockpit/components/MemoryLayer';
+import { HomeDashboard } from './features/novelora-cockpit/components/home/HomeDashboard';
 import { ProjectSidebar } from './features/novelora-cockpit/components/ProjectSidebar';
-import { StructureMap } from './features/novelora-cockpit/components/StructureMap';
 import { WorkspaceTopbar } from './features/novelora-cockpit/components/WorkspaceTopbar';
+import { WritingView } from './features/novelora-cockpit/components/writing/WritingView';
 import { noveloraMockProject } from './features/novelora-cockpit/data/noveloraMockProject';
+import { NAV_ITEMS, type NavId } from './features/novelora-cockpit/nav';
 
-// Long enough to read without leaving a permanent obstruction over the workspace.
 const ACTION_FEEDBACK_DURATION_MS = 3200;
 
+type AppView = 'dashboard' | 'writing' | 'outline' | 'characters' | 'relations' | 'world' | 'tasks';
+
+function navLabel(id: NavId) {
+  return NAV_ITEMS.find((item) => item.id === id)?.label ?? id;
+}
+
 export default function App() {
-  const initialChapter = noveloraMockProject.chapters.find(
-    (chapter) => chapter.id === noveloraMockProject.selectedChapterId,
-  );
-  const [activeNavigation, setActiveNavigation] = useState('Home');
+  const [activeNavigation, setActiveNavigation] = useState<NavId>('home');
   const [actionMessage, setActionMessage] = useState('');
-  const [selectedChapterId, setSelectedChapterId] = useState(noveloraMockProject.selectedChapterId);
-  const [isChapterDrawerOpen, setIsChapterDrawerOpen] = useState(false);
-  const [isAgentDrawerOpen, setIsAgentDrawerOpen] = useState(false);
-  const chapterDetailsButtonRef = useRef<HTMLButtonElement>(null);
-  const agentDetailsButtonRef = useRef<HTMLButtonElement>(null);
-  const [selectedActId, setSelectedActId] = useState(
-    initialChapter?.actId ?? noveloraMockProject.acts[0]?.id ?? '',
+  const [view, setView] = useState<AppView>('dashboard');
+  const [writingChapterNum, setWritingChapterNum] = useState(1);
+  const timelineChapters = [...noveloraMockProject.chapters].sort(
+    (first, second) => first.order - second.order,
   );
-  const activeChapters = noveloraMockProject.chapters
-    .filter((chapter) => chapter.actId === selectedActId)
-    .sort((first, second) => first.order - second.order);
-  const selectedChapter = noveloraMockProject.chapters.find(
-    (chapter) => chapter.id === selectedChapterId,
+  const currentChapterIndex = timelineChapters.findIndex(
+    (chapter) => chapter.id === noveloraMockProject.selectedChapterId,
   );
 
   useEffect(() => {
@@ -49,19 +39,23 @@ export default function App() {
     return () => window.clearTimeout(dismissalTimer);
   }, [actionMessage]);
 
-  function selectAct(actId: string) {
-    const act = noveloraMockProject.acts.find((candidate) => candidate.id === actId);
-    const firstChapterId = act?.chapterIds[0];
-
-    setSelectedActId(actId);
-    if (firstChapterId) setSelectedChapterId(firstChapterId);
+  function openWriting(chapterNum: number) {
+    setWritingChapterNum(chapterNum);
+    setActiveNavigation('writing');
+    setView('writing');
   }
 
-  function openAgentDetails() {
-    if (document.activeElement instanceof HTMLButtonElement) {
-      agentDetailsButtonRef.current = document.activeElement;
+  function selectNavigation(id: NavId) {
+    setActiveNavigation(id);
+    if (id === 'home') {
+      setView('dashboard');
+      return;
     }
-    setIsAgentDrawerOpen(true);
+    if (id === 'writing') {
+      openWriting(writingChapterNum);
+      return;
+    }
+    setView(id);
   }
 
   return (
@@ -70,7 +64,7 @@ export default function App() {
         sidebar={
           <ProjectSidebar
             activeItem={activeNavigation}
-            onSelectItem={setActiveNavigation}
+            onSelectItem={selectNavigation}
             onNewProject={() =>
               setActionMessage('New project creation is not available in this demo.')
             }
@@ -79,80 +73,38 @@ export default function App() {
         topbar={<WorkspaceTopbar project={noveloraMockProject} />}
         hero={
           <EchoHeroCopy
-            onContinueWriting={() => setActionMessage('Opening the selected chapter draft.')}
+            onContinueWriting={() => openWriting(currentChapterIndex + 1)}
             onAIAssist={() =>
               setActionMessage('AI Assist is ready for the selected chapter.')
             }
           />
         }
       >
-        <div className="echo-dashboard">
-          <div className="echo-dashboard__primary-row">
-            <StructureMap
-              acts={noveloraMockProject.acts}
-              selectedActId={selectedActId}
-              onSelectAct={selectAct}
-            />
-            <div className="echo-dashboard__timeline">
-              <ChapterSwimlane
-                chapters={activeChapters}
-                selectedChapterId={selectedChapterId}
-                onSelectChapter={setSelectedChapterId}
-              />
-              <button
-                ref={chapterDetailsButtonRef}
-                className="chapter-details-button"
-                type="button"
-                disabled={!selectedChapter}
-                onClick={() => setIsChapterDrawerOpen(true)}
-              >
-                Open chapter details
-              </button>
-            </div>
-            <AIWritingPartner
-              project={noveloraMockProject}
-              onViewAll={openAgentDetails}
-              viewAllButtonRef={agentDetailsButtonRef}
-            />
-          </div>
-
-          <div className="echo-dashboard__lower-row knowledge-workspace-grid">
-            <InspirationVault
-              inspirations={noveloraMockProject.inspirations}
-              onViewAll={() =>
-                setActionMessage('The full inspiration archive is available from Inspiration.')
-              }
-            />
-            <CharacterGraph
-              characters={noveloraMockProject.characters}
-              relationships={noveloraMockProject.characterRelationships}
-            />
-            <ClueAttributionFlow
-              clueFlows={noveloraMockProject.clueFlows}
-              chapters={noveloraMockProject.chapters}
-              selectedChapterId={selectedChapterId}
-            />
-            <MemoryLayer
-              sources={noveloraMockProject.memorySources}
-              onManage={openAgentDetails}
-            />
-          </div>
-        </div>
+        {view === 'dashboard' && (
+          <HomeDashboard
+            onOpenProject={() => openWriting(currentChapterIndex + 1)}
+            onAddSchedule={() =>
+              setActionMessage('Schedule entries are not editable in this demo.')
+            }
+          />
+        )}
+        {view === 'writing' && (
+          <WritingView
+            projectId="default-project"
+            chapterNum={writingChapterNum}
+            onSelectChapter={setWritingChapterNum}
+            onBack={() => {
+              setActiveNavigation('home');
+              setView('dashboard');
+            }}
+          />
+        )}
+        {view !== 'dashboard' && view !== 'writing' && (
+          <section aria-label={navLabel(view)}>
+            <p>{navLabel(view)}</p>
+          </section>
+        )}
       </AppShell>
-
-      <ChapterDetailDrawer
-        project={noveloraMockProject}
-        selectedChapter={selectedChapter}
-        isOpen={isChapterDrawerOpen}
-        onClose={() => setIsChapterDrawerOpen(false)}
-        invokerRef={chapterDetailsButtonRef}
-      />
-      <AgentDetailsDrawer
-        project={noveloraMockProject}
-        isOpen={isAgentDrawerOpen}
-        onClose={() => setIsAgentDrawerOpen(false)}
-        invokerRef={agentDetailsButtonRef}
-      />
       <div
         className={`echo-action-feedback${actionMessage ? ' is-visible' : ''}`}
         role="status"
