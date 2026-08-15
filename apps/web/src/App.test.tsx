@@ -15,11 +15,12 @@ describe('App', () => {
     const navigationRail = screen.getByRole('complementary', { name: 'Project navigation' });
     const home = container.querySelector('.echo-home-dashboard');
 
+    expect(page?.children).toHaveLength(2);
     expect(page?.children[0]).toHaveClass('echo-hero-background');
     expect(page?.children[1]).toHaveClass('cockpit-shell');
-    expect(page?.children[2]).toHaveClass('echo-book-layer');
-    expect(container.querySelectorAll('img[src*="scene-robot-background"]')).toHaveLength(1);
-    expect(container.querySelectorAll('img[src*="book-foreground"]')).toHaveLength(1);
+    expect(container.querySelectorAll('img[src*="hero-background-clean"]')).toHaveLength(1);
+    expect(container.querySelector('.echo-book-layer')).not.toBeInTheDocument();
+    expect(container.querySelector('.echo-scale-viewport')).not.toBeInTheDocument();
     expect(within(navigationRail).getAllByRole('img', { name: 'Echo' })).toHaveLength(1);
     expect(screen.queryByText(/Novelora/i)).not.toBeInTheDocument();
     expect(screen.getAllByRole('heading', { name: 'Bring your story to life with AI' })).toHaveLength(1);

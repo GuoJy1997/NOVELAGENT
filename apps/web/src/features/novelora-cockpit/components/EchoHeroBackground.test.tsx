@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { EchoHeroBackground } from './EchoHeroBackground';
 
 describe('EchoHeroBackground', () => {
-  it('renders the scenic background once with eager loading hints', () => {
+  it('renders the Echo hero image once with eager loading hints', () => {
     const { container } = render(<EchoHeroBackground />);
 
     expect(container.querySelector('.echo-hero-background')).toHaveAttribute(
@@ -20,6 +20,6 @@ describe('EchoHeroBackground', () => {
     expect(image).toHaveAttribute('decoding', 'async');
     expect(image).toHaveAttribute('fetchpriority', 'high');
     expect(image).toHaveAttribute('draggable', 'false');
-    expect(image).toHaveAttribute('src', expect.stringContaining('scene-robot-background'));
+    expect(image).toHaveAttribute('src', expect.stringContaining('hero-background-clean'));
   });
 });

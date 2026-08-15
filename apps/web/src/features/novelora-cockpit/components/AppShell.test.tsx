@@ -14,18 +14,13 @@ describe('AppShell', () => {
       </AppShell>,
     );
 
-    const viewport = container.firstElementChild;
-    expect(viewport).toHaveClass('echo-scale-viewport');
-    expect(viewport?.firstElementChild).toHaveClass('echo-scale-root');
-    const page = viewport?.firstElementChild?.firstElementChild;
+    const page = container.firstElementChild;
     expect(page).toHaveClass('echo-page', 'cockpit-scroll');
-    expect(page?.children).toHaveLength(3);
+    expect(page?.children).toHaveLength(2);
     expect(page?.children[0]).toHaveClass('echo-hero-background');
     expect(page?.children[1]).toHaveClass('cockpit-shell');
-    expect(page?.children[2]).toHaveClass('echo-book-layer');
     expect(container.querySelectorAll('.echo-hero-background')).toHaveLength(1);
-    expect(container.querySelectorAll('img[src*="scene-robot-background"]')).toHaveLength(1);
-    expect(container.querySelectorAll('img[src*="book-foreground"]')).toHaveLength(1);
+    expect(container.querySelectorAll('img[src*="hero-background-clean"]')).toHaveLength(1);
   });
 
   it('orders sidebar, topbar, hero, and story workspace without a right rail', () => {
@@ -52,23 +47,5 @@ describe('AppShell', () => {
     expect(workspace?.children[2]).toBe(screen.getByRole('main', { name: 'Story workspace' }));
     expect(screen.queryByRole('complementary', { name: 'Workspace assistant' })).not.toBeInTheDocument();
     expect(container.querySelector('.cockpit-right-panel')).not.toBeInTheDocument();
-  });
-
-  it('sets --echo-scale to fit the 1728 by 972 desktop canvas', () => {
-    const { container } = render(
-      <AppShell
-        sidebar={<span>Sidebar content</span>}
-        topbar={<span>Topbar content</span>}
-        hero={<span>Hero content</span>}
-      >
-        <span>Workspace content</span>
-      </AppShell>,
-    );
-
-    const viewport = container.firstElementChild as HTMLElement;
-    const expected = String(
-      Math.min(window.innerWidth / 1728, window.innerHeight / 972),
-    );
-    expect(viewport.style.getPropertyValue('--echo-scale')).toBe(expected);
   });
 });

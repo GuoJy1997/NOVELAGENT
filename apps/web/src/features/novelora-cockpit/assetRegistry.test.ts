@@ -15,10 +15,7 @@ import {
   characterPortraits,
   clueNodes,
   echoAssistantCard,
-  echoBookForeground,
   echoHeroBackground,
-  echoProjectCover,
-  echoSceneBackground,
   inspirationThumbnails,
   logo,
   navigationIcons,
@@ -175,9 +172,6 @@ describe('novelora asset registry', () => {
       [appIcon, '../../assets/novelora/novelora_ui_asset_pack/01_logo/app_icon_star.svg'],
       [echoAssistantCard, '../../assets/echo/echo-assistant-card.png'],
       [echoHeroBackground, '../../assets/echo/hero-background-clean.png'],
-      [echoSceneBackground, '../../assets/echo/scene-robot-background.png'],
-      [echoBookForeground, '../../assets/echo/book-foreground.svg'],
-      [echoProjectCover, '../../assets/echo/project-cover.png'],
       [novaFront, '../../assets/novelora/novelora_ui_asset_pack/02_mascot/mascot_nova_front.svg'],
       [novaAvatar, '../../assets/novelora/novelora_ui_asset_pack/02_mascot/mascot_nova_avatar.svg'],
       [navigationIcons.home, '../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/home.svg'],
@@ -208,7 +202,7 @@ describe('novelora asset registry', () => {
       [clueNodes.memory, '../../assets/novelora/novelora_ui_asset_pack/08_graph_nodes/node_memory.svg'],
     ];
 
-    expect(assets).toHaveLength(35);
+    expect(assets).toHaveLength(32);
     expect(assets.every(([asset]) => asset.length > 0)).toBe(true);
 
     assets.forEach(([asset, sourcePath]) => {
