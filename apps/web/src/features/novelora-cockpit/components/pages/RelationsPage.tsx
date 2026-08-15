@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { characterPortraits } from '../../assetRegistry';
 import {
   fetchCharacters,
@@ -14,6 +14,14 @@ import './RelationsPage.css';
 interface RelationsPageProps {
   projectId: string;
 }
+
+type SaveStatus = 'saved' | 'saving' | 'error';
+
+const STATUS_LABEL: Record<SaveStatus, string> = {
+  saved: '已保存',
+  saving: '保存中',
+  error: '保存失败',
+};
 
 const RELATIONSHIP_KINDS: readonly RelationshipKind[] = ['ally', 'neutral', 'rival', 'unknown'];
 const FALLBACK_PORTRAIT: CharacterNode['portraitAssetKey'] = 'kael';
@@ -50,6 +58,8 @@ function partnerName(file: CharacterFile, id: string) {
 
 export function RelationsPage({ projectId }: RelationsPageProps) {
   const [file, setFile] = useState<CharacterFile | null>(null);
+  const [status, setStatus] = useState<SaveStatus>('saved');
+  const saveSeq = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -74,13 +84,23 @@ export function RelationsPage({ projectId }: RelationsPageProps) {
       ),
     };
     setFile(next);
-    void saveCharacters(next, projectId).catch(() => {});
+    setStatus('saving');
+    saveSeq.current += 1;
+    const seq = saveSeq.current;
+    saveCharacters(next, projectId)
+      .then(() => {
+        if (seq === saveSeq.current) setStatus('saved');
+      })
+      .catch(() => {
+        if (seq === saveSeq.current) setStatus('error');
+      });
   }
 
   return (
     <section className="relations-page" aria-label="关系">
       <header className="relations-page__header">
         <h2>关系</h2>
+        <span role="status">{STATUS_LABEL[status]}</span>
       </header>
       {file ? (
         <CharacterGraph

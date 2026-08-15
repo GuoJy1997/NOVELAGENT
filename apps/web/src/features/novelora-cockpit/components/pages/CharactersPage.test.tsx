@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CharactersPage } from './CharactersPage';
@@ -75,5 +75,35 @@ describe('CharactersPage', () => {
     const list = await screen.findByRole('list', { name: '人物列表' });
     expect(within(list).getByRole('button', { name: 'Kael' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: '人物' })).toBeInTheDocument();
+  });
+
+  it('does not apply an older save result after a newer save fails', async () => {
+    const user = userEvent.setup();
+    let finishOlder: ((value: Response) => void) | undefined;
+    const olderSave = new Promise<Response>((resolve) => {
+      finishOlder = resolve;
+    });
+    let puts = 0;
+    const fetchMock = vi.fn((_url: string, init?: RequestInit) => {
+      if (init?.method === 'PUT') {
+        puts += 1;
+        if (puts === 1) return olderSave;
+        return Promise.reject(new Error('down'));
+      }
+      return Promise.resolve(okJson(characterFile));
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(<CharactersPage projectId="default-project" />);
+    const role = await screen.findByRole('textbox', { name: '角色' });
+    await user.type(role, 'A');
+    expect(screen.getByRole('status')).toHaveTextContent('保存中');
+    await user.type(role, 'B');
+    expect(await screen.findByRole('status')).toHaveTextContent('保存失败');
+
+    await act(async () => {
+      finishOlder?.(okJson(characterFile));
+    });
+    expect(screen.getByRole('status')).toHaveTextContent('保存失败');
   });
 });

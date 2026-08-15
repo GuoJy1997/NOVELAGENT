@@ -72,4 +72,19 @@ describe('RelationsPage', () => {
 
     expect(fetchPaths(fetchMock).every((path) => !path.includes('/documents/relations'))).toBe(true);
   });
+
+  it('reports 保存失败 when a label save rejects', async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.fn(async (_url: string, init?: RequestInit) => {
+      if (init?.method === 'PUT') throw new Error('down');
+      return okJson(characterFile);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(<RelationsPage projectId="default-project" />);
+    const label = await screen.findByRole('textbox', { name: 'Kael 与 Liora' });
+    await user.type(label, 'x');
+    expect(await screen.findByRole('status')).toHaveTextContent('保存失败');
+    expect(fetchPaths(fetchMock).every((path) => !path.includes('/documents/relations'))).toBe(true);
+  });
 });

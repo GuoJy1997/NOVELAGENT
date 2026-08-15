@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   fetchCharacters,
   saveCharacters,
@@ -23,6 +23,7 @@ export function CharactersPage({ projectId }: CharactersPageProps) {
   const [file, setFile] = useState<CharacterFile | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [status, setStatus] = useState<SaveStatus>('saved');
+  const saveSeq = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -53,9 +54,15 @@ export function CharactersPage({ projectId }: CharactersPageProps) {
     };
     setFile(next);
     setStatus('saving');
+    saveSeq.current += 1;
+    const seq = saveSeq.current;
     saveCharacters(next, projectId)
-      .then(() => setStatus('saved'))
-      .catch(() => setStatus('error'));
+      .then(() => {
+        if (seq === saveSeq.current) setStatus('saved');
+      })
+      .catch(() => {
+        if (seq === saveSeq.current) setStatus('error');
+      });
   }
 
   return (
