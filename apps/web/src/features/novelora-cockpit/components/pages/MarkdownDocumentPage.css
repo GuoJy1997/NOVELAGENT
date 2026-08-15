@@ -3,11 +3,6 @@
   flex-direction: column;
   gap: 16px;
   min-width: 0;
-  padding: 20px 24px;
-  border: 1px solid var(--echo-line);
-  border-radius: 16px;
-  background: var(--echo-glass-card);
-  box-shadow: var(--echo-glass-highlight), var(--echo-shadow-mint-md);
 }
 
 .markdown-document-page__header {
