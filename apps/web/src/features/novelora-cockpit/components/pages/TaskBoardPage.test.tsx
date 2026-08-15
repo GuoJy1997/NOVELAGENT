@@ -131,6 +131,47 @@ describe('TaskBoardPage', () => {
     });
   });
 
+  it('accepts the parked last chapter when the log is not pause:act', async () => {
+    const user = userEvent.setup();
+    const finalPark = task({
+      id: 't-final',
+      recipe: 'act',
+      status: 'awaiting_accept',
+      step: 'await_accept',
+      chapterNums: [2, 3],
+      currentIndex: 1,
+      log: ['context', 'draft'],
+    });
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      if (url.includes('/accept')) return okJson({ ok: true });
+      return okJson([finalPark]);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(<TaskBoardPage projectId="default-project" />);
+
+    await user.click(await screen.findByRole('button', { name: '接受' }));
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/api/projects/default-project/tasks/t-final/accept',
+        expect.objectContaining({ method: 'POST' }),
+      );
+    });
+    expect(postBody(fetchMock, '/accept')).toEqual({ chapterNum: 3 });
+  });
+
+  it('does not show 接受 on a queued-only board', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => okJson([
+      task({ id: 't-queued-only', recipe: 'chapter', status: 'queued', chapterNums: [1] }),
+    ])));
+
+    render(<TaskBoardPage projectId="default-project" />);
+
+    expect(await screen.findByRole('region', { name: '排队' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '接受' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '丢弃' })).not.toBeInTheDocument();
+  });
+
   it('declares a four-column grid on .task-board', () => {
     const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'TaskBoardPage.css'), 'utf8');
     expect(css).toMatch(/\.task-board\s*\{[^}]*display:\s*grid/s);

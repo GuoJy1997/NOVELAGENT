@@ -32,14 +32,16 @@ describe('WritingView', () => {
     expect(list).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /Ash on the Morning Tide/ }));
     expect(onSelect).toHaveBeenCalledWith(1);
-    await user.click(screen.getByRole('button', { name: /back to dashboard/i }));
+    await user.click(screen.getByRole('button', { name: '返回首页' }));
     expect(onBack).toHaveBeenCalled();
   });
 
   it('shows an error state when the api is down', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')));
     render(<WritingView projectId="default-project" chapterNum={3} onSelectChapter={() => undefined} onBack={() => undefined} />);
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/unavailable/i));
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('写作数据不可用。请检查本地 api 服务。'));
+    expect(screen.getByRole('button', { name: '返回首页' })).toBeInTheDocument();
+    expect(document.body.textContent ?? '').not.toMatch(/[—–]/);
   });
 
   it('delegates the current chapter as a chapter recipe', async () => {

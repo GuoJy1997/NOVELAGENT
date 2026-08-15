@@ -100,7 +100,7 @@ describe('App', () => {
     render(<App />);
     await user.click(screen.getByRole('button', { name: /continue writing/i }));
     expect(screen.getByLabelText('Writing workspace')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /back to dashboard/i }));
+    await user.click(screen.getByRole('button', { name: '返回首页' }));
     expect(screen.getByRole('main', { name: 'Story workspace' })).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'My Project' })).toBeInTheDocument();
   });

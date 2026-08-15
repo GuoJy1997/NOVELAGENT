@@ -46,8 +46,8 @@ export function WritingView({ projectId, chapterNum, onSelectChapter, onBack }: 
   if (error) {
     return (
       <div className="writing-view" aria-label="Writing workspace">
-        <p role="status">Writing data is unavailable. Check the local api server.</p>
-        <button type="button" onClick={onBack}>Back to Dashboard</button>
+        <p role="status">写作数据不可用。请检查本地 api 服务。</p>
+        <button type="button" onClick={onBack}>返回首页</button>
       </div>
     );
   }
@@ -55,7 +55,7 @@ export function WritingView({ projectId, chapterNum, onSelectChapter, onBack }: 
   return (
     <div className="writing-view" aria-label="Writing workspace">
       <header className="writing-view__bar">
-        <button type="button" onClick={onBack}>Back to Dashboard</button>
+        <button type="button" onClick={onBack}>返回首页</button>
         <button
           type="button"
           className="writing-view__delegate"

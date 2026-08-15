@@ -40,10 +40,23 @@ const STEP_LABEL: Record<string, string> = {
 };
 
 function waitingChapterNum(task: RecipeTask): number {
-  if (task.status === 'awaiting_accept' && task.currentIndex > 0) {
+  const pausedAtAct = task.log[task.log.length - 1] === 'pause:act';
+  if (task.status === 'awaiting_accept' && pausedAtAct && task.currentIndex > 0) {
     return task.chapterNums[task.currentIndex - 1];
   }
   return task.chapterNums[task.currentIndex];
+}
+
+function canAccept(status: string): boolean {
+  return status === 'awaiting_accept';
+}
+
+function canContinue(status: string): boolean {
+  return status === 'queued' || status === 'running' || status === 'awaiting_accept';
+}
+
+function canStop(status: string): boolean {
+  return status === 'running' || status === 'blocked' || status === 'awaiting_accept';
 }
 
 function chapterRange(nums: number[]): string {
@@ -173,10 +186,18 @@ export function TaskBoardPage({ projectId }: TaskBoardPageProps) {
                               ))}
                             </ul>
                             <div className="task-board__actions">
-                              <button type="button" onClick={() => void onAccept()}>接受</button>
-                              <button type="button" onClick={() => void onDiscard()}>丢弃</button>
-                              <button type="button" onClick={() => void onContinue()}>继续</button>
-                              <button type="button" onClick={() => void onStop()}>停止</button>
+                              {canAccept(item.status) ? (
+                                <button type="button" onClick={() => void onAccept()}>接受</button>
+                              ) : null}
+                              {canAccept(item.status) ? (
+                                <button type="button" onClick={() => void onDiscard()}>丢弃</button>
+                              ) : null}
+                              {canContinue(item.status) ? (
+                                <button type="button" onClick={() => void onContinue()}>继续</button>
+                              ) : null}
+                              {canStop(item.status) ? (
+                                <button type="button" onClick={() => void onStop()}>停止</button>
+                              ) : null}
                             </div>
                           </div>
                         ) : null}
