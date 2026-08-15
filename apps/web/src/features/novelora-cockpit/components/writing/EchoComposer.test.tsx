@@ -20,6 +20,20 @@ describe('EchoComposer', () => {
     expect(screen.queryByRole('listbox', { name: 'Skills' })).not.toBeInTheDocument();
   });
 
+  it('dismisses the skills listbox when Escape is pressed', async () => {
+    const user = userEvent.setup();
+    render(<EchoComposer streaming={false} onSend={() => undefined} onStop={() => undefined} />);
+
+    const field = screen.getByRole('textbox', { name: 'Message Echo' });
+    await user.type(field, '/');
+
+    expect(await screen.findByRole('listbox', { name: 'Skills' })).toBeVisible();
+    await user.keyboard('{Escape}');
+
+    expect(screen.queryByRole('listbox', { name: 'Skills' })).not.toBeInTheDocument();
+    expect(field).toHaveValue('');
+  });
+
   it('opens experts when @ is typed and inserts the chosen expert', async () => {
     const user = userEvent.setup();
     render(<EchoComposer streaming={false} onSend={() => undefined} onStop={() => undefined} />);

@@ -106,6 +106,13 @@ export function EchoComposer({ streaming, onSend, onStop }: EchoComposerProps) {
   }
 
   function onFieldKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key === 'Escape' && trigger) {
+      event.preventDefault();
+      const next = `${input.slice(0, trigger.start)}${input.slice(caret)}`;
+      updateInput(next, trigger.start);
+      return;
+    }
+
     if (trigger && items.length > 0) {
       if (event.key === 'ArrowDown') {
         event.preventDefault();
@@ -120,12 +127,6 @@ export function EchoComposer({ streaming, onSend, onStop }: EchoComposerProps) {
       if (event.key === 'Enter') {
         event.preventDefault();
         insertToken(items[activeIndex]?.id ?? items[0].id);
-        return;
-      }
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        updateInput(input, caret);
-        setCaret(trigger.start);
         return;
       }
     }
