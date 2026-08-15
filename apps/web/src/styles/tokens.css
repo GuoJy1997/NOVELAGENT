@@ -87,4 +87,24 @@
   --echo-radius-card: 13px;
   --echo-shadow-card: 0 12px 32px rgb(30 100 75 / 7%);
   --echo-shadow-action: 0 10px 24px rgb(0 190 110 / 20%);
+  --echo-glass-pill: rgb(255 255 255 / 55%);
+  --echo-glass-panel: rgb(255 255 255 / 72%);
+  --echo-glass-card: rgb(255 255 255 / 88%);
+  --echo-glass-border: rgb(255 255 255 / 65%);
+  --echo-glass-highlight: inset 0 1px 0 rgb(255 255 255 / 60%);
+  --echo-shadow-mint-sm: 0 2px 8px rgb(9 160 110 / 6%);
+  --echo-shadow-mint-md: 0 10px 28px rgb(9 160 110 / 10%);
+  --echo-shadow-mint-lg: 0 18px 48px rgb(9 160 110 / 14%);
+  --echo-teal-500: #14c2c0;
+  --echo-aqua-400: #4fd8e8;
+  --echo-gradient-accent: linear-gradient(135deg, var(--echo-mint-500), var(--echo-teal-500));
+  --echo-gradient-action: linear-gradient(135deg, #068051, #0b7f7a);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --echo-glass-pill: var(--echo-surface);
+    --echo-glass-panel: var(--echo-surface);
+    --echo-glass-card: var(--echo-surface);
+  }
 }

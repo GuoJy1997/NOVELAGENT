@@ -410,6 +410,8 @@ const occludedPanelContractViolations = (source: string) => {
     property === 'opacity' ||
     property === 'filter' ||
     property === '-webkit-filter' ||
+    property === 'backdrop-filter' ||
+    property === '-webkit-backdrop-filter' ||
     property === 'clip-path' ||
     /^(?:-webkit-)?mask(?:-|$)/.test(property);
   const pseudoCoveringProperties = new Set(['background', 'background-color', 'background-image']);
@@ -517,14 +519,27 @@ describe('Echo visual foundation', () => {
       'radius-card': '13px',
       'shadow-card': '0 12px 32px rgb(30 100 75 / 7%)',
       'shadow-action': '0 10px 24px rgb(0 190 110 / 20%)',
+      'glass-border': 'rgb(255 255 255 / 65%)',
+      'glass-highlight': 'inset 0 1px 0 rgb(255 255 255 / 60%)',
+      'shadow-mint-sm': '0 2px 8px rgb(9 160 110 / 6%)',
+      'shadow-mint-md': '0 10px 28px rgb(9 160 110 / 10%)',
+      'shadow-mint-lg': '0 18px 48px rgb(9 160 110 / 14%)',
+      'teal-500': '#14c2c0',
+      'aqua-400': '#4fd8e8',
+      'gradient-accent': 'linear-gradient(135deg, var(--echo-mint-500), var(--echo-teal-500))',
+      'gradient-action': 'linear-gradient(135deg, #068051, #0b7f7a)',
     } as const;
 
-    const expectedNames = Object.keys(expectedTokens).map((name) => `--echo-${name}`).sort();
+    const reducedTransparencyTokens = ['--echo-glass-pill', '--echo-glass-panel', '--echo-glass-card'];
+    const expectedNames = [
+      ...Object.keys(expectedTokens).map((name) => `--echo-${name}`),
+      ...reducedTransparencyTokens,
+    ].sort();
     const declaredNames = Array.from(
-      stripCssComments(tokensCss).matchAll(/(--echo-[a-z0-9-]+)\s*:/gi),
+      ruleBody(tokensCss, ':root').matchAll(/(--echo-[a-z0-9-]+)\s*:/gi),
       ([, name]) => name,
     ).sort();
-    expect(declaredNames).toHaveLength(18);
+    expect(declaredNames).toHaveLength(30);
     expect(declaredNames).toEqual(expectedNames);
 
     for (const [name, value] of Object.entries(expectedTokens)) {
@@ -532,6 +547,28 @@ describe('Echo visual foundation', () => {
       expect(matches, `--echo-${name}`).toHaveLength(1);
       expect(matches[0][1].trim()).toBe(value);
     }
+  });
+
+  it('defines the illustration-matched glass token system with a solid fallback', () => {
+    const root = ruleBody(tokensCss, ':root');
+    for (const token of [
+      '--echo-glass-pill',
+      '--echo-glass-panel',
+      '--echo-glass-card',
+      '--echo-glass-border',
+      '--echo-glass-highlight',
+      '--echo-shadow-mint-sm',
+      '--echo-shadow-mint-md',
+      '--echo-shadow-mint-lg',
+      '--echo-teal-500',
+      '--echo-aqua-400',
+      '--echo-gradient-accent',
+    ]) {
+      expect(root).toContain(token);
+    }
+    const fallback = mediaBlock(tokensCss, 'prefers-reduced-transparency: reduce');
+    expect(fallback).toContain('--echo-glass-panel');
+    expect(fallback).toMatch(/--echo-glass-panel\s*:\s*var\(--echo-surface\)/);
   });
 
   it('uses the Echo stylesheet and a plain white page foundation', () => {
@@ -547,8 +584,10 @@ describe('Echo visual foundation', () => {
 
     expectDeclaration(page, 'position', 'relative');
     expectDeclaration(page, 'min-width', '0');
-    expectDeclaration(page, 'min-height', '100svh');
-    expectDeclaration(page, 'overflow-x', 'visible');
+    expectDeclaration(page, 'width', '1728px');
+    expectDeclaration(page, 'height', '972px');
+    expectDeclaration(page, 'min-height', '972px');
+    expectDeclaration(page, 'overflow', 'hidden');
     expectDeclaration(page, 'isolation', 'isolate');
     expectDeclaration(page, 'background', 'var(--echo-page)');
     expectDeclaration(page, 'color', 'var(--echo-ink)');
@@ -560,19 +599,38 @@ describe('Echo visual foundation', () => {
 
     expectDeclaration(hero, 'position', 'absolute');
     expectDeclaration(hero, 'top', '0');
-    expectDeclaration(hero, 'left', '0');
-    expectDeclaration(hero, 'z-index', '1');
-    expectDeclaration(hero, 'width', '100%');
-    expectDeclaration(hero, 'height', 'auto');
+    expectDeclaration(hero, 'left', '168px');
+    expectDeclaration(hero, 'z-index', '10');
+    expectDeclaration(hero, 'right', '0');
+    expectDeclaration(hero, 'height', '700px');
     expectDeclaration(hero, 'pointer-events', 'none');
     expectDeclaration(image, 'display', 'block');
     expectDeclaration(image, 'width', '100%');
-    expectDeclaration(image, 'height', 'auto');
-    expectDeclaration(image, 'object-fit', 'contain');
+    expectDeclaration(image, 'height', '100%');
+    expectDeclaration(image, 'object-fit', 'cover');
     expectDeclaration(image, 'object-position', 'center top');
     expectDeclaration(image, 'opacity', '1');
     expectDeclaration(image, 'filter', 'none');
     expectDeclaration(image, 'user-select', 'none');
+  });
+
+  it('places the book on the sky-card split above the character network', () => {
+    const layer = ruleBody(echoCss, '.echo-book-layer');
+    const book = ruleBody(echoCss, '.echo-book-foreground');
+
+    expectDeclaration(layer, 'position', 'absolute');
+    expectDeclaration(layer, 'left', '168px');
+    expectDeclaration(layer, 'right', '0');
+    expectDeclaration(layer, 'top', '0');
+    expectDeclaration(layer, 'z-index', '30');
+    expectDeclaration(layer, 'height', '820px');
+    expectDeclaration(layer, 'overflow', 'visible');
+    expectDeclaration(layer, 'pointer-events', 'none');
+    expectDeclaration(book, 'position', 'absolute');
+    expectDeclaration(book, 'top', '492px');
+    expectDeclaration(book, 'right', '272px');
+    expectDeclaration(book, 'width', '430px');
+    expectDeclaration(book, 'pointer-events', 'none');
   });
 
   it('keeps foreground content and the current cockpit above the hero artwork', () => {
@@ -582,12 +640,9 @@ describe('Echo visual foundation', () => {
     expectDeclaration(ruleBody(echoCss, '.cockpit-shell'), 'z-index', '20');
   });
 
-  it('builds occluded panels from solid structural pieces without compositing content', () => {
+  it('builds occluded panels from a liquid glass surface without compositing content', () => {
     const panel = ruleBody(echoCss, '.occluded-panel');
     const surface = ruleBody(echoCss, '.occluded-panel__surface');
-    const cap = ruleBody(echoCss, '.occluded-panel__top-cap');
-    const leftCap = ruleBody(echoCss, '.occluded-panel__top-cap--left');
-    const rightCap = ruleBody(echoCss, '.occluded-panel__top-cap--right');
     const content = ruleBody(echoCss, '.occluded-panel__content');
 
     expectDeclaration(panel, 'position', 'relative');
@@ -596,36 +651,22 @@ describe('Echo visual foundation', () => {
     expectDeclaration(panel, 'background', 'transparent');
 
     expectDeclaration(surface, 'position', 'absolute');
-    expectDeclaration(surface, 'inset', 'var(--occlusion-depth, 58px) 0 0');
+    expectDeclaration(surface, 'inset', '0');
     expectDeclaration(surface, 'z-index', '10');
-    expectDeclaration(surface, 'border', '1px solid var(--echo-line)');
-    expectDeclaration(surface, 'border-top', '0');
+    expectDeclaration(surface, 'border', '1px solid var(--echo-glass-border)');
+    expectDeclaration(surface, 'border-radius', 'var(--echo-radius-panel)');
+    expectDeclaration(surface, 'background', 'var(--echo-glass-panel)');
     expectDeclaration(
       surface,
-      'border-radius',
-      '0 0 var(--echo-radius-panel) var(--echo-radius-panel)',
+      'box-shadow',
+      'var(--echo-glass-highlight), var(--echo-shadow-mint-md)',
     );
-    expectDeclaration(surface, 'background', 'var(--echo-surface)');
-    expectDeclaration(surface, 'box-shadow', 'var(--echo-shadow-card)');
     expectDeclaration(surface, 'pointer-events', 'none');
-
-    expectDeclaration(cap, 'position', 'absolute');
-    expectDeclaration(cap, 'top', '0');
-    expectDeclaration(cap, 'z-index', '10');
-    expectDeclaration(cap, 'display', 'var(--cap-display, block)');
-    expectDeclaration(cap, 'height', 'var(--occlusion-depth, 58px)');
-    expectDeclaration(cap, 'border-top', '1px solid var(--echo-line)');
-    expectDeclaration(cap, 'background', 'var(--echo-surface)');
-    expectDeclaration(cap, 'pointer-events', 'none');
-    expectDeclaration(leftCap, 'left', '0');
-    expectDeclaration(leftCap, 'width', 'var(--left-cap-width, 0)');
-    expectDeclaration(rightCap, 'right', '0');
-    expectDeclaration(rightCap, 'width', 'var(--right-cap-width, 0)');
 
     expectDeclaration(content, 'position', 'relative');
     expectDeclaration(content, 'z-index', '20');
 
-    for (const body of [panel, surface, cap, content]) {
+    for (const body of [panel, surface, content]) {
       expect(body).not.toMatch(/(?:^|;)\s*opacity\s*:/im);
     }
     expect(content).not.toMatch(
@@ -634,22 +675,38 @@ describe('Echo visual foundation', () => {
     expect(occludedPanelContractViolations(echoCss)).toEqual([]);
   });
 
+  it('renders panel surfaces as liquid glass over the hero art', () => {
+    const surface = ruleBody(echoCss, '.occluded-panel__surface');
+    expectDeclaration(surface, 'background', 'var(--echo-glass-panel)');
+    expectDeclaration(surface, 'border', '1px solid var(--echo-glass-border)');
+    expect(surface).toMatch(/backdrop-filter\s*:\s*blur\(18px\) saturate\(150%\)/);
+    expect(surface).toContain('var(--echo-shadow-mint-md)');
+    expectDeclaration(surface, 'border-radius', 'var(--echo-radius-panel)');
+  });
+
+  it('separates the dashboard below the hero book without occlusion geometry', () => {
+    const workspace = ruleBody(echoCss, '.cockpit-workspace');
+    expectDeclaration(workspace, 'grid-template-rows', '672px 300px');
+    expect(echoCss).not.toMatch(/\.echo-dashboard__book-edge/im);
+    expect(echoCss).not.toMatch(/\.occluded-panel__(?:top-cap|hero-foreground)/im);
+    expect(echoCss).not.toMatch(/--(?:occlusion-depth|left-cap-width|right-cap-width|cap-display)\s*:/im);
+  });
+
   it('keeps the structure map at reference width without forcing desktop rail overflow', () => {
     const panel = ruleBody(echoCss, '.echo-structure-map');
     const rail = ruleBody(echoCss, '.echo-structure-map__rail');
     const track = ruleBody(echoCss, '.echo-structure-map__track');
     const connectors = ruleBody(echoCss, '.echo-structure-map__connectors');
     const cards = ruleBody(echoCss, '.echo-structure-map__cards');
-    const phase = ruleBody(echoCss, '.echo-act-card__body strong');
-    const chapterMetric = ruleBody(echoCss, '.echo-act-card__body small');
+    const phase = ruleBody(echoCss, '.echo-act-card__phase');
+    const chapterMetric = ruleBody(echoCss, '.echo-act-card__metric');
     const percentage = ruleBody(echoCss, '.echo-act-card__percentage');
-    const marker = ruleBody(echoCss, '.echo-act-card__marker');
-    const markerRow = ruleBody(echoCss, '.echo-act-card__markers');
+    const legend = ruleBody(echoCss, '.echo-structure-map__legend');
 
     expectDeclaration(panel, 'width', '100%');
     expectDeclaration(panel, 'max-width', '522px');
     expectDeclaration(rail, 'overflow-x', 'auto');
-    expectDeclaration(rail, 'padding', '10px 12px 16px');
+    expectDeclaration(rail, 'padding', '8px 10px 10px');
     expectDeclaration(track, 'position', 'relative');
     expectDeclaration(track, 'width', 'max(100%, var(--structure-track-min-width))');
     expectDeclaration(track, 'min-width', 'var(--structure-track-min-width)');
@@ -666,11 +723,10 @@ describe('Echo visual foundation', () => {
     expectDeclaration(cards, 'gap', '10px');
     expect(phase).not.toMatch(/(?:^|;)\s*(?:overflow|text-overflow)\s*:/im);
     expect(phase).not.toMatch(/(?:^|;)\s*white-space\s*:\s*nowrap/im);
-    for (const body of [phase, chapterMetric, percentage, marker]) {
+    for (const body of [phase, chapterMetric, percentage, legend]) {
       expect(pixelFontSize(body)).toBeGreaterThanOrEqual(10);
     }
-    expectDeclaration(markerRow, 'flex-wrap', 'wrap');
-    expectDeclaration(marker, 'overflow-wrap', 'anywhere');
+    expectDeclaration(legend, 'color', 'var(--echo-mint-600)');
   });
 
   it('builds the compact chapter timeline with open-cap geometry and solid foreground cards', () => {
@@ -689,11 +745,7 @@ describe('Echo visual foundation', () => {
 
     expectDeclaration(panel, 'width', '100%');
     expectDeclaration(panel, 'max-width', '547px');
-    expectDeclaration(panel, 'min-height', '201px');
-    expectDeclaration(panel, '--occlusion-depth', '58px');
-    expectDeclaration(panel, '--left-cap-width', '176px');
-    expectDeclaration(panel, '--right-cap-width', '112px');
-    expect(176 + 112).toBeLessThan(547);
+    expectDeclaration(panel, 'min-height', '190px');
     expect(panel).not.toMatch(/(?:^|;)\s*background(?:-[a-z-]+)?\s*:/im);
     expect(heading).not.toMatch(/(?:^|;)\s*background(?:-[a-z-]+)?\s*:/im);
 
@@ -704,14 +756,15 @@ describe('Echo visual foundation', () => {
     expectDeclaration(cards, 'flex-wrap', 'nowrap');
     expectDeclaration(card, 'position', 'relative');
     expectDeclaration(card, 'z-index', '20');
-    expectDeclaration(card, 'background', 'var(--echo-surface)');
+    expectDeclaration(card, 'background', 'var(--echo-glass-card)');
 
     expectDeclaration(progress, 'position', 'relative');
     expectDeclaration(progress, 'z-index', '21');
     expectDeclaration(progress, 'width', 'max-content');
     expectDeclaration(progress, 'margin-top', '12px');
     expect(progress).not.toMatch(/(?:^|;)\s*min-width\s*:\s*100%\s*;/im);
-    expectDeclaration(progressLine, 'background', 'var(--echo-line)');
+    expectDeclaration(progressLine, 'height', '2px');
+    expect(progressLine).not.toMatch(/(?:^|;)\s*background(?:-[a-z-]+)?\s*:/im);
     expectDeclaration(completeNode, 'background', 'var(--echo-mint-500)');
     expectDeclaration(laterNode, 'background', 'var(--echo-line)');
 
@@ -723,32 +776,41 @@ describe('Echo visual foundation', () => {
     }
   });
 
-  it('uses contrast-safe blue for Task 8 controls, state, progress, and focus affordances', () => {
+  it('marks selected act and chapter cards with a gradient border and lift', () => {
+    const act = ruleBody(echoCss, '.echo-act-card.is-selected');
+    expect(act).toContain('var(--echo-gradient-accent) border-box');
+    expect(act).toContain('var(--echo-shadow-mint-md)');
+    const chapter = ruleBody(echoCss, '.chapter-timeline__card.is-selected');
+    expect(chapter).toContain('var(--echo-gradient-accent) border-box');
+    const hover = ruleBody(echoCss, '.echo-act-card:hover');
+    expect(hover).toMatch(/transform\s*:\s*translateY\(-2px\)/);
+  });
+
+  it('uses reference accents for Task 8 controls, state, progress, and focus affordances', () => {
     expectDeclaration(ruleBody(echoCss, '.ai-writing-partner__status'), 'color', 'var(--echo-blue-600)');
     expectDeclaration(ruleBody(echoCss, '.ai-writing-partner__status > span'), 'background', 'var(--echo-blue-600)');
-    expectDeclaration(ruleBody(echoCss, '.ai-writing-partner progress'), 'accent-color', 'var(--echo-blue-600)');
+    expectDeclaration(ruleBody(echoCss, '.ai-writing-partner progress'), 'accent-color', 'var(--echo-mint-500)');
     expectDeclaration(
       ruleBody(echoCss, '.ai-writing-partner progress::-webkit-progress-value'),
       'background',
-      'var(--echo-blue-600)',
+      'var(--echo-mint-500)',
     );
     expectDeclaration(
       ruleBody(echoCss, '.ai-writing-partner progress::-moz-progress-bar'),
       'background',
-      'var(--echo-blue-600)',
+      'var(--echo-mint-500)',
     );
 
-    const cardActions = ruleBody(
-      echoCss,
-      '.ai-writing-partner__view-all,\n.memory-layer-card__header button',
-    );
-    expectDeclaration(cardActions, 'border', '1px solid var(--echo-blue-600)');
-    expectDeclaration(cardActions, 'color', 'var(--echo-blue-600)');
+    for (const selector of ['.ai-writing-partner__view-all', '.memory-layer-card__header button']) {
+      const cardAction = ruleBody(echoCss, selector);
+      expectDeclaration(cardAction, 'border', '0');
+      expectDeclaration(cardAction, 'color', 'var(--echo-mint-600)');
+    }
 
     const selectedTag = ruleBody(echoCss, ".memory-layer-card__tags button[aria-pressed='true']");
-    expectDeclaration(selectedTag, 'border-color', 'var(--echo-blue-600)');
-    expectDeclaration(selectedTag, 'color', 'var(--echo-blue-600)');
-    expectDeclaration(selectedTag, 'background', 'var(--echo-mint-50)');
+    expectDeclaration(selectedTag, 'border-color', 'var(--echo-mint-500)');
+    expectDeclaration(selectedTag, 'color', 'var(--echo-surface)');
+    expectDeclaration(selectedTag, 'background', 'var(--echo-mint-500)');
 
     expectDeclaration(ruleBody(echoCss, '.agent-details-drawer__avatar'), 'color', 'var(--echo-blue-600)');
     const focusMode = ruleBody(
@@ -774,8 +836,8 @@ describe('Echo visual foundation', () => {
 
   it('keeps the optimized Echo card image contained at its display size', () => {
     const image = ruleBody(echoCss, '.ai-writing-partner__intro img');
-    expectDeclaration(image, 'width', '76px');
-    expectDeclaration(image, 'height', '76px');
+    expectDeclaration(image, 'width', '56px');
+    expectDeclaration(image, 'height', '56px');
     expectDeclaration(image, 'object-fit', 'contain');
   });
 
@@ -785,7 +847,7 @@ describe('Echo visual foundation', () => {
       .scope .occluded-panel__content.is-responsive { opacity: 0.8; }
       @media (width >= 900px) {
         @supports (display: grid) {
-          .occluded-panel__content { filter: none; mask-image: none; }
+          .occluded-panel__content { filter: none; mask-image: none; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
         }
       }
       :is(.occluded-panel__content) { opacity: 0.5; }
@@ -799,6 +861,8 @@ describe('Echo visual foundation', () => {
       '.scope .occluded-panel__content.is-responsive -> opacity',
       '.occluded-panel__content -> filter',
       '.occluded-panel__content -> mask-image',
+      '.occluded-panel__content -> backdrop-filter',
+      '.occluded-panel__content -> -webkit-backdrop-filter',
       ':is(.occluded-panel__content) -> opacity',
       ':where(.occluded-panel)::before -> background',
       '.scope :is(.occluded-panel__content, .other) -> -webkit-filter',
@@ -812,7 +876,7 @@ describe('Echo visual foundation', () => {
       .wrapper:has(.occluded-panel)::before { background: white; opacity: 0.5; }
       .wrapper:not(.occluded-panel)::after { background: white; filter: none; }
       .occluded-panel__surface::before { content: ''; }
-      .occluded-panel__top-cap--left::after { content: ''; }
+      .occluded-panel__surface::after { content: ''; }
     `;
 
     expect(occludedPanelContractViolations(fixture)).toEqual([]);
@@ -830,25 +894,26 @@ describe('Echo visual foundation', () => {
 
     expectDeclaration(scroll, 'position', 'relative');
     expectDeclaration(scroll, 'min-width', '0');
-    expectDeclaration(scroll, 'min-height', '100svh');
-    expectDeclaration(scroll, 'overflow-x', 'visible');
+    expectDeclaration(scroll, 'min-height', '972px');
+    expectDeclaration(scroll, 'overflow', 'hidden');
     expectDeclaration(shell, 'position', 'relative');
     expectDeclaration(shell, 'display', 'grid');
-    expectDeclaration(shell, 'grid-template-columns', '230px minmax(0, 1fr)');
+    expectDeclaration(shell, 'grid-template-columns', '168px minmax(0, 1fr)');
     expectDeclaration(shell, 'width', '100%');
-    expectDeclaration(shell, 'min-height', '100svh');
+    expectDeclaration(shell, 'min-height', '972px');
     expectDeclaration(workspace, 'display', 'grid');
-    expectDeclaration(workspace, 'grid-template-rows', '96px 386px minmax(0, 1fr)');
+    expectDeclaration(workspace, 'grid-template-rows', '672px 300px');
     expectDeclaration(workspace, 'min-width', '0');
     expectDeclaration(workspace, 'background', 'transparent');
     expectDeclaration(ruleBody(echoCss, '.cockpit-sidebar'), 'background', 'transparent');
     expect(ruleBody(echoCss, '.cockpit-right-panel')).toBe('');
-    expectDeclaration(topbar, 'min-height', '96px');
+    expectDeclaration(topbar, 'position', 'absolute');
+    expectDeclaration(topbar, 'min-height', '56px');
     expectDeclaration(topbar, 'background', 'transparent');
     expectDeclaration(heroSlot, 'min-width', '0');
     expectDeclaration(heroSlot, 'background', 'transparent');
     expectDeclaration(main, 'min-width', '0');
-    expectDeclaration(main, 'padding', '30px 16px 22px 30px');
+    expectDeclaration(main, 'padding', '0 24px 24px');
     expectDeclaration(main, 'background', 'transparent');
     expectDeclaration(topbarContent, 'display', 'flex');
     expectDeclaration(topbarContent, 'align-items', 'center');
@@ -858,7 +923,35 @@ describe('Echo visual foundation', () => {
     expectDeclaration(actions, 'margin-left', 'auto');
   });
 
-  it('caps the reference dashboard geometry so the exact 1440 boundary remains fluid', () => {
+  it('unifies topbar controls as glass pills', () => {
+    const search = ruleBody(echoCss, '.workspace-topbar-content .workspace-search');
+    expectDeclaration(search, 'background', 'var(--echo-glass-pill)');
+    expectDeclaration(search, 'border', '1px solid var(--echo-glass-border)');
+    expectDeclaration(search, 'border-radius', '999px');
+    expect(search).toMatch(/backdrop-filter\s*:\s*blur\(18px\) saturate\(160%\)/);
+    expect(search).toContain('var(--echo-shadow-mint-sm)');
+    const iconButton = ruleBody(echoCss, '.workspace-topbar-content .topbar-icon-button');
+    expectDeclaration(iconButton, 'background', 'var(--echo-glass-pill)');
+    expectDeclaration(iconButton, 'border-radius', '999px');
+  });
+
+  it('gives sidebar navigation a liquid mint active state', () => {
+    const active = ruleBody(echoCss, '.project-sidebar-content .project-navigation__item.is-active');
+    expectDeclaration(active, 'background', 'var(--echo-glass-pill)');
+    expect(active).toContain('var(--echo-shadow-mint-sm)');
+    const indicator = ruleBody(echoCss, '.project-sidebar-content .project-navigation__item.is-active::before');
+    expectDeclaration(indicator, 'background', 'var(--echo-gradient-accent)');
+    const hover = ruleBody(echoCss, '.project-sidebar-content .project-navigation__item:hover');
+    expectDeclaration(hover, 'background', 'var(--echo-mint-50)');
+  });
+
+  it('paints the new project button with the AA-compliant action gradient', () => {
+    const button = ruleBody(echoCss, '.echo-new-project');
+    expectDeclaration(button, 'background', 'var(--echo-gradient-action)');
+    expectDeclaration(button, 'color', 'var(--echo-surface)');
+  });
+
+  it('caps the reference dashboard geometry inside the locked 1672px canvas', () => {
     const dashboard = ruleBody(echoCss, '.echo-dashboard');
     const primary = ruleBody(echoCss, '.echo-dashboard__primary-row');
     const timeline = ruleBody(echoCss, '.echo-dashboard__timeline');
@@ -886,14 +979,14 @@ describe('Echo visual foundation', () => {
     expectDeclaration(timeline, 'display', 'grid');
     expectDeclaration(timeline, 'width', '100%');
     expectDeclaration(timeline, 'max-width', '547px');
-    expectDeclaration(timeline, 'height', '201px');
+    expectDeclaration(timeline, 'height', '190px');
     expectDeclaration(timeline, 'gap', '6px');
     expectDeclaration(chapterButton, 'position', 'absolute');
     expectDeclaration(chapterButton, 'top', '14px');
     expectDeclaration(chapterButton, 'right', '82px');
     expectDeclaration(chapterButton, 'margin', '0');
     expectDeclaration(chapterButton, 'background', 'var(--echo-blue-600)');
-    expectDeclaration(aiCard, 'height', '201px');
+    expectDeclaration(aiCard, 'height', '250px');
     expectDeclaration(aiCard, 'overflow-y', 'auto');
 
     expect(echoGrid).not.toBe('');
@@ -903,10 +996,10 @@ describe('Echo visual foundation', () => {
     expectDeclaration(echoGrid, 'gap', '12px');
     expectDeclaration(echoGrid, 'align-items', 'stretch');
     expectDeclaration(echoGrid, 'width', 'min(1396px, 100%)');
-    expectDeclaration(echoGrid, 'height', '220px');
+    expectDeclaration(echoGrid, 'height', '250px');
     expectDeclaration(echoGrid, 'min-width', '0');
 
-    expectDeclaration(echoChildren, 'height', '220px');
+    expectDeclaration(echoChildren, 'height', '250px');
     expectDeclaration(echoChildren, 'overflow', 'hidden');
     expectDeclaration(echoChildren, 'grid-column', 'auto');
     expectDeclaration(echoChildren, 'max-width', 'none');
@@ -956,71 +1049,33 @@ describe('Echo visual foundation', () => {
     expectDeclaration(tagsAndClues, 'list-style', 'none');
     expectDeclaration(closeFocus, 'outline', '3px solid var(--echo-blue-600)');
     expectDeclaration(closeFocus, 'outline-offset', '3px');
-
-    expectDeclaration(ruleBody(mediaBlock(echoCss, 'max-width: 760px'), '.chapter-detail-drawer,\n.agent-details-drawer'), 'width', '100%');
   });
 
-  it('defines exact responsive media contracts without restoring page overflow or cropped scenery', () => {
+  it('locks the layout to the 1728 by 972 design canvas with uniform scaling and reduced motion only', () => {
     const mediaConditions = Array.from(
       stripCssComments(echoCss).matchAll(/@media\s*\(([^)]+)\)/g),
       ([, condition]) => condition.trim(),
     );
     expect(mediaConditions).toEqual([
-      'max-width: 1439px',
-      'max-width: 1279px',
-      'max-width: 760px',
+      'prefers-reduced-motion: no-preference',
       'prefers-reduced-motion: reduce',
     ]);
     expect(echoCss).not.toMatch(/(?:\.echo-page|\.cockpit-scroll)[^{]*\{[^}]*min-width\s*:\s*1280px/im);
-    expect(echoCss).not.toMatch(/\.echo-hero-background(?:__image)?[^{}]*\{[^}]*(?:background-size\s*:\s*cover|object-fit\s*:\s*cover)/im);
     const documentFrame = ruleBody(globalCss, 'html,\nbody,\n#root');
     expectDeclaration(documentFrame, 'min-width', '100%');
+    expectDeclaration(documentFrame, 'height', '100%');
     expectDeclaration(documentFrame, 'overflow-x', 'visible');
     expect(documentFrame).not.toMatch(/(?:^|;)\s*overflow-x\s*:\s*hidden\s*;/im);
     expect(documentFrame).not.toMatch(/(?:^|;)\s*min-width\s*:\s*1280px\s*;/im);
 
-    const compressed = mediaBlock(echoCss, 'max-width: 1439px');
-    expectDeclaration(ruleBody(compressed, '.cockpit-shell'), 'grid-template-columns', '190px minmax(0, 1fr)');
-    expectDeclaration(ruleBody(compressed, '.echo-dashboard'), 'width', '100%');
-    expectDeclaration(ruleBody(compressed, '.echo-dashboard__primary-row'), 'grid-template-columns', 'minmax(0, 1fr) minmax(0, 1.05fr) minmax(230px, 260px)');
-    expectDeclaration(ruleBody(compressed, '.echo-structure-map,\n.echo-dashboard__timeline'), 'width', '100%');
-    expectDeclaration(ruleBody(compressed, '.cockpit-scroll .echo-dashboard__lower-row'), 'width', '100%');
-
-    const tablet = mediaBlock(echoCss, 'max-width: 1279px');
-    expectDeclaration(ruleBody(tablet, '.cockpit-shell'), 'grid-template-columns', '72px minmax(0, 1fr)');
-    expectDeclaration(ruleBody(tablet, '.cockpit-workspace'), 'grid-template-rows', '80px max(300px, calc(56.31vw - 80px)) minmax(0, 1fr)');
-    expectDeclaration(ruleBody(tablet, '.echo-brand__copy,\n.echo-progress-card'), 'display', 'none');
-    expectDeclaration(ruleBody(tablet, '.echo-new-project span:nth-child(2),\n.project-sidebar-content .project-navigation__item span'), 'clip-path', 'inset(50%)');
-    expectDeclaration(ruleBody(tablet, '.echo-dashboard__primary-row'), 'grid-template-columns', 'minmax(0, 1fr) minmax(0, 1fr)');
-    expectDeclaration(ruleBody(tablet, '.echo-dashboard__primary-row > .ai-writing-partner'), 'grid-column', '1 / -1');
-    expectDeclaration(ruleBody(tablet, '.cockpit-scroll .echo-dashboard__lower-row'), 'grid-template-columns', 'repeat(2, minmax(0, 1fr))');
-    const tabletTimeline = ruleBody(tablet, '.echo-dashboard__timeline');
-    const tabletChapterAction = ruleBody(
-      tablet,
-      '.echo-dashboard__timeline > .chapter-details-button',
-    );
-    expectDeclaration(tabletTimeline, 'height', 'auto');
-    expectDeclaration(tabletTimeline, 'display', 'grid');
-    expectDeclaration(tabletTimeline, 'gap', '10px');
-    expectDeclaration(tabletChapterAction, 'position', 'static');
-    expectDeclaration(tabletChapterAction, 'justify-self', 'end');
-    expectDeclaration(ruleBody(tablet, '.echo-structure-map,\n.chapter-timeline'), '--occlusion-depth', '0px');
-    expectDeclaration(ruleBody(tablet, '.echo-structure-map .occluded-panel__top-cap,\n.chapter-timeline .occluded-panel__top-cap'), 'display', 'none');
-    expectDeclaration(ruleBody(tablet, '.echo-structure-map .occluded-panel__surface,\n.chapter-timeline .occluded-panel__surface'), 'border-radius', 'var(--echo-radius-panel)');
-
-    const mobile = mediaBlock(echoCss, 'max-width: 760px');
-    expectDeclaration(ruleBody(mobile, '.echo-hero-background'), 'position', 'relative');
-    expectDeclaration(ruleBody(mobile, '.echo-hero-background__image'), 'width', '100%');
-    expectDeclaration(ruleBody(mobile, '.echo-hero-background__image'), 'height', 'auto');
-    expectDeclaration(ruleBody(mobile, '.cockpit-shell'), 'display', 'block');
-    expectDeclaration(
-      ruleBody(mobile, '.project-sidebar-content .project-navigation__item:focus-visible'),
-      'outline-offset',
-      '-3px',
-    );
-    expectDeclaration(ruleBody(mobile, '.echo-dashboard__primary-row,\n.cockpit-scroll .echo-dashboard__lower-row'), 'grid-template-columns', 'minmax(0, 1fr)');
-    expectDeclaration(ruleBody(mobile, '.echo-dashboard__timeline > .chapter-details-button'), 'position', 'static');
-    expectDeclaration(ruleBody(mobile, '.chapter-detail-drawer,\n.agent-details-drawer'), 'width', '100%');
+    const scaleViewport = ruleBody(echoCss, '.echo-scale-viewport');
+    const scaleRoot = ruleBody(echoCss, '.echo-scale-root');
+    expectDeclaration(scaleViewport, 'width', '100%');
+    expectDeclaration(scaleViewport, 'height', '100%');
+    expectDeclaration(scaleRoot, 'width', '1728px');
+    expectDeclaration(scaleRoot, 'height', '972px');
+    expectDeclaration(scaleRoot, 'transform', 'scale(var(--echo-scale, 1))');
+    expectDeclaration(scaleRoot, 'transform-origin', 'top left');
 
     const reducedMotion = mediaBlock(echoCss, 'prefers-reduced-motion: reduce');
     const motionTargets = ruleBody(reducedMotion, '.echo-page,\n.echo-page *');
@@ -1033,7 +1088,7 @@ describe('Echo visual foundation', () => {
   it('keeps keyboard focus visible inside every Echo scroll region', () => {
     const scrollFocus = ruleBody(
       echoCss,
-      '.echo-structure-map__rail:focus-visible,\n.chapter-timeline__rail:focus-visible,\n.ai-writing-partner:focus-visible,\n.cockpit-scroll .inspiration-vault__grid:focus-visible,\n.cockpit-scroll .character-graph__viewport:focus-visible,\n.cockpit-scroll .character-graph__relationships:focus-visible,\n.cockpit-scroll .clue-attribution-flow__canvas:focus-visible',
+      '.echo-structure-map__rail:focus-visible,\n.chapter-timeline__rail:focus-visible,\n.ai-writing-partner:focus-visible,\n.cockpit-scroll .inspiration-vault__grid:focus-visible,\n.cockpit-scroll .character-graph__viewport:focus-visible,\n.cockpit-scroll .clue-attribution-flow__canvas:focus-visible',
     );
     expectDeclaration(scrollFocus, 'outline', '3px solid var(--echo-blue-600)');
     expectDeclaration(scrollFocus, 'outline-offset', '-3px');
@@ -1068,9 +1123,8 @@ describe('Echo visual foundation', () => {
     expect(echoCss).not.toMatch(/\.echo-action-feedback[^{}]*\{[^}]*aria-hidden/im);
   });
 
-  it('does not introduce compositing effects or translucent white overlays', () => {
-    expect(echoCss).not.toMatch(/(?:^|[;{])\s*(?:-webkit-)?(?:mix-blend-mode|backdrop-filter)\s*:/im);
-    expect(echoCss).not.toMatch(/blur\s*\(/i);
+  it('does not introduce blend modes or translucent white overlays', () => {
+    expect(echoCss).not.toMatch(/(?:^|[;{])\s*(?:-webkit-)?mix-blend-mode\s*:/im);
     expect(hasTranslucentWhiteMask(echoCss)).toBe(false);
   });
 
@@ -1087,6 +1141,72 @@ describe('Echo visual foundation', () => {
     for (const value of ['#fff', '#ffffff', '#ffff', '#ffffffff', 'rgb(255 255 255)', 'rgba(255, 255, 255, 1)']) {
       expect(hasTranslucentWhiteMask(`.solid { background: ${value}; }`), value).toBe(false);
     }
+  });
+
+  it('places home cards in the three-column desktop grid from the reference', () => {
+    const grid = ruleBody(echoCss, '.echo-home-dashboard');
+    expectDeclaration(grid, 'display', 'grid');
+    expectDeclaration(grid, 'grid-template-columns', '1.12fr 1.02fr 1.05fr');
+    expectDeclaration(grid, 'grid-template-rows', 'minmax(0, 1fr) minmax(0, 1fr)');
+    expectDeclaration(grid, 'gap', '8px');
+    expectDeclaration(grid, 'width', '100%');
+    expectDeclaration(grid, 'height', '100%');
+    expectDeclaration(ruleBody(echoCss, '.echo-home-card--project'), 'grid-column', '1');
+    expectDeclaration(ruleBody(echoCss, '.echo-home-card--project'), 'grid-row', '1 / span 2');
+    expectDeclaration(ruleBody(echoCss, '.echo-home-card--chapters'), 'grid-column', '2');
+    expectDeclaration(ruleBody(echoCss, '.echo-home-card--chapters'), 'grid-row', '1');
+    expectDeclaration(ruleBody(echoCss, '.echo-home-card--network'), 'grid-column', '3');
+    expectDeclaration(ruleBody(echoCss, '.echo-home-card--network'), 'grid-row', '1');
+    expectDeclaration(ruleBody(echoCss, '.echo-home-card--goals'), 'grid-column', '2');
+    expectDeclaration(ruleBody(echoCss, '.echo-home-card--goals'), 'grid-row', '2');
+    expectDeclaration(ruleBody(echoCss, '.echo-home-dashboard__pair'), 'grid-column', '3');
+    expectDeclaration(ruleBody(echoCss, '.echo-home-dashboard__pair'), 'grid-row', '2');
+  });
+
+  it('pins the sidebar footer to the same baseline as the home cards', () => {
+    const sidebar = ruleBody(echoCss, '.cockpit-sidebar .project-sidebar-content');
+    const utilities = ruleBody(echoCss, '.echo-sidebar-utilities');
+    const main = ruleBody(echoCss, '.cockpit-main');
+
+    expectDeclaration(sidebar, 'display', 'flex');
+    expectDeclaration(sidebar, 'flex-direction', 'column');
+    expectDeclaration(sidebar, 'height', '972px');
+    expectDeclaration(sidebar, 'padding', '18px 10px 24px');
+    expectDeclaration(utilities, 'margin-top', 'auto');
+    expectDeclaration(main, 'padding', '0 24px 24px');
+  });
+
+  it('lays out the writing workspace as a three-column workbench', () => {
+    const view = ruleBody(echoCss, '.writing-view');
+    expectDeclaration(view, 'display', 'grid');
+    expectDeclaration(view, 'grid-template-columns', '240px minmax(0, 1fr) 320px');
+    expectDeclaration(ruleBody(echoCss, '.writing-view__editor'), 'min-width', '0');
+    expectDeclaration(ruleBody(echoCss, '.echo-chat'), 'display', 'flex');
+    expectDeclaration(ruleBody(echoCss, '.echo-chat'), 'flex-direction', 'column');
+    expectDeclaration(ruleBody(echoCss, '.echo-chat__log'), 'overflow-y', 'auto');
+    const composer = ruleBody(echoCss, '.echo-chat__composer-card');
+    expectDeclaration(composer, 'border-radius', '16px');
+    expectDeclaration(composer, 'background', 'var(--echo-glass-card)');
+    expectDeclaration(ruleBody(echoCss, '.echo-chat__send'), 'background', 'var(--echo-gradient-action)');
+    expectDeclaration(ruleBody(echoCss, '.echo-chat__attach'), 'border-radius', '999px');
+  });
+
+  it('styles the writing workspace with the glass system and a paper editor', () => {
+    const editor = ruleBody(echoCss, '.writing-view__editor');
+    expectDeclaration(editor, 'background', 'var(--echo-glass-card)');
+    const chat = ruleBody(echoCss, '.writing-view__chat');
+    expectDeclaration(chat, 'background', 'var(--echo-glass-panel)');
+    expect(chat).toContain('var(--echo-shadow-mint-md)');
+    const selected = ruleBody(echoCss, ".chapter-list button[aria-pressed='true']");
+    expect(selected).toContain('var(--echo-gradient-accent) border-box');
+  });
+
+  it('connects agent tasks with a vertical flow line', () => {
+    const flow = ruleBody(echoCss, '.agent-task-flow');
+    expectDeclaration(flow, 'list-style', 'none');
+    const connector = ruleBody(echoCss, '.agent-task-flow li::before');
+    expect(connector).toMatch(/border-left|background/);
+    expect(connector).toContain("content: ''");
   });
 
   it('uses the Echo product title', () => {

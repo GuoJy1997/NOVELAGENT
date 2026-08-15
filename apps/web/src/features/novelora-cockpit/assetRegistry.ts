@@ -53,8 +53,24 @@ export const echoHeroBackground = new URL(
   '../../assets/echo/hero-background-clean.png',
   import.meta.url,
 ).href;
+export const echoSceneBackground = new URL(
+  '../../assets/echo/scene-robot-background.png',
+  import.meta.url,
+).href;
+export const echoBookForeground = new URL(
+  '../../assets/echo/book-foreground.svg',
+  import.meta.url,
+).href;
+export const echoProjectCover = new URL(
+  '../../assets/echo/project-cover.png',
+  import.meta.url,
+).href;
 export const echoAssistantCard = new URL(
   '../../assets/echo/echo-assistant-card.png',
+  import.meta.url,
+).href;
+export const echoMemoryCrystal = new URL(
+  '../../assets/echo/memory-crystal.png',
   import.meta.url,
 ).href;
 

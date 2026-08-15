@@ -6,6 +6,11 @@
     "dev:web": "npm --prefix apps/web run dev",
     "build:web": "npm --prefix apps/web run build",
     "test:web": "npm --prefix apps/web run test -- --run",
-    "lint:web": "npm --prefix apps/web run lint"
+    "lint:web": "npm --prefix apps/web run lint",
+    "dev:api": "npm --prefix services/api run dev",
+    "seed:api": "npm --prefix services/api run seed",
+    "build:desktop": "npm --prefix apps/desktop run build",
+    "dev:desktop": "npm --prefix apps/desktop run dev",
+    "dist:desktop": "npm --prefix apps/desktop run package"
   }
 }
