@@ -1,7 +1,7 @@
-import { spawn, type ChildProcess } from 'node:child_process';
+import { type ChildProcess } from 'node:child_process';
 import { app, BrowserWindow } from 'electron';
 import { join } from 'node:path';
-import { resolveApiSpawn } from './apiProcess';
+import { spawnApiProcess } from './apiProcess';
 
 const DEV_SERVER_URL = process.env.ELECTRON_RENDERER_URL ?? 'http://localhost:5173/';
 const PROD_INDEX = join(__dirname, '../../web/dist/index.html');
@@ -9,12 +9,11 @@ const PROD_INDEX = join(__dirname, '../../web/dist/index.html');
 let apiChild: ChildProcess | undefined;
 
 function startApiProcess(): void {
-  const spec = resolveApiSpawn();
-  apiChild = spawn(spec.command, spec.args, {
-    cwd: spec.cwd,
-    env: spec.env,
-    stdio: 'inherit',
-  });
+  try {
+    apiChild = spawnApiProcess();
+  } catch (err) {
+    console.error('Failed to start novelora api process', err);
+  }
 }
 
 function createWindow(): void {

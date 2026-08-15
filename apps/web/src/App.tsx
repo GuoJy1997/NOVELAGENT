@@ -66,7 +66,7 @@ export default function App() {
             activeItem={activeNavigation}
             onSelectItem={selectNavigation}
             onNewProject={() =>
-              setActionMessage('New project creation is not available in this demo.')
+              setActionMessage('演示中无法新建项目。')
             }
           />
         }
@@ -75,7 +75,7 @@ export default function App() {
           <EchoHeroCopy
             onContinueWriting={() => openWriting(currentChapterIndex + 1)}
             onAIAssist={() =>
-              setActionMessage('AI Assist is ready for the selected chapter.')
+              setActionMessage('AI 助手已就绪，可用于当前章节。')
             }
           />
         }
@@ -84,7 +84,7 @@ export default function App() {
           <HomeDashboard
             onOpenProject={() => openWriting(currentChapterIndex + 1)}
             onAddSchedule={() =>
-              setActionMessage('Schedule entries are not editable in this demo.')
+              setActionMessage('演示中无法编辑日程。')
             }
           />
         )}

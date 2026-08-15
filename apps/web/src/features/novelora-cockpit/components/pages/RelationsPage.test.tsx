@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { RelationsPage } from './RelationsPage';
@@ -23,15 +23,18 @@ const characterFile = {
   ],
 };
 
-function fetchPaths(fetchMock: ReturnType<typeof vi.fn>) {
-  return fetchMock.mock.calls.map((call) => String(call[0]));
+function fetchPaths(fetchMock: ReturnType<typeof vi.fn<(url: string, init?: RequestInit) => Promise<Response>>>) {
+  return fetchMock.mock.calls.map(([url]) => String(url));
 }
 
 describe('RelationsPage', () => {
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
 
   it('renders two character nodes and never requests relations.md', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(okJson(characterFile));
+    const fetchMock = vi.fn(async (_url: string, _init?: RequestInit) => okJson(characterFile));
     vi.stubGlobal('fetch', fetchMock);
 
     render(<RelationsPage projectId="default-project" />);
@@ -41,15 +44,17 @@ describe('RelationsPage', () => {
     expect(within(nodes).getByRole('listitem', { name: 'Kael, Exiled tide-runner' })).toBeInTheDocument();
     expect(within(nodes).getByRole('listitem', { name: 'Liora, Lighthouse archivist' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: '关系' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Character Relationship Graph' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '人物关系图' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Character Relationship Graph' })).not.toBeInTheDocument();
 
     expect(fetchPaths(fetchMock).every((path) => !path.includes('/documents/relations'))).toBe(true);
     expect(document.body.textContent ?? '').not.toMatch(/[—–]/);
   });
 
   it('saves an edited relationship label without requesting relations.md', async () => {
-    const user = userEvent.setup();
-    const fetchMock = vi.fn(async () => okJson(characterFile));
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const fetchMock = vi.fn(async (_url: string, _init?: RequestInit) => okJson(characterFile));
     vi.stubGlobal('fetch', fetchMock);
 
     render(<RelationsPage projectId="default-project" />);
@@ -59,6 +64,10 @@ describe('RelationsPage', () => {
 
     await user.clear(label);
     await user.type(label, '旧日盟友');
+    const putsBefore = fetchMock.mock.calls.filter(([, init]) => init?.method === 'PUT');
+    expect(putsBefore).toHaveLength(0);
+
+    await act(() => vi.advanceTimersByTimeAsync(1600));
 
     await waitFor(() => {
       const puts = fetchMock.mock.calls.filter(([, init]) => init?.method === 'PUT');
@@ -74,7 +83,8 @@ describe('RelationsPage', () => {
   });
 
   it('reports 保存失败 when a label save rejects', async () => {
-    const user = userEvent.setup();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const fetchMock = vi.fn(async (_url: string, init?: RequestInit) => {
       if (init?.method === 'PUT') throw new Error('down');
       return okJson(characterFile);
@@ -84,6 +94,7 @@ describe('RelationsPage', () => {
     render(<RelationsPage projectId="default-project" />);
     const label = await screen.findByRole('textbox', { name: 'Kael 与 Liora' });
     await user.type(label, 'x');
+    await act(() => vi.advanceTimersByTimeAsync(1600));
     expect(await screen.findByRole('status')).toHaveTextContent('保存失败');
     expect(fetchPaths(fetchMock).every((path) => !path.includes('/documents/relations'))).toBe(true);
   });

@@ -5,6 +5,7 @@ import type { CharacterNode, CharacterRelationship } from '../types';
 interface CharacterGraphProps {
   characters: CharacterNode[];
   relationships: CharacterRelationship[];
+  title?: string;
 }
 
 interface NodeCoordinate {
@@ -18,9 +19,9 @@ interface GraphLayout {
 }
 
 const GRAPH_WIDTH = 320;
-const COMPACT_GRAPH_HEIGHT = 104;
+const COMPACT_GRAPH_HEIGHT = 180;
 const GRID_COLUMNS = [50, 160, 270] as const;
-const GRID_ROW_PITCH = 44;
+const GRID_ROW_PITCH = 48;
 
 function firstById<T extends { id: string }>(items: T[]) {
   const seen = new Set<string>();
@@ -38,7 +39,7 @@ function graphLayout(characters: CharacterNode[]): GraphLayout {
     characters.forEach((character, index) => {
       coordinates.set(character.id, {
         x: GRID_COLUMNS[index % GRID_COLUMNS.length],
-        y: 22 + Math.floor(index / GRID_COLUMNS.length) * GRID_ROW_PITCH,
+        y: 30 + Math.floor(index / GRID_COLUMNS.length) * GRID_ROW_PITCH,
       });
     });
     return {
@@ -50,16 +51,23 @@ function graphLayout(characters: CharacterNode[]): GraphLayout {
     };
   }
 
+  if (characters.length === 1) {
+    coordinates.set(characters[0]?.id ?? '', { x: GRAPH_WIDTH / 2, y: COMPACT_GRAPH_HEIGHT / 2 });
+    return { coordinates, height: COMPACT_GRAPH_HEIGHT };
+  }
+
+  const centerX = GRAPH_WIDTH / 2;
+  const centerY = COMPACT_GRAPH_HEIGHT / 2;
   characters.forEach((character, index) => {
-    if (characters.length === 1) {
-      coordinates.set(character.id, { x: GRAPH_WIDTH / 2, y: COMPACT_GRAPH_HEIGHT / 2 });
+    if (index === 0) {
+      coordinates.set(character.id, { x: centerX, y: centerY });
       return;
     }
 
-    const angle = -Math.PI / 2 + (index * Math.PI * 2) / characters.length;
+    const angle = -Math.PI / 2 + ((index - 1) * Math.PI * 2) / (characters.length - 1);
     coordinates.set(character.id, {
-      x: Math.round((GRAPH_WIDTH / 2 + Math.cos(angle) * 110) * 10) / 10,
-      y: Math.round((COMPACT_GRAPH_HEIGHT / 2 + Math.sin(angle) * 30) * 10) / 10,
+      x: Math.round((centerX + Math.cos(angle) * 112) * 10) / 10,
+      y: Math.round((centerY + Math.sin(angle) * 60) * 10) / 10,
     });
   });
 
@@ -82,7 +90,11 @@ function relationshipPath(
   return `M ${from.x} ${from.y} C ${middleX} ${firstControlY} ${middleX} ${secondControlY} ${to.x} ${to.y}`;
 }
 
-export function CharacterGraph({ characters, relationships }: CharacterGraphProps) {
+export function CharacterGraph({
+  characters,
+  relationships,
+  title = 'Character Relationship Graph',
+}: CharacterGraphProps) {
   const uniqueCharacters = firstById(characters);
   const uniqueRelationships = firstById(relationships);
   const layout = graphLayout(uniqueCharacters);
@@ -100,7 +112,7 @@ export function CharacterGraph({ characters, relationships }: CharacterGraphProp
   return (
     <section className="character-graph" aria-labelledby="character-graph-title">
       <header className="character-graph__heading">
-        <h2 id="character-graph-title">Character Relationship Graph</h2>
+        <h2 id="character-graph-title">{title}</h2>
         <span>{uniqueCharacters.length} characters</span>
       </header>
 
@@ -134,7 +146,7 @@ export function CharacterGraph({ characters, relationships }: CharacterGraphProp
           </svg>
 
           <ul className="character-graph__nodes" aria-label="Character nodes">
-            {uniqueCharacters.map((character) => {
+            {uniqueCharacters.map((character, characterIndex) => {
               const coordinate = layout.coordinates.get(character.id) ?? {
                 x: GRAPH_WIDTH / 2,
                 y: COMPACT_GRAPH_HEIGHT / 2,
@@ -143,13 +155,22 @@ export function CharacterGraph({ characters, relationships }: CharacterGraphProp
                 '--character-x': `${coordinate.x}px`,
                 '--character-y': `${coordinate.y}px`,
               } as CSSProperties;
+              const relatedTensions = uniqueRelationships
+                .filter(
+                  (relationship) =>
+                    relationship.fromCharacterId === character.id ||
+                    relationship.toCharacterId === character.id,
+                )
+                .map((relationship) => relationship.tension)
+                .join(' ');
 
               return (
                 <li
                   key={character.id}
-                  className="character-graph__node"
+                  className={`character-graph__node${characterIndex === 0 ? ' is-protagonist' : ''}`}
                   style={nodeStyle}
                   aria-label={`${character.name}, ${character.role}`}
+                  title={relatedTensions || undefined}
                 >
                   <img src={characterPortraits[character.portraitAssetKey]} alt="" />
                   <span>
@@ -163,20 +184,11 @@ export function CharacterGraph({ characters, relationships }: CharacterGraphProp
         </div>
       </div>
 
-      <ul
-        className="character-graph__relationships"
-        tabIndex={0}
-        aria-label="Character relationships"
-      >
-        {knownRelationships.map(({ relationship, from, to }) => (
-          <li
-            key={relationship.id}
-            aria-label={`${from.name} to ${to.name}, ${relationship.kind}, ${relationship.label}. ${relationship.tension}`}
-          >
-            <strong>{`${from.name} → ${to.name}`}</strong>
-            <span className="character-graph__relationship-kind">{relationship.kind}</span>
-            <span>{relationship.label}</span>
-            <small>{relationship.tension}</small>
+      <ul className="character-graph__legend" aria-label="Relationship kinds">
+        {(['ally', 'neutral', 'rival', 'unknown'] as const).map((kind) => (
+          <li key={kind} className={`character-graph__legend-item character-graph__legend-item--${kind}`}>
+            <span aria-hidden="true" />
+            {kind.charAt(0).toUpperCase() + kind.slice(1)}
           </li>
         ))}
       </ul>

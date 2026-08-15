@@ -1,3 +1,4 @@
+import { spawn, type ChildProcess } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -51,4 +52,28 @@ export function resolveApiSpawn(): ApiSpawnSpec {
     cwd,
     env,
   };
+}
+
+type SpawnLike = (
+  command: string,
+  args: readonly string[],
+  options: { cwd?: string; env?: NodeJS.ProcessEnv; stdio?: 'inherit' },
+) => ChildProcess;
+
+export function spawnApiProcess(spawnImpl: SpawnLike = spawn as SpawnLike): ChildProcess | undefined {
+  try {
+    const spec = resolveApiSpawn();
+    const child = spawnImpl(spec.command, spec.args, {
+      cwd: spec.cwd,
+      env: spec.env,
+      stdio: 'inherit',
+    });
+    child.on('error', (err) => {
+      console.error('Failed to start novelora api process', err);
+    });
+    return child;
+  } catch (err) {
+    console.error('Failed to start novelora api process', err);
+    return undefined;
+  }
 }

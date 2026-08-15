@@ -1,8 +1,9 @@
+import type { ChildProcess } from 'node:child_process';
 import { renameSync } from 'node:fs';
 import { join } from 'node:path';
 import { it } from 'node:test';
 import assert from 'node:assert/strict';
-import { resolveApiSpawn } from './apiProcess.ts';
+import { resolveApiSpawn, spawnApiProcess } from './apiProcess.ts';
 
 it('points the api child at 127.0.0.1 and services/api', () => {
   const spec = resolveApiSpawn();
@@ -45,4 +46,25 @@ it('falls back to npx.cmd on win32 when local tsx is missing', () => {
   } finally {
     renameSync(hidden, tsxCli);
   }
+});
+
+it('returns undefined when spawn throws and still opens the window path', () => {
+  const missing = spawnApiProcess(() => {
+    throw new Error('spawn ENOENT');
+  });
+  assert.equal(missing, undefined);
+});
+
+it('attaches an error listener so a child failure does not throw', () => {
+  const listeners: Array<(err: Error) => void> = [];
+  const child = {
+    on(event: string, handler: (err: Error) => void) {
+      if (event === 'error') listeners.push(handler);
+      return child;
+    },
+  };
+  const started = spawnApiProcess(() => child as unknown as ChildProcess);
+  assert.equal(started, child);
+  assert.equal(listeners.length, 1);
+  listeners[0](new Error('child error'));
 });

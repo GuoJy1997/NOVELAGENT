@@ -22,6 +22,10 @@ describe('seedProject', () => {
       assert.equal(meta.currentChapter, 3);
       assert.equal(meta.chapters[1].status, 'review');
       assert.deepEqual(meta.chapters[5], { num: 6, title: 'Embers Under Black Water', status: 'planned', actId: 'act-2' });
+      assert.equal(meta.acts[0].title, 'Act I: The Ash Tide');
+      assert.equal(meta.volumes[0].title, 'Volume I: Tides of Embers');
+      assert.doesNotMatch(JSON.stringify(meta.acts), /[—–]/);
+      assert.doesNotMatch(JSON.stringify(meta.volumes), /[—–]/);
       await writeFile(join(root, 'default-project/chapters/ch_03.md'), 'user edits', 'utf8');
       await seedProject(root);
       assert.equal(await readFile(join(root, 'default-project/chapters/ch_03.md'), 'utf8'), 'user edits');

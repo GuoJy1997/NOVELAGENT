@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, before, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { countWords, projectRelations, readChapter, readCharacters, readDocument, readProject, writeChapter, writeCharacters, writeDocument } from './projectStore.ts';
+import { atomicWrite, countWords, projectRelations, readChapter, readCharacters, readDocument, readProject, writeChapter, writeCharacters, writeDocument } from './projectStore.ts';
 
 describe('projectStore', () => {
   let root: string;
@@ -58,6 +58,27 @@ describe('projectStore', () => {
 
   it('refuses to write relations.md directly', async () => {
     await assert.rejects(writeDocument(root, 'relations', 'nope'), /relations/);
+  });
+
+  it('overwrites an existing file without leaving the target missing', async () => {
+    const target = join(root, 'atomic-target.md');
+    await writeFile(target, 'old', 'utf8');
+    await atomicWrite(target, 'new contents');
+    assert.equal(await readFile(target, 'utf8'), 'new contents');
+    await assert.rejects(readFile(`${target}.tmp`, 'utf8'), { code: 'ENOENT' });
+  });
+
+  it('keeps distinct tmp names so concurrent writes do not share target.tmp', async () => {
+    const first = join(root, 'concurrent-a.md');
+    const second = join(root, 'concurrent-b.md');
+    await Promise.all([atomicWrite(first, 'alpha'), atomicWrite(second, 'beta')]);
+    assert.equal(await readFile(first, 'utf8'), 'alpha');
+    assert.equal(await readFile(second, 'utf8'), 'beta');
+    const same = join(root, 'concurrent-same.md');
+    await Promise.all([atomicWrite(same, 'one'), atomicWrite(same, 'two')]);
+    const winner = await readFile(same, 'utf8');
+    assert.ok(winner === 'one' || winner === 'two');
+    await assert.rejects(readFile(`${same}.tmp`, 'utf8'), { code: 'ENOENT' });
   });
 
   it('overwrites characters.json and relations.md on second write', async () => {

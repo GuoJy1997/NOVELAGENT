@@ -60,9 +60,21 @@ export function RelationsPage({ projectId }: RelationsPageProps) {
   const [file, setFile] = useState<CharacterFile | null>(null);
   const [status, setStatus] = useState<SaveStatus>('saved');
   const saveSeq = useRef(0);
+  const dirty = useRef(false);
+  const fileRef = useRef(file);
+  const projectIdRef = useRef(projectId);
+
+  useEffect(() => {
+    fileRef.current = file;
+  }, [file]);
+
+  useEffect(() => {
+    projectIdRef.current = projectId;
+  }, [projectId]);
 
   useEffect(() => {
     let cancelled = false;
+    dirty.current = false;
     fetchCharacters(projectId)
       .then((next) => {
         if (!cancelled) setFile(next);
@@ -75,6 +87,31 @@ export function RelationsPage({ projectId }: RelationsPageProps) {
     };
   }, [projectId]);
 
+  useEffect(() => () => {
+    if (dirty.current && fileRef.current) {
+      dirty.current = false;
+      saveSeq.current += 1;
+      void saveCharacters(fileRef.current, projectIdRef.current).catch(() => {});
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!dirty.current || !file) return undefined;
+    setStatus('saving');
+    const timer = window.setTimeout(() => {
+      saveSeq.current += 1;
+      const seq = saveSeq.current;
+      saveCharacters(file, projectId)
+        .then(() => {
+          if (seq === saveSeq.current) setStatus('saved');
+        })
+        .catch(() => {
+          if (seq === saveSeq.current) setStatus('error');
+        });
+    }, 1500);
+    return () => window.clearTimeout(timer);
+  }, [file, projectId]);
+
   function updateLabel(relationshipId: string, label: string) {
     if (!file) return;
     const next: CharacterFile = {
@@ -84,16 +121,7 @@ export function RelationsPage({ projectId }: RelationsPageProps) {
       ),
     };
     setFile(next);
-    setStatus('saving');
-    saveSeq.current += 1;
-    const seq = saveSeq.current;
-    saveCharacters(next, projectId)
-      .then(() => {
-        if (seq === saveSeq.current) setStatus('saved');
-      })
-      .catch(() => {
-        if (seq === saveSeq.current) setStatus('error');
-      });
+    dirty.current = true;
   }
 
   return (
@@ -106,6 +134,7 @@ export function RelationsPage({ projectId }: RelationsPageProps) {
         <CharacterGraph
           characters={file.characters.map(toCharacterNode)}
           relationships={file.relationships.map(toRelationship)}
+          title="人物关系图"
         />
       ) : null}
       {file && file.relationships.length > 0 ? (

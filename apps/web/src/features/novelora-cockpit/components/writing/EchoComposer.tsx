@@ -176,7 +176,7 @@ export function EchoComposer({ streaming, onSend, onStop }: EchoComposerProps) {
         <textarea
           ref={fieldRef}
           aria-label="Message Echo"
-          placeholder="Ask Echo about this chapter"
+          placeholder="问 Echo 关于本章"
           rows={3}
           value={input}
           onChange={(event) => updateInput(event.target.value, event.target.selectionStart ?? event.target.value.length)}
@@ -204,7 +204,7 @@ export function EchoComposer({ streaming, onSend, onStop }: EchoComposerProps) {
           <div className="echo-chat__model">
             <button
               type="button"
-              aria-label="Model"
+              aria-label="模型"
               aria-haspopup="listbox"
               aria-expanded={modelOpen}
               onClick={() => setModelOpen((open) => !open)}
@@ -237,11 +237,11 @@ export function EchoComposer({ streaming, onSend, onStop }: EchoComposerProps) {
 
           {streaming ? (
             <button type="button" className="echo-chat__send is-stop" onClick={onStop}>
-              Stop generating
+              停止
             </button>
           ) : (
             <button type="button" className="echo-chat__send" onClick={submit} disabled={!input.trim()}>
-              Send
+              发送
             </button>
           )}
         </div>

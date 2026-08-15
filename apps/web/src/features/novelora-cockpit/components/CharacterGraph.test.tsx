@@ -107,13 +107,13 @@ describe('CharacterGraph', () => {
       /\.cockpit-scroll \.character-graph__stage\s*\{([^}]*)\}/,
     )?.[1];
 
-    expect(container.querySelector('svg')).toHaveAttribute('viewBox', '0 0 320 104');
+    expect(container.querySelector('svg')).toHaveAttribute('viewBox', '0 0 320 180');
     expect(stageRule).toMatch(/width:\s*320px;/);
     expect(stageRule).toMatch(/height:\s*var\(--character-graph-height\);/);
     expect(stageRule).not.toMatch(/max-width:/);
   });
 
-  it('exposes resolved relationship meaning for every known relationship', () => {
+  it('exposes the four relationship kinds as a compact legend with edge colors', () => {
     render(
       <CharacterGraph
         characters={noveloraMockProject.characters}
@@ -121,36 +121,36 @@ describe('CharacterGraph', () => {
       />,
     );
 
-    const relationshipList = screen.getByRole('list', { name: 'Character relationships' });
-    expect(relationshipList).toHaveAttribute('tabindex', '0');
-    expect(within(relationshipList).getAllByRole('listitem')).toHaveLength(
-      noveloraMockProject.characterRelationships.length,
+    const legend = screen.getByRole('list', { name: 'Relationship kinds' });
+    const items = within(legend).getAllByRole('listitem');
+    expect(items.map((item) => item.textContent)).toEqual(['Ally', 'Neutral', 'Rival', 'Unknown']);
+
+    const edges = screen
+      .getByRole('region', { name: 'Character relationship graph' })
+      .querySelectorAll('path[data-relationship-kind]');
+    expect(Array.from(edges, (edge) => edge.getAttribute('data-relationship-kind'))).toEqual(
+      noveloraMockProject.characterRelationships.map((relationship) => relationship.kind),
     );
-    expect(
-      within(relationshipList).getByRole('listitem', {
-        name: 'Kael to Liora, ally, uneasy allies. Liora trusts Kael with the map but not its final destination.',
-      }),
-    ).toBeTruthy();
-    expect(within(relationshipList).getByText('uneasy allies')).toBeTruthy();
-    expect(
-      within(relationshipList).getByText(
-        'Liora trusts Kael with the map but not its final destination.',
-      ),
-    ).toBeTruthy();
-    const relationshipListRule = echoCss.match(
-      /\.cockpit-scroll \.character-graph__relationships\s*\{([^}]*)\}/,
+
+    const legendRule = echoCss.match(
+      /\.cockpit-scroll \.character-graph__legend\s*\{([^}]*)\}/,
     )?.[1];
-    const relationshipItemRule = echoCss.match(
-      /\.cockpit-scroll \.character-graph__relationships li\s*\{([^}]*)\}/,
-    )?.[1];
-    expect(relationshipListRule).toMatch(/max-height:\s*48px;/);
-    expect(relationshipListRule).toMatch(/overflow-y:\s*auto;/);
-    expect(relationshipItemRule).toMatch(/font-size:\s*10px;/);
-    const relationshipFocusRule = echoCss.match(
-      /\.cockpit-scroll \.character-graph__relationships:focus-visible[^{}]*\{([^}]*)\}/,
-    )?.[1];
-    expect(relationshipFocusRule).toMatch(/outline:\s*3px solid var\(--echo-blue-600\);/);
-    expect(relationshipFocusRule).toMatch(/outline-offset:\s*-3px;/);
+    expect(legendRule).toMatch(/list-style:\s*none;/);
+  });
+
+  it('centers the first character as the protagonist', () => {
+    const { container } = render(
+      <CharacterGraph
+        characters={noveloraMockProject.characters}
+        relationships={noveloraMockProject.characterRelationships}
+      />,
+    );
+
+    const kaelNode = container.querySelector<HTMLElement>('.character-graph__node.is-protagonist');
+    expect(kaelNode).not.toBeNull();
+    expect(kaelNode?.textContent).toContain('Kael');
+    expect(kaelNode?.style.getPropertyValue('--character-x')).toBe('160px');
+    expect(kaelNode?.style.getPropertyValue('--character-y')).toBe('90px');
   });
 
   it('lays out eight characters without overlapping node bounds', () => {
@@ -169,10 +169,10 @@ describe('CharacterGraph', () => {
       };
     });
 
-    expect(container.querySelector('svg')).toHaveAttribute('viewBox', '0 0 320 132');
+    expect(container.querySelector('svg')).toHaveAttribute('viewBox', '0 0 320 180');
     expect(container.querySelector('.character-graph__stage')).toHaveStyle({
-      '--character-graph-height': '132px',
-      height: '132px',
+      '--character-graph-height': '180px',
+      height: '180px',
     });
     for (let first = 0; first < centers.length; first += 1) {
       for (let second = first + 1; second < centers.length; second += 1) {

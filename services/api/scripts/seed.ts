@@ -14,12 +14,12 @@ const CHAPTERS = [
 ] as const;
 
 const ACTS = [
-  { id: 'act-1', title: 'Act I — The Ash Tide', chapterNums: [1, 2, 3] },
-  { id: 'act-2', title: 'Act II — The Drowned Forge', chapterNums: [4, 5, 6] },
+  { id: 'act-1', title: 'Act I: The Ash Tide', chapterNums: [1, 2, 3] },
+  { id: 'act-2', title: 'Act II: The Drowned Forge', chapterNums: [4, 5, 6] },
 ] as const;
 
 const VOLUMES = [
-  { id: 'vol-1', title: 'Volume I — Tides of Embers', actIds: ['act-1', 'act-2'] },
+  { id: 'vol-1', title: 'Volume I: Tides of Embers', actIds: ['act-1', 'act-2'] },
 ] as const;
 
 const RECIPES: RecipeId[] = ['chapter', 'act', 'volume'];

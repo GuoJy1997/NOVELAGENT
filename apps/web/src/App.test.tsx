@@ -25,12 +25,12 @@ describe('App', () => {
     expect(screen.getAllByRole('heading', { name: 'Bring your story to life with AI' })).toHaveLength(1);
 
     expect(home?.children).toHaveLength(5);
-    expect(home?.children[0]).toBe(screen.getByRole('region', { name: 'My Project' }));
-    expect(home?.children[1]).toBe(screen.getByRole('region', { name: 'Chapter Progress' }));
-    expect(home?.children[2]).toBe(screen.getByRole('region', { name: 'Character Network' }));
-    expect(home?.children[3]).toBe(screen.getByRole('region', { name: 'Writing Goals' }));
-    expect(home?.children[4]).toContainElement(screen.getByRole('region', { name: 'Scene Schedule' }));
-    expect(home?.children[4]).toContainElement(screen.getByRole('region', { name: 'Calendar' }));
+    expect(home?.children[0]).toBe(screen.getByRole('region', { name: '我的项目' }));
+    expect(home?.children[1]).toBe(screen.getByRole('region', { name: '章节进度' }));
+    expect(home?.children[2]).toBe(screen.getByRole('region', { name: '人物关系' }));
+    expect(home?.children[3]).toBe(screen.getByRole('region', { name: '写作目标' }));
+    expect(home?.children[4]).toContainElement(screen.getByRole('region', { name: '场景日程' }));
+    expect(home?.children[4]).toContainElement(screen.getByRole('region', { name: '日历' }));
 
     expect(screen.queryByRole('region', { name: 'Novel Structure Map' })).not.toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'Chapter Timeline' })).not.toBeInTheDocument();
@@ -69,11 +69,11 @@ describe('App', () => {
     expect(status).not.toHaveClass('is-visible');
 
     await user.click(screen.getByRole('button', { name: 'New Project' }));
-    expect(status).toHaveTextContent('New project creation is not available in this demo.');
+    expect(status).toHaveTextContent('演示中无法新建项目。');
     expect(status).toHaveClass('is-visible');
 
     await user.click(screen.getByRole('button', { name: /AI Assist/i }));
-    expect(status).toHaveTextContent('AI Assist is ready for the selected chapter.');
+    expect(status).toHaveTextContent('AI 助手已就绪，可用于当前章节。');
   });
 
   it('dismisses action feedback after 3200ms while keeping the live region mounted', () => {
@@ -82,11 +82,11 @@ describe('App', () => {
 
     const status = screen.getByRole('status');
     fireEvent.click(screen.getByRole('button', { name: /AI Assist/i }));
-    expect(status).toHaveTextContent('AI Assist is ready for the selected chapter.');
+    expect(status).toHaveTextContent('AI 助手已就绪，可用于当前章节。');
     expect(status).toHaveClass('is-visible');
 
     act(() => vi.advanceTimersByTime(3199));
-    expect(status).toHaveTextContent('AI Assist is ready for the selected chapter.');
+    expect(status).toHaveTextContent('AI 助手已就绪，可用于当前章节。');
     expect(status).toHaveClass('is-visible');
 
     act(() => vi.advanceTimersByTime(1));
@@ -102,22 +102,22 @@ describe('App', () => {
     expect(screen.getByLabelText('Writing workspace')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: '返回首页' }));
     expect(screen.getByRole('main', { name: 'Story workspace' })).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: 'My Project' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: '我的项目' })).toBeInTheDocument();
   });
 
-  it('opens the writing workspace from Open Project', async () => {
+  it('opens the writing workspace from 打开项目', async () => {
     const user = userEvent.setup();
     render(<App />);
-    await user.click(screen.getByRole('button', { name: 'Open Project' }));
+    await user.click(screen.getByRole('button', { name: '打开项目' }));
     expect(screen.getByLabelText('Writing workspace')).toBeInTheDocument();
   });
 
   it('announces schedule add from the home dashboard', async () => {
     const user = userEvent.setup();
     render(<App />);
-    await user.click(screen.getByRole('button', { name: 'Add entry' }));
+    await user.click(screen.getByRole('button', { name: '添加日程' }));
     expect(screen.getByRole('status')).toHaveTextContent(
-      'Schedule entries are not editable in this demo.',
+      '演示中无法编辑日程。',
     );
   });
 

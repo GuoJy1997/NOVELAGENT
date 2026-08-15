@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { CharacterFile, DocumentName } from './projectTypes.ts';
@@ -22,11 +23,52 @@ export function countWords(text: string): number {
 const chapterFile = (num: number) => `ch_${String(num).padStart(2, '0')}.md`;
 const documentFile = (name: DocumentName) => `${name}.md`;
 
+function uniqueTmp(target: string): string {
+  return `${target}.${process.pid}.${randomBytes(8).toString('hex')}.tmp`;
+}
+
+function isReplaceError(err: unknown): boolean {
+  return Boolean(err && typeof err === 'object' && 'code' in err && (err.code === 'EPERM' || err.code === 'EEXIST'));
+}
+
 export async function atomicWrite(target: string, content: string): Promise<void> {
-  const tmp = `${target}.tmp`;
+  const tmp = uniqueTmp(target);
   await writeFile(tmp, content, 'utf8');
+  try {
+    await rename(tmp, target);
+    return;
+  } catch (err) {
+    if (!isReplaceError(err)) {
+      await rm(tmp, { force: true }).catch(() => undefined);
+      throw err;
+    }
+  }
+
+  const retryTmp = uniqueTmp(target);
+  await writeFile(retryTmp, content, 'utf8');
+  await rm(tmp, { force: true }).catch(() => undefined);
+  try {
+    await rename(retryTmp, target);
+    return;
+  } catch (err) {
+    if (!isReplaceError(err)) {
+      await rm(retryTmp, { force: true }).catch(() => undefined);
+      throw err;
+    }
+  }
+
   await rm(target, { force: true });
-  await rename(tmp, target);
+  try {
+    await rename(retryTmp, target);
+  } catch {
+    try {
+      await writeFile(target, content, 'utf8');
+    } catch (writeErr) {
+      await rm(retryTmp, { force: true }).catch(() => undefined);
+      throw writeErr;
+    }
+    await rm(retryTmp, { force: true }).catch(() => undefined);
+  }
 }
 
 async function readProjectFile(root: string): Promise<ProjectFile> {

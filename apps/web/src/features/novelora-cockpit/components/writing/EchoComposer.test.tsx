@@ -63,10 +63,10 @@ describe('EchoComposer', () => {
     const onSend = vi.fn();
     render(<EchoComposer streaming={false} onSend={onSend} onStop={() => undefined} />);
 
-    await user.click(screen.getByRole('button', { name: 'Model' }));
+    await user.click(screen.getByRole('button', { name: '模型' }));
     await user.click(screen.getByRole('option', { name: 'GPT-4.1' }));
     await user.type(screen.getByRole('textbox', { name: 'Message Echo' }), 'Tighten the ending');
-    await user.click(screen.getByRole('button', { name: 'Send' }));
+    await user.click(screen.getByRole('button', { name: '发送' }));
 
     expect(onSend).toHaveBeenCalledWith({
       text: 'Tighten the ending',

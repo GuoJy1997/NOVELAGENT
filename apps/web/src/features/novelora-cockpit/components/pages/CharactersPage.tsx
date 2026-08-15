@@ -24,9 +24,21 @@ export function CharactersPage({ projectId }: CharactersPageProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [status, setStatus] = useState<SaveStatus>('saved');
   const saveSeq = useRef(0);
+  const dirty = useRef(false);
+  const fileRef = useRef(file);
+  const projectIdRef = useRef(projectId);
+
+  useEffect(() => {
+    fileRef.current = file;
+  }, [file]);
+
+  useEffect(() => {
+    projectIdRef.current = projectId;
+  }, [projectId]);
 
   useEffect(() => {
     let cancelled = false;
+    dirty.current = false;
     setStatus('saved');
     fetchCharacters(projectId)
       .then((next) => {
@@ -42,6 +54,31 @@ export function CharactersPage({ projectId }: CharactersPageProps) {
     };
   }, [projectId]);
 
+  useEffect(() => () => {
+    if (dirty.current && fileRef.current) {
+      dirty.current = false;
+      saveSeq.current += 1;
+      void saveCharacters(fileRef.current, projectIdRef.current).catch(() => {});
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!dirty.current || !file) return undefined;
+    setStatus('saving');
+    const timer = window.setTimeout(() => {
+      saveSeq.current += 1;
+      const seq = saveSeq.current;
+      saveCharacters(file, projectId)
+        .then(() => {
+          if (seq === saveSeq.current) setStatus('saved');
+        })
+        .catch(() => {
+          if (seq === saveSeq.current) setStatus('error');
+        });
+    }, 1500);
+    return () => window.clearTimeout(timer);
+  }, [file, projectId]);
+
   const selected = file?.characters.find((character) => character.id === selectedId);
 
   function updateSelected(patch: Partial<CharacterRecord>) {
@@ -53,16 +90,7 @@ export function CharactersPage({ projectId }: CharactersPageProps) {
       ),
     };
     setFile(next);
-    setStatus('saving');
-    saveSeq.current += 1;
-    const seq = saveSeq.current;
-    saveCharacters(next, projectId)
-      .then(() => {
-        if (seq === saveSeq.current) setStatus('saved');
-      })
-      .catch(() => {
-        if (seq === saveSeq.current) setStatus('error');
-      });
+    dirty.current = true;
   }
 
   return (

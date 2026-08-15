@@ -30,18 +30,22 @@ const characterFile = {
   ],
 };
 
-function putBodies(fetchMock: ReturnType<typeof vi.fn>) {
+function putBodies(fetchMock: ReturnType<typeof vi.fn<(url: string, init?: RequestInit) => Promise<Response>>>) {
   return fetchMock.mock.calls
     .filter(([url, init]) => String(url).includes('/characters') && init?.method === 'PUT')
     .map(([, init]) => JSON.parse(String((init as RequestInit).body)));
 }
 
 describe('CharactersPage', () => {
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
 
   it('saves an edited role on PUT /characters and keeps existing coordinates', async () => {
-    const user = userEvent.setup();
-    const fetchMock = vi.fn(async () => okJson(characterFile));
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const fetchMock = vi.fn(async (_url: string, _init?: RequestInit) => okJson(characterFile));
     vi.stubGlobal('fetch', fetchMock);
 
     render(<CharactersPage projectId="default-project" />);
@@ -51,6 +55,9 @@ describe('CharactersPage', () => {
 
     await user.clear(role);
     await user.type(role, '新向导');
+    expect(putBodies(fetchMock)).toHaveLength(0);
+
+    await act(() => vi.advanceTimersByTimeAsync(1600));
 
     await waitFor(() => {
       const bodies = putBodies(fetchMock);
@@ -68,7 +75,7 @@ describe('CharactersPage', () => {
   });
 
   it('lists loaded characters for selection', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(okJson(characterFile)));
+    vi.stubGlobal('fetch', vi.fn(async (_url: string, _init?: RequestInit) => okJson(characterFile)));
 
     render(<CharactersPage projectId="default-project" />);
 
@@ -78,7 +85,8 @@ describe('CharactersPage', () => {
   });
 
   it('does not apply an older save result after a newer save fails', async () => {
-    const user = userEvent.setup();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     let finishOlder: ((value: Response) => void) | undefined;
     const olderSave = new Promise<Response>((resolve) => {
       finishOlder = resolve;
@@ -97,8 +105,10 @@ describe('CharactersPage', () => {
     render(<CharactersPage projectId="default-project" />);
     const role = await screen.findByRole('textbox', { name: '角色' });
     await user.type(role, 'A');
+    await act(() => vi.advanceTimersByTimeAsync(1600));
     expect(screen.getByRole('status')).toHaveTextContent('保存中');
     await user.type(role, 'B');
+    await act(() => vi.advanceTimersByTimeAsync(1600));
     expect(await screen.findByRole('status')).toHaveTextContent('保存失败');
 
     await act(async () => {
