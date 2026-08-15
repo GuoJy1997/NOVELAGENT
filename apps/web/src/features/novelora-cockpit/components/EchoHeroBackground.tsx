@@ -1,11 +1,11 @@
-import { echoHeroBackground } from '../assetRegistry';
+import { echoSceneBackground } from '../assetRegistry';
 
 export function EchoHeroBackground() {
   return (
     <div className="echo-hero-background" aria-hidden="true">
       <img
         className="echo-hero-background__image"
-        src={echoHeroBackground}
+        src={echoSceneBackground}
         alt=""
         decoding="async"
         fetchPriority="high"
