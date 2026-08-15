@@ -120,6 +120,32 @@ describe('api routes', () => {
     assert.match(accept.json().error, /unknown draft/i);
   });
 
+  it('stops a task to queued without deleting drafts', async () => {
+    const { readDraft, writeDraft, writeTask } = await import('./taskStore.ts');
+    const created = await app.inject({
+      method: 'POST', url: '/projects/default-project/tasks',
+      payload: { recipe: 'chapter', chapterNums: [1] },
+    });
+    assert.equal(created.statusCode, 200);
+    const task = created.json();
+    const root = join(process.env.NOVELORA_DATA_DIR!, 'default-project');
+    await writeDraft(root, task.id, 1, 'keep this candidate');
+    await writeTask(root, { ...task, status: 'running' });
+
+    const stopped = await app.inject({
+      method: 'POST', url: `/projects/default-project/tasks/${task.id}/stop`,
+    });
+    assert.equal(stopped.statusCode, 200);
+    assert.equal(stopped.json().status, 'queued');
+    assert.equal(await readDraft(root, task.id, 1), 'keep this candidate');
+
+    const missing = await app.inject({
+      method: 'POST', url: '/projects/default-project/tasks/missing-task-id/stop',
+    });
+    assert.equal(missing.statusCode, 404);
+    assert.match(missing.json().error, /unknown task/i);
+  });
+
   it('returns 404 for an unknown task on run', async () => {
     const missing = await app.inject({
       method: 'POST', url: '/projects/default-project/tasks/missing-task-id/run',

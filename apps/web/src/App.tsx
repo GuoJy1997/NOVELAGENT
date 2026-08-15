@@ -7,17 +7,14 @@ import { WorkspaceTopbar } from './features/novelora-cockpit/components/Workspac
 import { CharactersPage } from './features/novelora-cockpit/components/pages/CharactersPage';
 import { MarkdownDocumentPage } from './features/novelora-cockpit/components/pages/MarkdownDocumentPage';
 import { RelationsPage } from './features/novelora-cockpit/components/pages/RelationsPage';
+import { TaskBoardPage } from './features/novelora-cockpit/components/pages/TaskBoardPage';
 import { WritingView } from './features/novelora-cockpit/components/writing/WritingView';
 import { noveloraMockProject } from './features/novelora-cockpit/data/noveloraMockProject';
-import { NAV_ITEMS, type NavId } from './features/novelora-cockpit/nav';
+import type { NavId } from './features/novelora-cockpit/nav';
 
 const ACTION_FEEDBACK_DURATION_MS = 3200;
 
 type AppView = 'dashboard' | 'writing' | 'outline' | 'characters' | 'relations' | 'world' | 'tasks';
-
-function navLabel(id: NavId) {
-  return NAV_ITEMS.find((item) => item.id === id)?.label ?? id;
-}
 
 export default function App() {
   const [activeNavigation, setActiveNavigation] = useState<NavId>('home');
@@ -120,11 +117,7 @@ export default function App() {
         )}
         {view === 'characters' && <CharactersPage projectId="default-project" />}
         {view === 'relations' && <RelationsPage projectId="default-project" />}
-        {view === 'tasks' && (
-          <section aria-label={navLabel(view)}>
-            <p>{navLabel(view)}</p>
-          </section>
-        )}
+        {view === 'tasks' && <TaskBoardPage projectId="default-project" />}
       </AppShell>
       <div
         className={`echo-action-feedback${actionMessage ? ' is-visible' : ''}`}

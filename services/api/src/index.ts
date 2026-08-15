@@ -7,7 +7,7 @@ import {
 } from './projectStore.ts';
 import { runTaskStep } from './recipeRunner.ts';
 import {
-  acceptDraft, createTask, discardDraft, listTasks, readDraft, readTask,
+  acceptDraft, createTask, discardDraft, listTasks, readDraft, readTask, writeTask,
 } from './taskStore.ts';
 
 const REPO_ROOT = fileURLToPath(new URL('../../../', import.meta.url));
@@ -185,6 +185,24 @@ export async function buildServer() {
       return reply.code(404).send({ error: `Unknown task ${taskId}` });
     }
     return await runTaskStep(root, taskId);
+  });
+
+  app.post('/projects/:id/tasks/:taskId/stop', async (request, reply) => {
+    const { id, taskId } = request.params as { id: string; taskId: string };
+    const root = projectRoot(id);
+    try {
+      await readProject(root);
+    } catch {
+      return reply.code(404).send({ error: `Unknown project ${id}` });
+    }
+    try {
+      const task = await readTask(root, taskId);
+      const next = { ...task, status: 'queued' as const };
+      await writeTask(root, next);
+      return next;
+    } catch {
+      return reply.code(404).send({ error: `Unknown task ${taskId}` });
+    }
   });
 
   app.get('/projects/:id/drafts/:taskId/:num', async (request, reply) => {

@@ -4,6 +4,8 @@ import {
   createTask,
   discardTaskDraft,
   fetchChapter,
+  runTask,
+  stopTask,
   fetchCharacters,
   fetchDocument,
   fetchDraft,
@@ -95,6 +97,22 @@ describe('noveloraApi', () => {
       ['/api/projects/default-project/drafts/t1/1', undefined],
       ['/api/projects/default-project/tasks/t1/accept', 'POST'],
       ['/api/projects/default-project/tasks/t1/discard', 'POST'],
+    ]);
+  });
+
+  it('runs and stops a task through POST /run and /stop', async () => {
+    const task = { id: 't1', recipe: 'chapter', status: 'queued', chapterNums: [1] };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(okJson({ ...task, status: 'running' }))
+      .mockResolvedValueOnce(okJson({ ...task, status: 'queued' }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await runTask('t1');
+    await stopTask('t1');
+
+    expect(fetchMock.mock.calls.map((call) => [call[0], call[1]?.method])).toEqual([
+      ['/api/projects/default-project/tasks/t1/run', 'POST'],
+      ['/api/projects/default-project/tasks/t1/stop', 'POST'],
     ]);
   });
 });

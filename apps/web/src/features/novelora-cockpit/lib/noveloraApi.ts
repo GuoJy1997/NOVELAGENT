@@ -131,3 +131,11 @@ export function discardTaskDraft(
 ): Promise<{ ok: boolean }> {
   return request(`${BASE}/${projectId}/tasks/${taskId}/discard`, jsonInit('POST', { chapterNum }));
 }
+
+export function runTask(taskId: string, projectId = 'default-project'): Promise<RecipeTask> {
+  return request(`${BASE}/${projectId}/tasks/${taskId}/run`, jsonInit('POST', {}));
+}
+
+export function stopTask(taskId: string, projectId = 'default-project'): Promise<RecipeTask> {
+  return request(`${BASE}/${projectId}/tasks/${taskId}/stop`, jsonInit('POST', {}));
+}
