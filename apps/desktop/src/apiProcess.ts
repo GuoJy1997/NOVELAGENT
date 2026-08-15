@@ -46,7 +46,7 @@ export function resolveApiSpawn(): ApiSpawnSpec {
   }
 
   return {
-    command: 'npx',
+    command: process.platform === 'win32' ? 'npx.cmd' : 'npx',
     args: ['tsx', 'src/index.ts'],
     cwd,
     env,
