@@ -56,6 +56,8 @@ describe('App', () => {
     expect(home).toHaveAttribute('aria-pressed', 'false');
     expect(outline).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('region', { name: '大纲' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '大纲' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: '大纲' })).toBeInTheDocument();
   });
 
   it('announces the new-project and AI assist actions exactly', async () => {
@@ -143,5 +145,8 @@ describe('App', () => {
     expect(screen.getByLabelText('Writing workspace')).toBeInTheDocument();
     await user.click(within(navigation).getByRole('button', { name: '世界观' }));
     expect(screen.getByRole('region', { name: '世界观' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '世界观' })).toBeInTheDocument();
+    expect(screen.getByText('这是设定编辑，不会召唤 Agent。')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: '世界观' })).toBeInTheDocument();
   });
 });
