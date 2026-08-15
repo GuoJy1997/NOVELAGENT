@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { fetchDocument, saveDocument } from '../../lib/noveloraApi';
+import './MarkdownDocumentPage.css';
 
 type SaveStatus = 'saved' | 'saving' | 'error';
 type DocumentKind = 'outline' | 'world';

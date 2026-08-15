@@ -1,0 +1,51 @@
+.markdown-document-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  padding: 20px 24px;
+  border: 1px solid var(--echo-line);
+  border-radius: 16px;
+  background: var(--echo-glass-card);
+  box-shadow: var(--echo-glass-highlight), var(--echo-shadow-mint-md);
+}
+
+.markdown-document-page__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 16px;
+}
+
+.markdown-document-page__header h2 {
+  margin: 0;
+  color: var(--echo-ink);
+  font-size: 22px;
+  font-weight: 750;
+}
+
+.markdown-document-page__header p {
+  margin: 0;
+  color: var(--echo-muted);
+  font-size: 13px;
+}
+
+.markdown-document-page__header [role='status'] {
+  margin-left: auto;
+  color: var(--echo-muted);
+  font-size: 12px;
+}
+
+.markdown-document-page textarea {
+  flex: 1;
+  width: 100%;
+  min-height: 60svh;
+  border: 0;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: var(--echo-ink);
+  font-family: 'EB Garamond', Georgia, 'Times New Roman', serif;
+  font-size: 17px;
+  line-height: 1.75;
+}
