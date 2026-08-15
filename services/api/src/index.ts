@@ -5,6 +5,7 @@ import type { CharacterFile, DocumentName, RecipeId } from './projectTypes.ts';
 import {
   readChapter, readCharacters, readDocument, readProject, writeChapter, writeCharacters, writeDocument,
 } from './projectStore.ts';
+import { runTaskStep } from './recipeRunner.ts';
 import {
   acceptDraft, createTask, discardDraft, listTasks, readDraft, readTask,
 } from './taskStore.ts';
@@ -168,6 +169,22 @@ export async function buildServer() {
     } catch {
       return reply.code(404).send({ error: `Unknown task ${taskId}` });
     }
+  });
+
+  app.post('/projects/:id/tasks/:taskId/run', async (request, reply) => {
+    const { id, taskId } = request.params as { id: string; taskId: string };
+    const root = projectRoot(id);
+    try {
+      await readProject(root);
+    } catch {
+      return reply.code(404).send({ error: `Unknown project ${id}` });
+    }
+    try {
+      await readTask(root, taskId);
+    } catch {
+      return reply.code(404).send({ error: `Unknown task ${taskId}` });
+    }
+    return await runTaskStep(root, taskId);
   });
 
   app.get('/projects/:id/drafts/:taskId/:num', async (request, reply) => {

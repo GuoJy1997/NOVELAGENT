@@ -120,6 +120,14 @@ describe('api routes', () => {
     assert.match(accept.json().error, /unknown draft/i);
   });
 
+  it('returns 404 for an unknown task on run', async () => {
+    const missing = await app.inject({
+      method: 'POST', url: '/projects/default-project/tasks/missing-task-id/run',
+    });
+    assert.equal(missing.statusCode, 404);
+    assert.match(missing.json().error, /unknown task/i);
+  });
+
   it('returns a task 404 not a draft 404 when accepting a missing taskId', async () => {
     const accept = await app.inject({
       method: 'POST', url: '/projects/default-project/tasks/missing-task-id/accept',
