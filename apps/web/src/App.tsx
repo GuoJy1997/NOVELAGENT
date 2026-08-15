@@ -4,7 +4,9 @@ import { EchoHeroCopy } from './features/novelora-cockpit/components/EchoHeroCop
 import { HomeDashboard } from './features/novelora-cockpit/components/home/HomeDashboard';
 import { ProjectSidebar } from './features/novelora-cockpit/components/ProjectSidebar';
 import { WorkspaceTopbar } from './features/novelora-cockpit/components/WorkspaceTopbar';
+import { CharactersPage } from './features/novelora-cockpit/components/pages/CharactersPage';
 import { MarkdownDocumentPage } from './features/novelora-cockpit/components/pages/MarkdownDocumentPage';
+import { RelationsPage } from './features/novelora-cockpit/components/pages/RelationsPage';
 import { WritingView } from './features/novelora-cockpit/components/writing/WritingView';
 import { noveloraMockProject } from './features/novelora-cockpit/data/noveloraMockProject';
 import { NAV_ITEMS, type NavId } from './features/novelora-cockpit/nav';
@@ -116,7 +118,9 @@ export default function App() {
             hint="这是设定编辑，不会召唤 Agent。"
           />
         )}
-        {view !== 'dashboard' && view !== 'writing' && view !== 'outline' && view !== 'world' && (
+        {view === 'characters' && <CharactersPage projectId="default-project" />}
+        {view === 'relations' && <RelationsPage projectId="default-project" />}
+        {view === 'tasks' && (
           <section aria-label={navLabel(view)}>
             <p>{navLabel(view)}</p>
           </section>
