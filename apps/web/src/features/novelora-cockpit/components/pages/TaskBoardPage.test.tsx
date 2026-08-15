@@ -142,7 +142,7 @@ describe('TaskBoardPage', () => {
       currentIndex: 1,
       log: ['context', 'draft'],
     });
-    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+    const fetchMock = vi.fn(async (url: string, _init?: RequestInit) => {
       if (url.includes('/accept')) return okJson({ ok: true });
       return okJson([finalPark]);
     });
@@ -169,6 +169,19 @@ describe('TaskBoardPage', () => {
 
     expect(await screen.findByRole('region', { name: '排队' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '接受' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '丢弃' })).not.toBeInTheDocument();
+  });
+
+  it('places done cards in 完成 without 继续, 丢弃, or 接受', async () => {
+    const user = userEvent.setup();
+    stubTasks();
+    render(<TaskBoardPage projectId="default-project" />);
+
+    const done = await screen.findByRole('region', { name: '完成' });
+    expect(within(done).getByText('第 8 章')).toBeInTheDocument();
+    await user.click(within(done).getByRole('button', { name: /单章/ }));
+    expect(screen.queryByRole('button', { name: '接受' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '继续' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: '丢弃' })).not.toBeInTheDocument();
   });
 

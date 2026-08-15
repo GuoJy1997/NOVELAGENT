@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, before, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { acceptDraft, createTask, discardDraft, listTasks, readTask, writeDraft } from './taskStore.ts';
+import { acceptDraft, createTask, discardDraft, listTasks, readTask, writeDraft, writeTask } from './taskStore.ts';
 
 describe('taskStore', () => {
   let root: string;
@@ -52,5 +52,38 @@ describe('taskStore', () => {
     await discardDraft(root, 'task-discard', 1);
     assert.equal(await readFile(join(root, 'chapters/ch_01.md'), 'utf8'), before);
     await assert.rejects(readFile(join(root, 'drafts/task-discard/ch_01.md'), 'utf8'), { code: 'ENOENT' });
+  });
+
+  it('marks the task done after accepting the last chapter', async () => {
+    const task = await createTask(root, { recipe: 'chapter', chapterNums: [1] });
+    await writeDraft(root, task.id, 1, '# last chapter draft\n');
+    await acceptDraft(root, task.id, 1);
+    assert.equal((await readTask(root, task.id)).status, 'done');
+    assert.equal(await readFile(join(root, 'chapters/ch_01.md'), 'utf8'), '# last chapter draft\n');
+  });
+
+  it('keeps awaiting_accept after accepting a pause:act chapter when more remain', async () => {
+    await writeFile(join(root, 'project.json'), JSON.stringify({
+      id: 'default-project', title: 'Tides of Embers', currentChapter: 1,
+      chapters: [
+        { num: 1, title: 'Ash on the Morning Tide', status: 'drafting' },
+        { num: 2, title: 'The Vow Beneath Glass', status: 'planned' },
+        { num: 3, title: 'Salt Map, Ember Mark', status: 'planned' },
+      ],
+    }));
+    await writeFile(join(root, 'chapters/ch_02.md'), '# two\n');
+    await writeFile(join(root, 'chapters/ch_03.md'), '# three\n');
+    const task = await createTask(root, { recipe: 'volume', chapterNums: [1, 2, 3] });
+    await writeTask(root, {
+      ...task,
+      status: 'awaiting_accept',
+      step: 'await_accept',
+      currentIndex: 1,
+      log: ['context', 'pause:act'],
+    });
+    await writeDraft(root, task.id, 1, '# parked act\n');
+    await acceptDraft(root, task.id, 1);
+    assert.equal((await readTask(root, task.id)).status, 'awaiting_accept');
+    assert.equal(await readFile(join(root, 'chapters/ch_01.md'), 'utf8'), '# parked act\n');
   });
 });

@@ -94,6 +94,15 @@ export async function acceptDraft(root: string, taskId: string, chapterNum: numb
   const content = await readDraft(root, taskId, chapterNum);
   await writeChapter(root, chapterNum, content);
   await rm(draftFile(root, taskId, chapterNum), { force: true });
+  try {
+    const task = await readTask(root, taskId);
+    const lastChapter = task.chapterNums[task.chapterNums.length - 1];
+    if (chapterNum === lastChapter) {
+      await writeTask(root, { ...task, status: 'done' });
+    }
+  } catch {
+    // Draft files can exist without a matching task record (store-level accept).
+  }
 }
 
 export async function discardDraft(root: string, taskId: string, chapterNum: number): Promise<void> {

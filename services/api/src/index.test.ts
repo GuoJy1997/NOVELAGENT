@@ -184,5 +184,47 @@ describe('api routes', () => {
     const missingDraft = await app.inject({ url: '/projects/default-project/drafts/missing-id/1' });
     assert.equal(missingDraft.statusCode, 404);
   });
+
+  it('rejects empty or unknown chapterNums with 400', async () => {
+    const empty = await app.inject({
+      method: 'POST', url: '/projects/default-project/tasks',
+      payload: { recipe: 'chapter', chapterNums: [] },
+    });
+    assert.equal(empty.statusCode, 400);
+
+    const unknown = await app.inject({
+      method: 'POST', url: '/projects/default-project/tasks',
+      payload: { recipe: 'chapter', chapterNums: [99] },
+    });
+    assert.equal(unknown.statusCode, 400);
+
+    const nan = await app.inject({
+      method: 'POST', url: '/projects/default-project/tasks',
+      payload: { recipe: 'chapter', chapterNums: [Number.NaN] },
+    });
+    assert.equal(nan.statusCode, 400);
+  });
+
+  it('marks a task done after accepting its last chapter draft', async () => {
+    const { writeDraft } = await import('./taskStore.ts');
+    const created = await app.inject({
+      method: 'POST', url: '/projects/default-project/tasks',
+      payload: { recipe: 'chapter', chapterNums: [1] },
+    });
+    assert.equal(created.statusCode, 200);
+    const task = created.json();
+    const root = join(process.env.NOVELORA_DATA_DIR!, 'default-project');
+    await writeDraft(root, task.id, 1, '# accepted last chapter\n');
+
+    const accept = await app.inject({
+      method: 'POST', url: `/projects/default-project/tasks/${task.id}/accept`,
+      payload: { chapterNum: 1 },
+    });
+    assert.equal(accept.statusCode, 200);
+
+    const fetched = await app.inject({ url: `/projects/default-project/tasks/${task.id}` });
+    assert.equal(fetched.statusCode, 200);
+    assert.equal(fetched.json().status, 'done');
+  });
 });
 

@@ -147,13 +147,20 @@ export async function buildServer() {
     const { id } = request.params as { id: string };
     const body = request.body as { recipe?: unknown; chapterNums?: unknown; model?: unknown };
     const recipe = asRecipeId(body?.recipe);
-    if (!recipe || !Array.isArray(body?.chapterNums) || !body.chapterNums.every((n) => typeof n === 'number')) {
+    if (!recipe || !Array.isArray(body?.chapterNums) || !body.chapterNums.every((n) => Number.isInteger(n))) {
       return reply.code(400).send({ error: 'recipe and chapterNums are required' });
+    }
+    if (body.chapterNums.length === 0) {
+      return reply.code(400).send({ error: 'chapterNums must not be empty' });
     }
     const model = typeof body.model === 'string' ? body.model : undefined;
     const root = projectRoot(id);
     try {
-      await readProject(root);
+      const project = await readProject(root);
+      const known = new Set(project.chapters.map((chapter) => chapter.num));
+      if (body.chapterNums.some((num) => !known.has(num))) {
+        return reply.code(400).send({ error: 'chapterNums must match project chapters' });
+      }
       return await createTask(root, { recipe, chapterNums: body.chapterNums, model });
     } catch {
       return reply.code(404).send({ error: `Unknown project ${id}` });
