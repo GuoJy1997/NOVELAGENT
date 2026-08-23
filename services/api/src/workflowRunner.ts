@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { callHermes, HermesFailure } from './hermesClient.ts';
 import { readCandidateContent, writeCandidate } from './candidateStore.ts';
 import { readAttachment, readGraph, readRun, writeAttachment, writeRun } from './workflowStore.ts';
-import { CANDIDATE_NODE_TYPES, topoOrder, validateGraph } from './workflowGraph.ts';
+import { CANDIDATE_NODE_TYPES, nodesToReset, topoOrder, validateGraph } from './workflowGraph.ts';
 import type {
   RunStatus, WorkflowEdge, WorkflowGraph, WorkflowNode, WorkflowRun,
 } from './workflowTypes.ts';
@@ -157,6 +157,65 @@ async function executeModelNode(
   state.status = 'done';
 }
 
+export function parseReportScores(content: string): Record<string, number> | undefined {
+  const lines = content.split('\n');
+  for (let i = lines.length - 1; i >= 0; i -= 1) {
+    const line = lines[i].trim();
+    if (!line.startsWith('SCORES:')) continue;
+    try {
+      const parsed = JSON.parse(line.slice('SCORES:'.length).trim()) as Record<string, unknown>;
+      const scores: Record<string, number> = {};
+      for (const [key, value] of Object.entries(parsed)) {
+        if (typeof value === 'number') scores[key] = value;
+      }
+      return scores;
+    } catch {
+      return undefined;
+    }
+  }
+  return undefined;
+}
+
+async function executeGate(
+  root: string, graph: WorkflowGraph, run: WorkflowRun, node: WorkflowNode,
+): Promise<void> {
+  const state = run.nodes[node.id];
+  const upstream = await gatherUpstream(root, graph, run, node.id);
+  const report = upstream.find((part) => part.edge.attachmentType === 'report');
+  const scores = report ? parseReportScores(report.content) : undefined;
+  const field = node.config?.scoreField ?? 'overall';
+  const threshold = node.config?.threshold;
+
+  if (!scores || typeof scores[field] !== 'number' || typeof threshold !== 'number') {
+    state.status = 'waiting_author';
+    state.error = 'no usable score; author decision required';
+    return;
+  }
+
+  state.score = scores[field];
+  if (scores[field] >= threshold) {
+    state.status = 'done';
+    return;
+  }
+
+  const loopEdge = graph.edges.find((edge) => edge.loop && edge.from === node.id);
+  if (!loopEdge) {
+    state.status = 'blocked';
+    state.error = `score ${scores[field]} < ${threshold} and no loop edge`;
+    return;
+  }
+  if (state.retriesUsed >= (loopEdge.maxRetries ?? 0)) {
+    state.status = 'blocked';
+    state.error = `score ${scores[field]} < ${threshold}, retries exhausted`;
+    return;
+  }
+  state.retriesUsed += 1;
+  for (const id of nodesToReset(graph, loopEdge.to, node.id)) {
+    run.nodes[id] = { nodeId: id, status: 'pending', retriesUsed: run.nodes[id].retriesUsed };
+  }
+  state.status = 'pending';
+}
+
 export async function runNextNode(
   root: string, runId: string, hermesFetch: typeof fetch = fetch,
 ): Promise<WorkflowRun> {
@@ -179,7 +238,7 @@ export async function runNextNode(
     if (node.type === 'manual') {
       state.status = 'waiting_author';
     } else if (node.type === 'gate') {
-      throw new Error(`gate node ${node.id} is not supported yet`);
+      await executeGate(root, graph, run, node);
     } else {
       await executeModelNode(root, graph, run, node, hermesFetch);
     }

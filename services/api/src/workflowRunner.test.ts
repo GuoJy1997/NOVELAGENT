@@ -5,7 +5,7 @@ import { beforeEach, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { listPendingCandidates } from './candidateStore.ts';
 import { readAttachment, writeGraph } from './workflowStore.ts';
-import { runNextNode, startRun } from './workflowRunner.ts';
+import { parseReportScores, runNextNode, startRun } from './workflowRunner.ts';
 import type { WorkflowGraph } from './workflowTypes.ts';
 
 function scriptedFetch(replies: string[], bodies: unknown[] = []): typeof fetch {
@@ -124,6 +124,77 @@ describe('workflowRunner core', () => {
     run = await runNextNode(root, run.id, scriptedFetch(['盘点']));
     run = await runNextNode(root, run.id, scriptedFetch([]));
     assert.equal(run.nodes.check.status, 'waiting_author');
+    assert.equal(run.status, 'waiting_author');
+  });
+});
+
+function gateGraph(threshold?: number): WorkflowGraph {
+  return {
+    name: 'gated',
+    model: 'hermes-agent',
+    nodes: [
+      { id: 'draft', type: 'write', title: '写', goal: '写第 3 章', skills: [], config: { targetPath: 'chapters/ch_03.md' } },
+      { id: 'judge', type: 'review', title: '审', goal: '审第 3 章', skills: [] },
+      { id: 'door', type: 'gate', title: '门禁', goal: '低分打回', skills: [], config: threshold === undefined ? {} : { threshold } },
+    ],
+    edges: [
+      { from: 'draft', to: 'judge', attachmentType: 'candidate_ref' },
+      { from: 'judge', to: 'door', attachmentType: 'report' },
+      { from: 'door', to: 'draft', attachmentType: 'pass', loop: true, maxRetries: 1 },
+    ],
+  };
+}
+
+describe('gate node', () => {
+  let root: string;
+  beforeEach(async () => {
+    root = await mkdtemp(join(tmpdir(), 'novelora-wfgate-'));
+    await mkdir(join(root, 'chapters'), { recursive: true });
+    await writeFile(join(root, 'chapters/ch_03.md'), '');
+  });
+
+  it('parses the trailing SCORES line', () => {
+    assert.deepEqual(parseReportScores('意见\nSCORES: {"overall": 72, "logic": 88}'), { overall: 72, logic: 88 });
+    assert.equal(parseReportScores('没有分数行'), undefined);
+    assert.equal(parseReportScores('SCORES: 不是JSON'), undefined);
+  });
+
+  it('passes when the score clears the threshold', async () => {
+    await writeGraph(root, gateGraph(80));
+    const hermesFetch = scriptedFetch(['稿', '好评\nSCORES: {"overall": 88}']);
+    let run = await startRun(root, 'gated');
+    run = await runNextNode(root, run.id, hermesFetch); // draft
+    run = await runNextNode(root, run.id, hermesFetch); // judge
+    run = await runNextNode(root, run.id, hermesFetch); // door
+    assert.equal(run.nodes.door.status, 'done');
+    assert.equal(run.nodes.door.score, 88);
+    assert.equal(run.status, 'done');
+  });
+
+  it('retries once along the loop edge, then blocks when retries run out', async () => {
+    await writeGraph(root, gateGraph(80));
+    const hermesFetch = scriptedFetch([
+      '稿1', '差\nSCORES: {"overall": 50}',
+      '稿2', '还差\nSCORES: {"overall": 60}',
+    ]);
+    let run = await startRun(root, 'gated');
+    for (let i = 0; i < 3; i += 1) run = await runNextNode(root, run.id, hermesFetch); // draft judge door
+    assert.equal(run.nodes.door.retriesUsed, 1);
+    assert.equal(run.nodes.draft.status, 'pending'); // 被打回
+    assert.equal(run.nodes.judge.status, 'pending');
+    assert.equal(run.status, 'running');
+    for (let i = 0; i < 3; i += 1) run = await runNextNode(root, run.id, hermesFetch); // 第二轮
+    assert.equal(run.nodes.door.status, 'blocked');
+    assert.equal(run.status, 'blocked');
+    assert.match(run.nodes.door.error ?? '', /retries exhausted/);
+  });
+
+  it('waits for the author when the report has no scores or the gate has no threshold', async () => {
+    await writeGraph(root, gateGraph(80));
+    const hermesFetch = scriptedFetch(['稿', '光有意见没有分数行']);
+    let run = await startRun(root, 'gated');
+    for (let i = 0; i < 3; i += 1) run = await runNextNode(root, run.id, hermesFetch);
+    assert.equal(run.nodes.door.status, 'waiting_author');
     assert.equal(run.status, 'waiting_author');
   });
 });
