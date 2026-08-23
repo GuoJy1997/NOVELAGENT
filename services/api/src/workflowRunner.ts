@@ -1,8 +1,9 @@
+import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { callHermes, HermesFailure } from './hermesClient.ts';
 import { readCandidateContent, writeCandidate } from './candidateStore.ts';
-import { readAttachment, readGraph, readRun, writeAttachment, writeRun } from './workflowStore.ts';
+import { readAttachment, readCache, readGraph, readRun, writeAttachment, writeCache, writeRun } from './workflowStore.ts';
 import { CANDIDATE_NODE_TYPES, nodesToReset, reachableFrom, topoOrder, validateGraph } from './workflowGraph.ts';
 import type {
   RunStatus, WorkflowEdge, WorkflowGraph, WorkflowNode, WorkflowRun,
@@ -132,13 +133,37 @@ async function buildNodeMessages(
   ];
 }
 
+async function sourceFingerprint(root: string, paths: string[]): Promise<string> {
+  const hash = createHash('sha256');
+  for (const path of paths) {
+    hash.update(path);
+    hash.update('\0');
+    hash.update(await readSourceFile(root, path));
+    hash.update('\0');
+  }
+  return hash.digest('hex');
+}
+
 async function executeModelNode(
   root: string, graph: WorkflowGraph, run: WorkflowRun, node: WorkflowNode, hermesFetch: typeof fetch,
 ): Promise<void> {
   const state = run.nodes[node.id];
   const upstream = await gatherUpstream(root, graph, run, node.id);
-  const messages = await buildNodeMessages(root, node, upstream);
-  const content = await callHermes(hermesFetch, node.model ?? graph.model, messages);
+  let content: string | undefined;
+  let fingerprint: string | undefined;
+  const cacheable = node.type === 'explore' || node.type === 'gene';
+  if (cacheable) {
+    fingerprint = await sourceFingerprint(root, node.config?.sourcePaths ?? []);
+    if (!state.forceRerun) {
+      content = await readCache(root, node.id, fingerprint);
+      if (content !== undefined) state.cached = true;
+    }
+  }
+  if (content === undefined) {
+    const messages = await buildNodeMessages(root, node, upstream);
+    content = await callHermes(hermesFetch, node.model ?? graph.model, messages);
+    if (cacheable && fingerprint) await writeCache(root, node.id, fingerprint, content);
+  }
 
   if (node.type === 'gene') {
     const targetPath = node.config?.targetPath;

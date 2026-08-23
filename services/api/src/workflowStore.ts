@@ -103,3 +103,22 @@ export async function readAttachment(root: string, relPath: string): Promise<str
     throw err;
   }
 }
+
+export async function writeCache(root: string, nodeId: string, fingerprint: string, content: string): Promise<void> {
+  if (!NODE_ID_PATTERN.test(nodeId)) throw new Error(`Invalid node id ${nodeId}`);
+  await mkdir(join(root, 'workflow', 'cache'), { recursive: true });
+  await atomicWrite(join(root, 'workflow', 'cache', `${nodeId}.json`), JSON.stringify({ fingerprint, content }));
+}
+
+export async function readCache(root: string, nodeId: string, fingerprint: string): Promise<string | undefined> {
+  if (!NODE_ID_PATTERN.test(nodeId)) throw new Error(`Invalid node id ${nodeId}`);
+  try {
+    const entry = JSON.parse(await readFile(join(root, 'workflow', 'cache', `${nodeId}.json`), 'utf8')) as {
+      fingerprint?: string; content?: string;
+    };
+    return entry.fingerprint === fingerprint && typeof entry.content === 'string' ? entry.content : undefined;
+  } catch (err) {
+    if (notFound(err)) return undefined;
+    throw err;
+  }
+}

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { beforeEach, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { listPendingCandidates } from './candidateStore.ts';
-import { readAttachment, writeGraph } from './workflowStore.ts';
+import { readAttachment, readCache, writeCache, writeGraph } from './workflowStore.ts';
 import { forceRerun, parseReportScores, resolveManual, runNextNode, startRun } from './workflowRunner.ts';
 import type { WorkflowGraph } from './workflowTypes.ts';
 
@@ -247,5 +247,60 @@ describe('manual node and force rerun', () => {
     assert.equal(run.nodes.check.status, 'pending');
     assert.equal(run.status, 'running');
     await assert.rejects(forceRerun(root, run.id, 'ghost'), /Unknown node ghost/);
+  });
+});
+
+describe('explore/gene attachment cache', () => {
+  let root: string;
+  const cacheGraph: WorkflowGraph = {
+    name: 'cached',
+    model: 'hermes-agent',
+    nodes: [
+      { id: 'scan', type: 'explore', title: '盘点', goal: '盘点', skills: [], config: { sourcePaths: ['world.md'] } },
+      { id: 'check', type: 'manual', title: '检查', goal: '过目', skills: [] },
+    ],
+    edges: [{ from: 'scan', to: 'check', attachmentType: 'fact' }],
+  };
+
+  beforeEach(async () => {
+    root = await mkdtemp(join(tmpdir(), 'novelora-wfcache-'));
+    await writeFile(join(root, 'world.md'), '设定 v1');
+    await writeGraph(root, cacheGraph);
+  });
+
+  it('store round-trips cache entries by fingerprint', async () => {
+    await writeCache(root, 'scan', 'fp-1', '缓存内容');
+    assert.equal(await readCache(root, 'scan', 'fp-1'), '缓存内容');
+    assert.equal(await readCache(root, 'scan', 'fp-2'), undefined);
+    assert.equal(await readCache(root, 'other', 'fp-1'), undefined);
+  });
+
+  it('reuses the cached attachment when sources are unchanged, recomputes when they change', async () => {
+    let calls = 0;
+    const countingFetch = (async () => {
+      calls += 1;
+      return new Response(JSON.stringify({ choices: [{ message: { content: `盘点第${calls}次` } }] }), { status: 200 });
+    }) as typeof fetch;
+
+    let run1 = await startRun(root, 'cached');
+    run1 = await runNextNode(root, run1.id, countingFetch);
+    assert.equal(calls, 1);
+    assert.ok(!run1.nodes.scan.cached);
+
+    let run2 = await startRun(root, 'cached');
+    run2 = await runNextNode(root, run2.id, countingFetch);
+    assert.equal(calls, 1); // 命中缓存，没调 Hermes
+    assert.equal(run2.nodes.scan.cached, true);
+    assert.equal(await readAttachment(root, run2.nodes.scan.attachmentPath!), '盘点第1次');
+
+    await writeFile(join(root, 'world.md'), '设定 v2'); // 源变了
+    let run3 = await startRun(root, 'cached');
+    run3 = await runNextNode(root, run3.id, countingFetch);
+    assert.equal(calls, 2);
+
+    let run4 = await startRun(root, 'cached');
+    run4 = await forceRerun(root, run4.id, 'scan'); // 作者强制重跑
+    run4 = await runNextNode(root, run4.id, countingFetch);
+    assert.equal(calls, 3);
   });
 });
