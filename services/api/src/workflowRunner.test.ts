@@ -5,7 +5,7 @@ import { beforeEach, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { listPendingCandidates } from './candidateStore.ts';
 import { readAttachment, writeGraph } from './workflowStore.ts';
-import { parseReportScores, runNextNode, startRun } from './workflowRunner.ts';
+import { forceRerun, parseReportScores, resolveManual, runNextNode, startRun } from './workflowRunner.ts';
 import type { WorkflowGraph } from './workflowTypes.ts';
 
 function scriptedFetch(replies: string[], bodies: unknown[] = []): typeof fetch {
@@ -196,5 +196,56 @@ describe('gate node', () => {
     for (let i = 0; i < 3; i += 1) run = await runNextNode(root, run.id, hermesFetch);
     assert.equal(run.nodes.door.status, 'waiting_author');
     assert.equal(run.status, 'waiting_author');
+  });
+});
+
+describe('manual node and force rerun', () => {
+  let root: string;
+  beforeEach(async () => {
+    root = await mkdtemp(join(tmpdir(), 'novelora-wfmanual-'));
+    await writeFile(join(root, 'world.md'), '设定');
+  });
+
+  const pauseGraph: WorkflowGraph = {
+    name: 'pause',
+    model: 'hermes-agent',
+    nodes: [
+      { id: 'scan', type: 'explore', title: '盘点', goal: '盘点', skills: [], config: { sourcePaths: ['world.md'] } },
+      { id: 'check', type: 'manual', title: '检查', goal: '作者过目', skills: [] },
+    ],
+    edges: [{ from: 'scan', to: 'check', attachmentType: 'fact' }],
+  };
+
+  it('resolveManual writes the author decision as an attachment and finishes the run', async () => {
+    await writeGraph(root, pauseGraph);
+    let run = await startRun(root, 'pause');
+    run = await runNextNode(root, run.id, scriptedFetch(['盘点']));
+    run = await runNextNode(root, run.id, scriptedFetch([]));
+    assert.equal(run.status, 'waiting_author');
+    run = await resolveManual(root, run.id, 'check', { note: '走方向 B' });
+    assert.equal(run.nodes.check.status, 'done');
+    assert.equal(run.status, 'done');
+    assert.equal(await readAttachment(root, run.nodes.check.attachmentPath!), '走方向 B');
+  });
+
+  it('rejects resolving a node that is not waiting', async () => {
+    await writeGraph(root, pauseGraph);
+    const run = await startRun(root, 'pause');
+    await assert.rejects(resolveManual(root, run.id, 'scan', {}), /not waiting for the author/);
+  });
+
+  it('forceRerun resets the node and its downstream to pending with the rerun flag', async () => {
+    await writeGraph(root, pauseGraph);
+    let run = await startRun(root, 'pause');
+    run = await runNextNode(root, run.id, scriptedFetch(['盘点']));
+    run = await runNextNode(root, run.id, scriptedFetch([]));
+    run = await resolveManual(root, run.id, 'check', {});
+    assert.equal(run.status, 'done');
+    run = await forceRerun(root, run.id, 'scan');
+    assert.equal(run.nodes.scan.status, 'pending');
+    assert.equal(run.nodes.scan.forceRerun, true);
+    assert.equal(run.nodes.check.status, 'pending');
+    assert.equal(run.status, 'running');
+    await assert.rejects(forceRerun(root, run.id, 'ghost'), /Unknown node ghost/);
   });
 });

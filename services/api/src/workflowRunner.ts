@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { callHermes, HermesFailure } from './hermesClient.ts';
 import { readCandidateContent, writeCandidate } from './candidateStore.ts';
 import { readAttachment, readGraph, readRun, writeAttachment, writeRun } from './workflowStore.ts';
-import { CANDIDATE_NODE_TYPES, nodesToReset, topoOrder, validateGraph } from './workflowGraph.ts';
+import { CANDIDATE_NODE_TYPES, nodesToReset, reachableFrom, topoOrder, validateGraph } from './workflowGraph.ts';
 import type {
   RunStatus, WorkflowEdge, WorkflowGraph, WorkflowNode, WorkflowRun,
 } from './workflowTypes.ts';
@@ -259,3 +259,38 @@ export async function runNextNode(
   await writeRun(root, run);
   return run;
 }
+
+export async function resolveManual(
+  root: string, runId: string, nodeId: string, decision: { note?: string },
+): Promise<WorkflowRun> {
+  const run = await readRun(root, runId);
+  const state = run.nodes[nodeId];
+  if (!state || state.status !== 'waiting_author') {
+    throw new Error(`Node ${nodeId} is not waiting for the author`);
+  }
+  const graph = await readGraph(root, run.graphName);
+  const node = graph.nodes.find((candidate) => candidate.id === nodeId);
+  if (node?.type === 'manual') {
+    state.attachmentPath = await writeAttachment(root, run.id, nodeId, decision.note ?? 'pass');
+  }
+  state.status = 'done';
+  delete state.error;
+  state.finishedAt = new Date().toISOString();
+  run.status = recomputeRunStatus(run);
+  await writeRun(root, run);
+  return run;
+}
+
+export async function forceRerun(root: string, runId: string, nodeId: string): Promise<WorkflowRun> {
+  const run = await readRun(root, runId);
+  if (!run.nodes[nodeId]) throw new Error(`Unknown node ${nodeId}`);
+  const graph = await readGraph(root, run.graphName);
+  for (const id of reachableFrom(graph, nodeId)) {
+    run.nodes[id] = { nodeId: id, status: 'pending', retriesUsed: 0 };
+  }
+  run.nodes[nodeId].forceRerun = true;
+  run.status = 'running';
+  await writeRun(root, run);
+  return run;
+}
+
