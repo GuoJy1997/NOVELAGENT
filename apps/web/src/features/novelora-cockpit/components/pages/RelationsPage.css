@@ -1,0 +1,109 @@
+.relations-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: none;
+  margin-inline: auto;
+  min-width: 0;
+}
+
+.relations-page__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 16px;
+}
+
+.relations-page__header h2 {
+  margin: 0;
+  color: var(--bixin-ink);
+  font-family: var(--bixin-font-display);
+  font-size: 26px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.relations-page__header p { margin: 4px 0 0; color: var(--bixin-muted); font-size: 13px; }
+
+.relations-page__body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(340px, 380px); gap: 20px; align-items: stretch; }
+.relations-page__canvas { min-width: 0; position: relative; }
+.relations-page__canvas-inner { min-width: 340px; transform-origin: center top; transition: transform var(--bixin-motion-fast); }
+.relations-page__controls { display: flex; justify-content: center; gap: 8px; margin-top: 12px; }
+.relations-page__detail { min-width: 0; padding: 24px; border: 1px solid var(--bixin-card-border); border-radius: var(--bixin-radius-card); background: var(--bixin-card); box-shadow: var(--bixin-shadow-card); }
+.relations-page__detail-person { display: flex; align-items: center; gap: 14px; padding-bottom: 18px; border-bottom: 1px solid var(--bixin-card-border); }
+.relations-page__detail-person img { width: 76px; height: 76px; border: 2px solid var(--bixin-surface-solid); border-radius: var(--bixin-radius-circle); object-fit: cover; box-shadow: var(--bixin-shadow-portrait); }
+.relations-page__detail h3 { margin: 0; color: var(--bixin-ink); }
+.relations-page__detail h4 { margin: 20px 0 10px; color: var(--bixin-ink); font-size: 14px; }
+.relations-page__summary-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.relations-page__summary-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; min-height: 42px; padding: 8px 10px; border: 1px solid var(--bixin-card-border); border-radius: var(--bixin-radius-input); background: var(--bixin-surface-solid); color: var(--bixin-muted); font-size: 11px; }
+.relations-page__summary-card strong { color: var(--bixin-ink); font-size: 16px; font-variant-numeric: tabular-nums; }
+.relations-page__summary-card--ally strong { color: var(--bixin-green-600); }
+.relations-page__summary-card--friend strong { color: var(--bixin-pop-blue); }
+.relations-page__summary-card--rival strong { color: var(--bixin-pop-pink); }
+.relations-page__summary-card--deal strong { color: var(--bixin-pop-orange); }
+.relations-page__summary-card--kin strong { color: var(--bixin-pop-cyan); }
+.relations-page__summary-card--mentor strong { color: var(--bixin-pop-purple); }
+.relations-page__key-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.relations-page__key-list li { display: grid; grid-template-columns: 38px minmax(0, 1fr); gap: 4px 10px; align-items: center; color: var(--bixin-muted); font-size: 12px; }
+.relations-page__key-list img { grid-row: span 2; width: 38px; height: 38px; border-radius: var(--bixin-radius-circle); object-fit: cover; }
+.relations-page__key-context { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.relations-page__key-list strong, .relations-page__key-list span { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.relations-page__key-list strong { color: var(--bixin-ink); }
+.relations-page__key-list input { grid-column: 2; width: 100%; box-sizing: border-box; border: 1px solid var(--bixin-ink-08); border-radius: var(--bixin-radius-input); background: var(--bixin-surface-solid); color: var(--bixin-ink); padding: 7px 9px; font: inherit; }
+
+@media (max-width: 820px) { .relations-page__body { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .relations-page__canvas-inner { transition: none; } }
+
+.relations-page__actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+  align-items: center;
+}
+
+.relations-page__header [role='status'] {
+  color: var(--bixin-muted);
+  font-size: 12px;
+}
+
+.relations-page__empty {
+  margin: 0;
+  padding: 16px 20px;
+  color: var(--bixin-muted);
+  font-size: 13px;
+  background: var(--bixin-card);
+  border: 1px solid var(--bixin-card-border);
+  border-radius: var(--bixin-radius-card);
+  box-shadow: var(--bixin-shadow-card);
+}
+
+/* The relationship canvas and inspector sit within a single reference sheet. */
+.relations-page { height: 100%; min-height: 0; }
+.relations-page__header { min-height: 70px; align-items: center; padding-inline: 20px; }
+.relations-page__header h2 { font-size: 28px; font-weight: 750; }
+.relations-page__body { flex: 1; min-height: 0; grid-template-columns: minmax(0, 1fr) 380px; gap: 12px; padding: 16px; border: 1px solid var(--bixin-card-border); border-radius: var(--bixin-radius-card); background: var(--bixin-surface-94); }
+.relations-page__canvas { height: 100%; overflow: hidden; }
+.relations-page__canvas-inner { height: calc(100% - 58px); overflow: auto; scrollbar-width: thin; }
+.relations-page__controls { position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); white-space: nowrap; padding: 5px; border: 1px solid var(--bixin-card-border); border-radius: var(--bixin-radius-action); background: var(--bixin-surface-solid); box-shadow: var(--bixin-shadow-card); }
+.relations-page__detail { overflow: auto; scrollbar-width: thin; box-shadow: var(--bixin-shadow-none); padding: 20px; border-radius: var(--bixin-radius-medium); }
+.relations-page__detail-person { min-height: 160px; }
+.relations-page__detail-person img { width: 105px; height: 120px; object-fit: cover; }
+.relations-page__detail-person p { font-size: 12px; line-height: 1.75; color: var(--bixin-muted); }
+.relations-page__summary-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+.relations-page__summary-card { grid-template-columns: 1fr; gap: 5px; text-align: center; background: var(--bixin-green-50); min-height: 62px; padding: 7px 3px; font-size: 10px; }
+.relations-page__summary-card:nth-child(2) { background: var(--bixin-pop-blue-soft); }
+.relations-page__summary-card:nth-child(3) { background: var(--bixin-pop-pink-soft); }
+.relations-page__summary-card:nth-child(4) { background: var(--bixin-pop-orange-soft); }
+.relations-page__summary-card:nth-child(5) { background: var(--bixin-pop-purple-soft); }
+.relations-page .character-graph { position: relative; height: 100%; padding: 8px; border: 0; box-shadow: var(--bixin-shadow-none); background: transparent; }
+.relations-page .character-graph__heading { padding-left: 8px; }
+.relations-page .character-graph__heading h2 { font-size: 13px; }
+.relations-page .character-graph__viewport { min-height: 480px; }
+.relations-page .character-graph__legend { position: absolute; top: 46px; left: 8px; z-index: 2; display: grid; justify-content: start; gap: 12px; padding: 16px; border: 1px solid var(--bixin-card-border); border-radius: var(--bixin-radius-medium); background: var(--bixin-surface-94); }
+
+
+
+.relations-page__graph-content { min-width: 760px; min-height: 600px; }
+.relations-page .character-graph__viewport { overflow: visible; }
+

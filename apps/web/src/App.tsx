@@ -1,164 +1,179 @@
-import { useEffect, useRef, useState } from 'react';
-import { AIWritingPartner } from './features/novelora-cockpit/components/AIWritingPartner';
-import { AgentDetailsDrawer } from './features/novelora-cockpit/components/AgentDetailsDrawer';
-import { AppShell } from './features/novelora-cockpit/components/AppShell';
-import { ChapterDetailDrawer } from './features/novelora-cockpit/components/ChapterDetailDrawer';
-import { ChapterSwimlane } from './features/novelora-cockpit/components/ChapterSwimlane';
-import { CharacterGraph } from './features/novelora-cockpit/components/CharacterGraph';
-import { ClueAttributionFlow } from './features/novelora-cockpit/components/ClueAttributionFlow';
-import { EchoHeroCopy } from './features/novelora-cockpit/components/EchoHeroCopy';
-import { InspirationVault } from './features/novelora-cockpit/components/InspirationVault';
-import { MemoryLayer } from './features/novelora-cockpit/components/MemoryLayer';
-import { ProjectSidebar } from './features/novelora-cockpit/components/ProjectSidebar';
-import { StructureMap } from './features/novelora-cockpit/components/StructureMap';
-import { WorkspaceTopbar } from './features/novelora-cockpit/components/WorkspaceTopbar';
+import { useCallback, useEffect, useState } from 'react';
+import { BixinHomePage } from './features/novelora-cockpit/components/home/BixinHomePage';
+import { WorkspacePicker } from './features/novelora-cockpit/components/home/WorkspacePicker';
+import { CharactersPage } from './features/novelora-cockpit/components/pages/CharactersPage';
+import { MarkdownDocumentPage } from './features/novelora-cockpit/components/pages/MarkdownDocumentPage';
+import { RelationsPage } from './features/novelora-cockpit/components/pages/RelationsPage';
+import { TaskBoardPage } from './features/novelora-cockpit/components/pages/TaskBoardPage';
+import { WorkflowCanvasPage } from './features/novelora-cockpit/components/pages/WorkflowCanvasPage';
+import { WritingView } from './features/novelora-cockpit/components/writing/WritingView';
 import { noveloraMockProject } from './features/novelora-cockpit/data/noveloraMockProject';
+import { useImportCompletionNotice } from './features/novelora-cockpit/lib/importSession';
+import { coverUrl, listWorkspaces } from './features/novelora-cockpit/lib/noveloraApi';
+import type { NavId } from './features/novelora-cockpit/nav';
 
-// Long enough to read without leaving a permanent obstruction over the workspace.
 const ACTION_FEEDBACK_DURATION_MS = 3200;
+const DEFAULT_PROJECT_ID = 'default-project';
+const WORKSPACE_STORAGE_KEY = 'novelora.workspace';
 
 export default function App() {
-  const initialChapter = noveloraMockProject.chapters.find(
+  const [activeNavigation, setActiveNavigation] = useState<NavId>('home');
+  const [actionMessage, setActionMessage] = useState('');
+  const [actionTarget, setActionTarget] = useState<NavId | null>(null);
+  const [writingChapterNum, setWritingChapterNum] = useState(1);
+  const [currentProjectId, setCurrentProjectId] = useState(DEFAULT_PROJECT_ID);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [coverVersion, setCoverVersion] = useState(0);
+  const timelineChapters = [...noveloraMockProject.chapters].sort(
+    (first, second) => first.order - second.order,
+  );
+  const currentChapterIndex = timelineChapters.findIndex(
     (chapter) => chapter.id === noveloraMockProject.selectedChapterId,
   );
-  const [activeNavigation, setActiveNavigation] = useState('Home');
-  const [actionMessage, setActionMessage] = useState('');
-  const [selectedChapterId, setSelectedChapterId] = useState(noveloraMockProject.selectedChapterId);
-  const [isChapterDrawerOpen, setIsChapterDrawerOpen] = useState(false);
-  const [isAgentDrawerOpen, setIsAgentDrawerOpen] = useState(false);
-  const chapterDetailsButtonRef = useRef<HTMLButtonElement>(null);
-  const agentDetailsButtonRef = useRef<HTMLButtonElement>(null);
-  const [selectedActId, setSelectedActId] = useState(
-    initialChapter?.actId ?? noveloraMockProject.acts[0]?.id ?? '',
-  );
-  const activeChapters = noveloraMockProject.chapters
-    .filter((chapter) => chapter.actId === selectedActId)
-    .sort((first, second) => first.order - second.order);
-  const selectedChapter = noveloraMockProject.chapters.find(
-    (chapter) => chapter.id === selectedChapterId,
-  );
+
+  const showMessage = useCallback((message: string) => {
+    setActionTarget(null);
+    setActionMessage(message);
+  }, []);
+
+  const announceImport = useCallback((notice: { text: string; nav: NavId }) => {
+    setActionTarget(notice.nav);
+    setActionMessage(notice.text);
+  }, []);
+
+  useImportCompletionNotice(currentProjectId, announceImport);
 
   useEffect(() => {
     if (!actionMessage) return undefined;
-
-    const dismissalTimer = window.setTimeout(
-      () => setActionMessage(''),
-      ACTION_FEEDBACK_DURATION_MS,
-    );
-
+    const dismissalTimer = window.setTimeout(() => {
+      setActionMessage('');
+      setActionTarget(null);
+    }, ACTION_FEEDBACK_DURATION_MS);
     return () => window.clearTimeout(dismissalTimer);
   }, [actionMessage]);
 
-  function selectAct(actId: string) {
-    const act = noveloraMockProject.acts.find((candidate) => candidate.id === actId);
-    const firstChapterId = act?.chapterIds[0];
+  useEffect(() => {
+    let cancelled = false;
+    listWorkspaces()
+      .then((workspaces) => {
+        if (cancelled || workspaces.length === 0) return;
+        const storedId = window.localStorage.getItem(WORKSPACE_STORAGE_KEY);
+        const matched = workspaces.find((workspace) => workspace.id === storedId);
+        const fallback = workspaces[0];
+        if (!fallback) return;
+        setCurrentProjectId(matched?.id ?? fallback.id);
+      })
+      .catch(() => {
+        /* Keep the demo project when the local api is offline. */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-    setSelectedActId(actId);
-    if (firstChapterId) setSelectedChapterId(firstChapterId);
+  function openWriting(chapterNum: number) {
+    setWritingChapterNum(chapterNum);
+    setActiveNavigation('writing');
   }
 
-  function openAgentDetails() {
-    if (document.activeElement instanceof HTMLButtonElement) {
-      agentDetailsButtonRef.current = document.activeElement;
+  function workbench() {
+    if (activeNavigation === 'writing') {
+      return (
+        <WritingView
+          projectId={currentProjectId}
+          chapterNum={writingChapterNum}
+          onSelectChapter={setWritingChapterNum}
+          onBack={() => setActiveNavigation('home')}
+        />
+      );
     }
-    setIsAgentDrawerOpen(true);
+    if (activeNavigation === 'outline') {
+      return (
+        <MarkdownDocumentPage
+          projectId={currentProjectId}
+          document="outline"
+          title="大纲"
+          hint=""
+          onBack={() => setActiveNavigation('home')}
+        />
+      );
+    }
+    if (activeNavigation === 'world') {
+      return (
+        <MarkdownDocumentPage
+          projectId={currentProjectId}
+          document="world"
+          title="世界观"
+          hint="这是设定编辑，不会召唤 Agent。"
+          onBack={() => setActiveNavigation('home')}
+        />
+      );
+    }
+    if (activeNavigation === 'characters') {
+      return (
+        <CharactersPage
+          projectId={currentProjectId}
+          onBack={() => setActiveNavigation('home')}
+          onOpenRelations={() => setActiveNavigation('relations')}
+        />
+      );
+    }
+    if (activeNavigation === 'relations') {
+      return <RelationsPage projectId={currentProjectId} onBack={() => setActiveNavigation('home')} />;
+    }
+    if (activeNavigation === 'workflow') {
+      return <WorkflowCanvasPage projectId={currentProjectId} />;
+    }
+    if (activeNavigation === 'tasks') {
+      return <TaskBoardPage projectId={currentProjectId} />;
+    }
+    return null;
   }
 
   return (
     <>
-      <AppShell
-        sidebar={
-          <ProjectSidebar
-            activeItem={activeNavigation}
-            onSelectItem={setActiveNavigation}
-            onNewProject={() =>
-              setActionMessage('New project creation is not available in this demo.')
-            }
-          />
-        }
-        topbar={<WorkspaceTopbar project={noveloraMockProject} />}
-        hero={
-          <EchoHeroCopy
-            onContinueWriting={() => setActionMessage('Opening the selected chapter draft.')}
-            onAIAssist={() =>
-              setActionMessage('AI Assist is ready for the selected chapter.')
-            }
-          />
-        }
+      <BixinHomePage
+        activeNavigation={activeNavigation}
+        onSelectNavigation={setActiveNavigation}
+        onContinueWriting={() => openWriting(currentChapterIndex + 1)}
+        onOpenProject={() => setPickerOpen(true)}
+        onNewProject={() => setPickerOpen(true)}
+        onShowMessage={showMessage}
+        coverSrc={`${coverUrl(currentProjectId)}?v=${coverVersion}`}
+        projectId={currentProjectId}
       >
-        <div className="echo-dashboard">
-          <div className="echo-dashboard__primary-row">
-            <StructureMap
-              acts={noveloraMockProject.acts}
-              selectedActId={selectedActId}
-              onSelectAct={selectAct}
-            />
-            <div className="echo-dashboard__timeline">
-              <ChapterSwimlane
-                chapters={activeChapters}
-                selectedChapterId={selectedChapterId}
-                onSelectChapter={setSelectedChapterId}
-              />
-              <button
-                ref={chapterDetailsButtonRef}
-                className="chapter-details-button"
-                type="button"
-                disabled={!selectedChapter}
-                onClick={() => setIsChapterDrawerOpen(true)}
-              >
-                Open chapter details
-              </button>
-            </div>
-            <AIWritingPartner
-              project={noveloraMockProject}
-              onViewAll={openAgentDetails}
-              viewAllButtonRef={agentDetailsButtonRef}
-            />
-          </div>
-
-          <div className="echo-dashboard__lower-row knowledge-workspace-grid">
-            <InspirationVault
-              inspirations={noveloraMockProject.inspirations}
-              onViewAll={() =>
-                setActionMessage('The full inspiration archive is available from Inspiration.')
-              }
-            />
-            <CharacterGraph
-              characters={noveloraMockProject.characters}
-              relationships={noveloraMockProject.characterRelationships}
-            />
-            <ClueAttributionFlow
-              clueFlows={noveloraMockProject.clueFlows}
-              chapters={noveloraMockProject.chapters}
-              selectedChapterId={selectedChapterId}
-            />
-            <MemoryLayer
-              sources={noveloraMockProject.memorySources}
-              onManage={openAgentDetails}
-            />
-          </div>
-        </div>
-      </AppShell>
-
-      <ChapterDetailDrawer
-        project={noveloraMockProject}
-        selectedChapter={selectedChapter}
-        isOpen={isChapterDrawerOpen}
-        onClose={() => setIsChapterDrawerOpen(false)}
-        invokerRef={chapterDetailsButtonRef}
-      />
-      <AgentDetailsDrawer
-        project={noveloraMockProject}
-        isOpen={isAgentDrawerOpen}
-        onClose={() => setIsAgentDrawerOpen(false)}
-        invokerRef={agentDetailsButtonRef}
-      />
+        {workbench()}
+      </BixinHomePage>
+      {pickerOpen ? (
+        <WorkspacePicker
+          currentProjectId={currentProjectId}
+          onSelect={(projectId) => {
+            setCurrentProjectId(projectId);
+            window.localStorage.setItem(WORKSPACE_STORAGE_KEY, projectId);
+            setWritingChapterNum(1);
+            setPickerOpen(false);
+            setCoverVersion((version) => version + 1);
+          }}
+          onClose={() => setPickerOpen(false)}
+        />
+      ) : null}
       <div
-        className={`echo-action-feedback${actionMessage ? ' is-visible' : ''}`}
+        className={`bixin-action-feedback${actionMessage ? ' is-visible' : ''}`}
         role="status"
         aria-live="polite"
       >
-        {actionMessage}
+        {actionMessage && actionTarget ? (
+          <button
+            type="button"
+            onClick={() => {
+              setActiveNavigation(actionTarget);
+              setActionMessage('');
+              setActionTarget(null);
+            }}
+          >
+            {actionMessage}
+          </button>
+        ) : actionMessage}
       </div>
     </>
   );

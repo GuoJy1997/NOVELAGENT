@@ -9,7 +9,15 @@ export type InspirationType = 'image' | 'quote' | 'location' | 'research';
 export type AgentTaskState = 'queued' | 'running' | 'done' | 'blocked';
 export type SkillCategory = 'writing' | 'review' | 'planning' | 'memory';
 export type NarrativeMarkerTone = 'conflict' | 'climax' | 'resolution';
-export type RelationshipKind = 'ally' | 'neutral' | 'rival' | 'unknown';
+export type RelationshipKind =
+  | 'ally' | 'neutral' | 'rival' | 'unknown'
+  | 'friend' | 'deal' | 'kin' | 'mentor';
+export const KIND_META: Record<RelationshipKind, { label: string }> = {
+  ally: { label: '亲密 / 信任' }, friend: { label: '友好 / 合作' },
+  rival: { label: '竞争 / 敌对' }, deal: { label: '利用 / 交易' },
+  kin: { label: '亲属 / 血缘' }, mentor: { label: '师徒 / 指导' },
+  neutral: { label: '中立' }, unknown: { label: '其他' },
+};
 
 export interface NarrativeMarker {
   label: string;

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "skills": {
+    "cs-universal-layered-assets": {
+      "name": "cs-universal-layered-assets",
+      "version": "1.2.0",
+      "source": "redskill",
+      "install_dir": "D:\\NOVELAGENT\\skills\\cs-universal-layered-assets",
+      "installed_at": "1786526760775",
+      "sha256": "7cb3e4b125ad52bebcb1d806a466cc783e96f3ed1ce6b9434cd3218599f5e153"
+    },
+    "impeccable": {
+      "name": "impeccable",
+      "version": "3.9.1",
+      "source": "redskill",
+      "install_dir": "D:\\NOVELAGENT\\skills\\impeccable",
+      "installed_at": "1786527157100",
+      "sha256": "6b5bc8c24b34dad3b9abe32f4a7ecec4e531a843b3ed0e2debb60275c972c18f"
+    },
+    "gsap-skills": {
+      "name": "gsap-skills",
+      "version": "1.0.0",
+      "source": "redskill",
+      "install_dir": "D:\\NOVELAGENT\\skills\\gsap-skills",
+      "installed_at": "1786527159502",
+      "sha256": "515f927234715d9c48ffed1f248d7f165e691572b34328f10226675dc1c05157"
+    }
+  }
+}

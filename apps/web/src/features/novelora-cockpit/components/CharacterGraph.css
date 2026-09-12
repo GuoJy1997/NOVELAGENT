@@ -1,0 +1,234 @@
+.character-graph {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  padding: 22px;
+  border: 1px solid var(--bixin-card-border);
+  border-radius: var(--bixin-radius-card);
+  background: var(--bixin-card);
+  box-shadow: var(--bixin-shadow-card);
+  backdrop-filter: blur(8px);
+}
+
+.character-graph__heading {
+  display: flex;
+  min-width: 0;
+  min-height: 28px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.character-graph__heading h2 {
+  margin: 0;
+  min-width: 0;
+  color: var(--bixin-ink);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.character-graph__heading > span {
+  flex: 0 0 auto;
+  color: var(--bixin-muted);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.character-graph__viewport {
+  position: relative;
+  min-width: 0;
+  min-height: 560px;
+  overflow: auto;
+}
+
+.character-graph__stage {
+  position: relative;
+  width: 760px;
+  height: var(--character-graph-height);
+  margin: 4px auto 0;
+}
+
+.character-graph__edges,
+.character-graph__nodes {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.character-graph__edges {
+  z-index: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.character-graph__edge {
+  fill: none;
+  stroke: var(--bixin-subtle);
+  stroke-linecap: round;
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.character-graph__edge--ally {
+  stroke: var(--bixin-green-600);
+}
+
+.character-graph__edge--neutral {
+  stroke: var(--bixin-muted);
+}
+
+.character-graph__edge--rival {
+  stroke: var(--bixin-pop-pink);
+  stroke-dasharray: 6 3;
+}
+
+.character-graph__edge--friend { stroke: var(--bixin-pop-blue); }
+.character-graph__edge--deal { stroke: var(--bixin-pop-orange); }
+.character-graph__edge--kin { stroke: var(--bixin-pop-cyan); }
+.character-graph__edge--mentor { stroke: var(--bixin-pop-purple); }
+
+.character-graph__edge--unknown {
+  stroke: var(--bixin-subtle);
+  stroke-dasharray: 2 4;
+}
+
+.character-graph__edge-label {
+  fill: var(--bixin-muted);
+  font-size: 8px;
+  text-anchor: middle;
+}
+
+.character-graph__nodes {
+  z-index: 1;
+  display: block;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.character-graph__node {
+  position: absolute;
+  top: var(--character-y);
+  left: var(--character-x);
+  display: grid;
+  width: 100px;
+  min-width: 0;
+  justify-items: center;
+  gap: 4px;
+  transform: translate(-50%, -50%);
+  color: var(--bixin-ink);
+  text-align: center;
+}
+
+.character-graph__node button {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.character-graph__node img {
+  width: 60px;
+  height: 60px;
+  border: 2px solid var(--bixin-surface-solid);
+  border-radius: var(--bixin-radius-circle);
+  box-shadow: var(--bixin-shadow-portrait);
+  object-fit: cover;
+}
+
+.character-graph__node.is-protagonist img {
+  width: 76px;
+  height: 76px;
+  box-shadow: var(--bixin-shadow-portrait-active);
+}
+
+.character-graph__node span {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+}
+
+.character-graph__node strong,
+.character-graph__node small {
+  min-width: 0;
+  overflow: hidden;
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.05;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.character-graph__node strong {
+  font-weight: 780;
+}
+
+.character-graph__node small {
+  color: var(--bixin-muted);
+}
+
+.character-graph__legend {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--bixin-muted);
+  font-size: 11px;
+}
+
+.character-graph__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.character-graph__legend-item > span {
+  display: inline-block;
+  width: 14px;
+  height: 2px;
+  border-radius: var(--bixin-radius-pill);
+  background: var(--bixin-subtle);
+}
+
+.character-graph__legend-item--ally > span {
+  background: var(--bixin-green-600);
+}
+
+.character-graph__legend-item--friend > span { background: var(--bixin-pop-blue); }
+.character-graph__legend-item--deal > span { background: var(--bixin-pop-orange); }
+.character-graph__legend-item--kin > span { background: var(--bixin-pop-cyan); }
+.character-graph__legend-item--mentor > span { background: var(--bixin-pop-purple); }
+
+.character-graph__legend-item--neutral > span {
+  background: var(--bixin-subtle);
+}
+
+.character-graph__legend-item--rival > span {
+  background: var(--bixin-pop-pink);
+}
+
+.character-graph__legend-item--unknown > span {
+  height: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--bixin-subtle) 0 3px,
+    transparent 3px 6px
+  );
+}
+
+.character-graph__viewport:focus-visible {
+  outline: 3px solid var(--color-focus-ring);
+  outline-offset: -3px;
+}

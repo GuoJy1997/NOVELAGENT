@@ -1,0 +1,25 @@
+{
+  "name": "@novelora/desktop",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./out/main/main.js",
+  "build": {
+    "appId": "com.novelora.bixin",
+    "files": ["out/**", "assets/**"],
+    "win": { "icon": "assets/icon.png" }
+  },
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "package": "electron-builder",
+    "test": "npx --yes tsx --test src/apiProcess.test.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^2.3.0",
+    "typescript": "~5.6.2"
+  }
+}

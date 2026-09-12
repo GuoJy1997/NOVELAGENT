@@ -1093,7 +1093,7 @@ describe('global cockpit texture', () => {
   it('uses the plain white Echo page foundation without a texture layer', () => {
     expect(globalCss).not.toContain('paper_grain_overlay.png');
     expect(globalCss).toMatch(/body\s*\{[^}]*isolation:\s*isolate;/s);
-    expect(finalTopLevelDeclaration(globalCss, 'body', 'background')).toBe('var(--echo-page)');
+    expect(finalTopLevelDeclaration(globalCss, 'body', 'background')).toBe('var(--bixin-canvas)');
     expect(globalCss).toMatch(/#root\s*\{[^}]*position:\s*relative;[^}]*z-index:\s*0;/s);
     expect(globalCss).not.toContain('body::after');
   });
@@ -1108,6 +1108,7 @@ describe('global cockpit texture', () => {
     const documentRootRule = globalCss.match(/html,\s*body,\s*#root\s*\{([^}]*)\}/s)?.[1];
     expect(documentRootRule).toMatch(/overflow-x:\s*visible;/);
     expect(documentRootRule).not.toMatch(/overflow-x:\s*hidden;/);
+    expect(globalCss).not.toMatch(/@import\s+['"]\.\/echo\.css['"]/);
     expect(globalCss).not.toMatch(/@import\s+['"]\.\/cockpit\.css['"]/);
     const legacyRootOverflowValues = contextualStyleRules(cockpitCss)
       .filter((rule) => rule.selectors.includes('.cockpit-scroll'))

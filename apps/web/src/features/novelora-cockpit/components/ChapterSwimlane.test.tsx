@@ -43,8 +43,6 @@ describe('ChapterSwimlane', () => {
     expect(timeline).toHaveAttribute('aria-labelledby', 'chapter-timeline-title');
     expect(directChildren.map((child) => child.className)).toEqual([
       'occluded-panel__surface',
-      'occluded-panel__top-cap occluded-panel__top-cap--left',
-      'occluded-panel__top-cap occluded-panel__top-cap--right',
       'occluded-panel__content',
     ]);
     expect(within(timeline).getByRole('heading', { name: 'Chapter Timeline', level: 2 })).toHaveAttribute(
@@ -54,9 +52,7 @@ describe('ChapterSwimlane', () => {
     expect(container.querySelector('.chapter-timeline__heading')).toHaveClass('echo-panel-heading');
   });
 
-  it('toggles reorder mode without changing chapter order', async () => {
-    const user = userEvent.setup();
-
+  it('keeps chapter order stable without a visible reorder control', () => {
     render(
       <ChapterSwimlane
         chapters={actTwoChapters}
@@ -67,25 +63,13 @@ describe('ChapterSwimlane', () => {
 
     const timeline = screen.getByRole('region', { name: 'Chapter Timeline' });
     const timelineQueries = within(timeline);
-    const reorder = timelineQueries.getByRole('button', { name: 'Reorder chapters' });
-    const chapterOrderBefore = timelineQueries
-      .getAllByRole('button')
-      .filter((button) => button.classList.contains('chapter-timeline__card'))
-      .map((button) => button.textContent);
 
-    expect(reorder).toHaveAttribute('aria-pressed', 'false');
-    await user.click(reorder);
-
-    expect(reorder).toHaveAttribute('aria-pressed', 'true');
-    expect(timelineQueries.getByRole('status')).toHaveTextContent(
-      'Reorder mode active. Drag persistence is not available in this demo.',
-    );
+    expect(timelineQueries.queryByRole('button', { name: 'Reorder chapters' })).toBeNull();
     expect(
-      timelineQueries
-        .getAllByRole('button')
-        .filter((button) => button.classList.contains('chapter-timeline__card'))
-        .map((button) => button.textContent),
-    ).toEqual(chapterOrderBefore);
+      Array.from(timeline.querySelectorAll('.chapter-timeline__card')).map(
+        (card) => card.querySelector('.chapter-timeline__number')?.textContent,
+      ),
+    ).toEqual(actTwoChapters.map((chapter) => `Ch. ${chapter.order}`));
   });
 
   it('selects Chapter 3 and reports the chosen chapter', async () => {
@@ -95,7 +79,7 @@ describe('ChapterSwimlane', () => {
     render(<ChapterSwimlaneHarness onSelectChapter={onSelectChapter} />);
 
     const timeline = screen.getByRole('region', { name: 'Chapter Timeline' });
-    const chapterThree = within(timeline).getByRole('button', { name: /Chapter 3/i });
+    const chapterThree = within(timeline).getByRole('button', { name: /Ch\. 3/i });
     await user.click(chapterThree);
 
     expect(chapterThree).toHaveAttribute('aria-pressed', 'true');
@@ -159,6 +143,21 @@ describe('ChapterSwimlane', () => {
     expect(within(progress).queryByRole('button')).toBeNull();
   });
 
+  it('strokes the progress line with a mint-to-teal gradient definition', () => {
+    const { container } = render(
+      <ChapterSwimlane
+        chapters={actTwoChapters}
+        selectedChapterId="chapter-3"
+        onSelectChapter={() => undefined}
+      />,
+    );
+
+    const gradient = container.querySelector('linearGradient');
+    expect(gradient).not.toBeNull();
+    expect(container.innerHTML).toMatch(/stroke="url\(#/);
+    expect(gradient?.getAttribute('id')).toBe('echoProgressGradientTimeline');
+  });
+
   it('renders compact visible chapter values while omitting the legacy summary layout', () => {
     const chapters = actTwoChapters.map((chapter) =>
       chapter.id === 'chapter-3'
@@ -182,9 +181,9 @@ describe('ChapterSwimlane', () => {
     );
 
     const timeline = screen.getByRole('region', { name: 'Chapter Timeline' });
-    const chapterThree = within(timeline).getByRole('button', { name: /Chapter 3/i });
+    const chapterThree = within(timeline).getByRole('button', { name: /Ch\. 3/i });
 
-    expect(chapterThree).toHaveTextContent('Chapter 3');
+    expect(chapterThree).toHaveTextContent('Ch. 3');
     expect(chapterThree).toHaveTextContent('A deliberately long fixture chapter title that stays accessible');
     expect(chapterThree).toHaveTextContent('Fixture proof beat that stays accessible');
     expect(chapterThree).toHaveTextContent('4,321 words');
@@ -195,3 +194,4 @@ describe('ChapterSwimlane', () => {
     expect(timeline.querySelector('.chapter-card__lock')).toBeNull();
   });
 });
+

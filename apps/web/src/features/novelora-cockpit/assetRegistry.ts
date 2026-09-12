@@ -49,14 +49,44 @@ export const actionIcons = {
   ).href,
 } as const;
 
-export const echoHeroBackground = new URL(
-  '../../assets/echo/hero-background-clean.png',
-  import.meta.url,
-).href;
-export const echoAssistantCard = new URL(
-  '../../assets/echo/echo-assistant-card.png',
-  import.meta.url,
-).href;
+export const bixinAssets = {
+  appIcon: new URL('../../assets/bixin/bixin-app-icon.png', import.meta.url).href,
+  scene: new URL('../../assets/bixin/scene-robot-background.png', import.meta.url).href,
+  book: new URL('../../assets/bixin/book-foreground.svg', import.meta.url).href,
+  projectCover: new URL('../../assets/bixin/project-cover.png', import.meta.url).href,
+  heroRobot: new URL('../../assets/bixin/hero-robot-uizip-v3.png', import.meta.url).href,
+  homeBackdrop: new URL('../../assets/bixin/home-sky-backdrop.png', import.meta.url).href,
+  skyBand: new URL('../../assets/bixin/scene-sky-band.png', import.meta.url).href,
+  mascotChallenge: new URL(
+    '../../assets/bixin/mascot-challenge.png',
+    import.meta.url,
+  ).href,
+  mascotCopilot: new URL(
+    '../../assets/bixin/mascot-copilot.png',
+    import.meta.url,
+  ).href,
+  mascotQuickgen: new URL(
+    '../../assets/bixin/mascot-quickgen.png',
+    import.meta.url,
+  ).href,
+  mascotPro: new URL(
+    '../../assets/bixin/mascot-pro.png',
+    import.meta.url,
+  ).href,
+  promoRocket: new URL(
+    '../../assets/bixin/promo-rocket.png',
+    import.meta.url,
+  ).href,
+  quill: new URL('../../assets/bixin/quill-uizip.png', import.meta.url).href,
+  avatarWriter: new URL('../../assets/bixin/avatar-writer.png', import.meta.url).href,
+} as const;
+
+export const homeProjectCovers = {
+  cloudThrone: new URL('../../assets/bixin/cover-cloud-throne.png', import.meta.url).href,
+  starseaTraveler: new URL('../../assets/bixin/cover-starsea-traveler.png', import.meta.url).href,
+  changanNightTales: new URL('../../assets/bixin/cover-changan-night-tales.png', import.meta.url).href,
+  defaultFantasy: new URL('../../assets/bixin/cover-default-fantasy.png', import.meta.url).href,
+} as const;
 
 export const novaFront = new URL(
   '../../assets/novelora/novelora_ui_asset_pack/02_mascot/mascot_nova_front.svg',
@@ -83,26 +113,23 @@ export const projectCovers = {
 } as const;
 
 export const characterPortraits = {
-  liora: new URL(
-    '../../assets/novelora/novelora_ui_asset_pack/06_character_portraits/portrait_liora.svg',
-    import.meta.url,
-  ).href,
-  arden: new URL(
-    '../../assets/novelora/novelora_ui_asset_pack/06_character_portraits/portrait_arden.svg',
-    import.meta.url,
-  ).href,
-  kael: new URL(
-    '../../assets/novelora/novelora_ui_asset_pack/06_character_portraits/portrait_kael.svg',
-    import.meta.url,
-  ).href,
-  selene: new URL(
-    '../../assets/novelora/novelora_ui_asset_pack/06_character_portraits/portrait_selene.svg',
-    import.meta.url,
-  ).href,
-  vex: new URL(
-    '../../assets/novelora/novelora_ui_asset_pack/06_character_portraits/portrait_vex.svg',
-    import.meta.url,
-  ).href,
+  liora: new URL('../../assets/bixin/uizip-generated/portrait-liora.png', import.meta.url).href,
+  arden: new URL('../../assets/bixin/uizip-generated/portrait-arden.png', import.meta.url).href,
+  kael: new URL('../../assets/bixin/uizip-generated/portrait-kael.png', import.meta.url).href,
+  selene: new URL('../../assets/bixin/uizip-generated/portrait-selene.png', import.meta.url).href,
+  vex: new URL('../../assets/bixin/uizip-generated/portrait-vex.png', import.meta.url).href,
+  theOrder: new URL('../../assets/bixin/uizip-generated/portrait-the-order.png', import.meta.url).href,
+} as const;
+
+export type CharacterPortraitKey = keyof typeof characterPortraits;
+
+export const characterBanners = {
+  liora: new URL('../../assets/bixin/uizip-generated/portrait-liora-banner.png', import.meta.url).href,
+  arden: new URL('../../assets/bixin/uizip-generated/portrait-arden-banner.png', import.meta.url).href,
+  kael: new URL('../../assets/bixin/uizip-generated/portrait-kael-banner.png', import.meta.url).href,
+  selene: new URL('../../assets/bixin/uizip-generated/portrait-selene-banner.png', import.meta.url).href,
+  vex: new URL('../../assets/bixin/uizip-generated/portrait-vex-banner.png', import.meta.url).href,
+  theOrder: new URL('../../assets/bixin/uizip-generated/portrait-the-order-banner.png', import.meta.url).href,
 } as const;
 
 export const inspirationThumbnails = {

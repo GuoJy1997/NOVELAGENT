@@ -1,11 +1,17 @@
 import type { CSSProperties } from 'react';
 import { characterPortraits } from '../assetRegistry';
-import type { CharacterNode, CharacterRelationship } from '../types';
+import { KIND_META } from '../types';
+import type { CharacterNode, CharacterRelationship, RelationshipKind } from '../types';
+import './CharacterGraph.css';
 
 interface CharacterGraphProps {
   characters: CharacterNode[];
   relationships: CharacterRelationship[];
+  title?: string;
+  onSelectCharacter?: (id: string) => void;
 }
+
+const RELATIONSHIP_KINDS = Object.keys(KIND_META) as RelationshipKind[];
 
 interface NodeCoordinate {
   x: number;
@@ -17,10 +23,8 @@ interface GraphLayout {
   height: number;
 }
 
-const GRAPH_WIDTH = 320;
-const COMPACT_GRAPH_HEIGHT = 104;
-const GRID_COLUMNS = [50, 160, 270] as const;
-const GRID_ROW_PITCH = 44;
+const GRAPH_WIDTH = 760;
+const GRAPH_HEIGHT = 560;
 
 function firstById<T extends { id: string }>(items: T[]) {
   const seen = new Set<string>();
@@ -33,37 +37,31 @@ function firstById<T extends { id: string }>(items: T[]) {
 
 function graphLayout(characters: CharacterNode[]): GraphLayout {
   const coordinates = new Map<string, NodeCoordinate>();
+  const centerX = GRAPH_WIDTH / 2;
+  const centerY = GRAPH_HEIGHT / 2;
 
-  if (characters.length >= 6) {
-    characters.forEach((character, index) => {
-      coordinates.set(character.id, {
-        x: GRID_COLUMNS[index % GRID_COLUMNS.length],
-        y: 22 + Math.floor(index / GRID_COLUMNS.length) * GRID_ROW_PITCH,
-      });
-    });
-    return {
-      coordinates,
-      height: Math.max(
-        COMPACT_GRAPH_HEIGHT,
-        Math.ceil(characters.length / GRID_COLUMNS.length) * GRID_ROW_PITCH,
-      ),
-    };
+  if (characters.length === 1) {
+    coordinates.set(characters[0]?.id ?? '', { x: centerX, y: centerY });
+    return { coordinates, height: GRAPH_HEIGHT };
   }
 
+  const ringCount = Math.max(1, characters.length - 1);
+  const radiusX = ringCount <= 4 ? 230 : ringCount <= 8 ? 285 : 315;
+  const radiusY = ringCount <= 4 ? 150 : ringCount <= 8 ? 190 : 205;
   characters.forEach((character, index) => {
-    if (characters.length === 1) {
-      coordinates.set(character.id, { x: GRAPH_WIDTH / 2, y: COMPACT_GRAPH_HEIGHT / 2 });
+    if (index === 0) {
+      coordinates.set(character.id, { x: centerX, y: centerY });
       return;
     }
 
-    const angle = -Math.PI / 2 + (index * Math.PI * 2) / characters.length;
+    const angle = -Math.PI / 2 + ((index - 1) * Math.PI * 2) / ringCount;
     coordinates.set(character.id, {
-      x: Math.round((GRAPH_WIDTH / 2 + Math.cos(angle) * 110) * 10) / 10,
-      y: Math.round((COMPACT_GRAPH_HEIGHT / 2 + Math.sin(angle) * 30) * 10) / 10,
+      x: Math.round((centerX + Math.cos(angle) * radiusX) * 10) / 10,
+      y: Math.round((centerY + Math.sin(angle) * radiusY) * 10) / 10,
     });
   });
 
-  return { coordinates, height: COMPACT_GRAPH_HEIGHT };
+  return { coordinates, height: GRAPH_HEIGHT };
 }
 
 function relationshipPath(
@@ -82,7 +80,12 @@ function relationshipPath(
   return `M ${from.x} ${from.y} C ${middleX} ${firstControlY} ${middleX} ${secondControlY} ${to.x} ${to.y}`;
 }
 
-export function CharacterGraph({ characters, relationships }: CharacterGraphProps) {
+export function CharacterGraph({
+  characters,
+  relationships,
+  title = 'Character Relationship Graph',
+  onSelectCharacter,
+}: CharacterGraphProps) {
   const uniqueCharacters = firstById(characters);
   const uniqueRelationships = firstById(relationships);
   const layout = graphLayout(uniqueCharacters);
@@ -100,7 +103,7 @@ export function CharacterGraph({ characters, relationships }: CharacterGraphProp
   return (
     <section className="character-graph" aria-labelledby="character-graph-title">
       <header className="character-graph__heading">
-        <h2 id="character-graph-title">Character Relationship Graph</h2>
+        <h2 id="character-graph-title">{title}</h2>
         <span>{uniqueCharacters.length} characters</span>
       </header>
 
@@ -116,46 +119,49 @@ export function CharacterGraph({ characters, relationships }: CharacterGraphProp
             viewBox={`0 0 ${GRAPH_WIDTH} ${layout.height}`}
             aria-hidden="true"
           >
-            {knownRelationships.map(({ relationship }, index) => {
-              const from = layout.coordinates.get(relationship.fromCharacterId);
-              const to = layout.coordinates.get(relationship.toCharacterId);
-              if (!from || !to) return null;
+            {knownRelationships.map(({ relationship, from, to }, index) => {
+              const fromCoordinate = layout.coordinates.get(from.id);
+              const toCoordinate = layout.coordinates.get(to.id);
+              if (!fromCoordinate || !toCoordinate) return null;
 
-              return (
-                <path
-                  key={relationship.id}
-                  className={`character-graph__edge character-graph__edge--${relationship.kind}`}
-                  data-relationship-id={relationship.id}
-                  data-relationship-kind={relationship.kind}
-                  d={relationshipPath(from, to, index)}
-                />
-              );
+              return <g key={relationship.id}>
+                <path className={`character-graph__edge character-graph__edge--${relationship.kind}`} data-relationship-id={relationship.id} data-relationship-kind={relationship.kind} fill="none" d={relationshipPath(fromCoordinate, toCoordinate, index)} />
+                <text className="character-graph__edge-label" x={(fromCoordinate.x + toCoordinate.x) / 2} y={(fromCoordinate.y + toCoordinate.y) / 2}>{relationship.label}</text>
+              </g>;
             })}
           </svg>
 
           <ul className="character-graph__nodes" aria-label="Character nodes">
-            {uniqueCharacters.map((character) => {
+            {uniqueCharacters.map((character, characterIndex) => {
               const coordinate = layout.coordinates.get(character.id) ?? {
                 x: GRAPH_WIDTH / 2,
-                y: COMPACT_GRAPH_HEIGHT / 2,
+                y: GRAPH_HEIGHT / 2,
               };
               const nodeStyle = {
                 '--character-x': `${coordinate.x}px`,
                 '--character-y': `${coordinate.y}px`,
               } as CSSProperties;
+              const relatedTensions = uniqueRelationships
+                .filter(
+                  (relationship) =>
+                    relationship.fromCharacterId === character.id ||
+                    relationship.toCharacterId === character.id,
+                )
+                .map((relationship) => relationship.tension)
+                .join(' ');
 
               return (
                 <li
                   key={character.id}
-                  className="character-graph__node"
+                  className={`character-graph__node${characterIndex === 0 ? ' is-protagonist' : ''}`}
                   style={nodeStyle}
                   aria-label={`${character.name}, ${character.role}`}
-                >
+                title={relatedTensions || undefined}
+              >
+                <button type="button" aria-label={`${character.name}, ${character.role}`} onClick={() => onSelectCharacter?.(character.id)}>
                   <img src={characterPortraits[character.portraitAssetKey]} alt="" />
-                  <span>
-                    <strong>{character.name}</strong>
-                    <small>{character.role}</small>
-                  </span>
+                  <span><strong>{character.name}</strong><small>{character.role}</small></span>
+                </button>
                 </li>
               );
             })}
@@ -163,20 +169,11 @@ export function CharacterGraph({ characters, relationships }: CharacterGraphProp
         </div>
       </div>
 
-      <ul
-        className="character-graph__relationships"
-        tabIndex={0}
-        aria-label="Character relationships"
-      >
-        {knownRelationships.map(({ relationship, from, to }) => (
-          <li
-            key={relationship.id}
-            aria-label={`${from.name} to ${to.name}, ${relationship.kind}, ${relationship.label}. ${relationship.tension}`}
-          >
-            <strong>{`${from.name} → ${to.name}`}</strong>
-            <span className="character-graph__relationship-kind">{relationship.kind}</span>
-            <span>{relationship.label}</span>
-            <small>{relationship.tension}</small>
+      <ul className="character-graph__legend" aria-label="关系图例">
+        {RELATIONSHIP_KINDS.map((kind) => (
+          <li key={kind} className={`character-graph__legend-item character-graph__legend-item--${kind}`}>
+            <span aria-hidden="true" />
+            {KIND_META[kind].label}
           </li>
         ))}
       </ul>

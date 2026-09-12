@@ -1,183 +1,256 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { resetImportSessions, startCharacterImport, startDocumentImport } from './features/novelora-cockpit/lib/importSession';
 import App from './App';
 
+vi.mock('./features/novelora-cockpit/lib/hermesChat', () => ({
+  DEFAULT_LLM_MODEL: 'deepseek-v4-flash',
+  streamChat: vi.fn(),
+}));
+
+import { streamChat } from './features/novelora-cockpit/lib/hermesChat';
+
+const streamChatMock = vi.mocked(streamChat);
+
+const okJson = (body: unknown) =>
+  new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json' } });
+
 afterEach(() => {
+  resetImportSessions();
   vi.useRealTimers();
+  vi.unstubAllGlobals();
+  streamChatMock.mockReset();
 });
 
 describe('App', () => {
-  it('composes the Echo page in the reference dashboard order', () => {
+  it('keeps workspace selection available on the outline workbench', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole('button', { name: '小说大纲' }));
+    await user.click(screen.getByRole('button', { name: '选择小说项目' }));
+    expect(screen.getByRole('dialog', { name: '选择工作区' })).toBeVisible();
+    expect(screen.getByRole('button', { name: '选择小说目录' })).toBeVisible();
+  });
+  it('navigates to outline from QuickGen 小说大纲', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole('button', { name: '小说大纲' }));
+    const navigation = screen.getByRole('navigation', { name: '工作区导航' });
+    expect(within(navigation).getByRole('button', { name: '大纲' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('region', { name: '大纲' })).toBeInTheDocument();
+  });
+
+  it('opens writing from the Copilot start action', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole('button', { name: '开始陪写' }));
+    const navigation = screen.getByRole('navigation', { name: '工作区导航' });
+    expect(within(navigation).getByRole('button', { name: '写作' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByLabelText('写作工作台')).toBeInTheDocument();
+  });
+
+  it('composes the Bixin home chrome with the workbench rail', () => {
     const { container } = render(<App />);
+    const frame = container.querySelector('.bixin-home__frame');
+    const navigation = screen.getByRole('navigation', { name: '工作区导航' });
 
-    const page = container.querySelector('.echo-page.cockpit-scroll');
-    const navigationRail = screen.getByRole('complementary', { name: 'Project navigation' });
-    const primaryRow = container.querySelector('.echo-dashboard__primary-row');
-    const lowerRow = container.querySelector('.echo-dashboard__lower-row.knowledge-workspace-grid');
-
-    expect(page?.children[0]).toHaveClass('echo-hero-background');
-    expect(container.querySelectorAll('img[src*="hero-background-clean"]')).toHaveLength(1);
-    expect(within(navigationRail).getAllByRole('img', { name: 'Echo' })).toHaveLength(1);
-    expect(screen.queryByText(/Novelora/i)).not.toBeInTheDocument();
-    expect(screen.getAllByRole('heading', { name: 'Bring your story to life with AI' })).toHaveLength(1);
-
-    expect(primaryRow?.children).toHaveLength(3);
-    expect(primaryRow?.children[0]).toBe(screen.getByRole('region', { name: 'Novel Structure Map' }));
-    expect(primaryRow?.children[1]).toHaveClass('echo-dashboard__timeline');
-    expect(primaryRow?.children[1]).toContainElement(
-      screen.getByRole('region', { name: 'Chapter Timeline' }),
-    );
-    expect(primaryRow?.children[2]).toBe(screen.getByRole('region', { name: 'AI Writing Partner' }));
-
-    expect(lowerRow?.children).toHaveLength(4);
-    expect(lowerRow?.children[0]).toBe(screen.getByRole('region', { name: 'Inspiration Vault' }));
-    expect(lowerRow?.children[1]).toBe(
-      screen.getByRole('region', { name: 'Character Relationship Graph' }),
-    );
-    expect(lowerRow?.children[2]).toBe(screen.getByRole('region', { name: 'Clue Attribution Flow' }));
-    expect(lowerRow?.children[3]).toBe(screen.getByRole('region', { name: 'Memory Layer' }));
-
-    expect(screen.queryByRole('complementary', { name: 'Workspace assistant' })).not.toBeInTheDocument();
-    expect(container.querySelector('.cockpit-right-panel')).not.toBeInTheDocument();
+    expect(container.querySelector('.bixin-home')).toBeInTheDocument();
+    expect(frame?.children[0]).toHaveClass('bixin-scene-layer');
+    expect(frame?.children[1]).toHaveClass('bixin-home__interface');
+    expect(frame?.children[2]).toBeUndefined();
+    expect(container.querySelector('.echo-page')).not.toBeInTheDocument();
+    expect(container.querySelector('.echo-hero-background')).not.toBeInTheDocument();
+    expect(screen.queryByRole('complementary', { name: 'Project navigation' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Bring your story to life with AI/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /笔心在手/ })).toBeInTheDocument();
+    expect(
+      Array.from(navigation.querySelectorAll<HTMLButtonElement>('.bixin-navigation-rail__item')).map(
+        (button) => button.textContent,
+      ),
+    ).toEqual([
+      '首页',
+      '写作',
+      '工作流',
+      '大纲',
+      '人物',
+      '关系',
+      '世界观',
+      '任务',
+    ]);
+    expect(screen.getByRole('button', { name: '继续写作' })).toBeInTheDocument();
+    expect(within(screen.getByRole('main', { name: '创作首页' })).getByRole('button', { name: '新建作品' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: '最近项目' })).toBeInTheDocument();
   });
 
-  it('keeps the project controls, menu, search, and controlled navigation usable', async () => {
+  it('opens outline from the rail and writing from 继续写作 without leaving the Bixin frame', async () => {
     const user = userEvent.setup();
-    render(<App />);
+    const { container } = render(<App />);
+    const navigation = screen.getByRole('navigation', { name: '工作区导航' });
 
-    expect(screen.getByRole('searchbox', { name: 'Search workspace' })).toBeInTheDocument();
-    const projectMenu = screen.getByRole('button', { name: /Tides of Embers/i });
-    await user.click(projectMenu);
-    expect(screen.getByRole('menu', { name: 'Project switcher' })).toBeInTheDocument();
+    await user.click(within(navigation).getByRole('button', { name: '大纲' }));
+    expect(screen.getByRole('region', { name: '大纲' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: '大纲' })).toBeInTheDocument();
+    expect(container.querySelector('.bixin-home')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /笔心在手/ })).not.toBeInTheDocument();
 
-    const navigation = screen.getByRole('navigation', { name: 'Workspace navigation' });
-    const home = within(navigation).getByRole('button', { name: 'Home' });
-    const structure = within(navigation).getByRole('button', { name: 'Structure' });
-    expect(home).toHaveAttribute('aria-pressed', 'true');
-    await user.click(structure);
-    expect(home).toHaveAttribute('aria-pressed', 'false');
-    expect(structure).toHaveAttribute('aria-pressed', 'true');
+    await user.click(within(navigation).getByRole('button', { name: '首页' }));
+    await user.click(screen.getByRole('button', { name: '继续写作' }));
+    expect(screen.getByLabelText('写作工作台')).toBeInTheDocument();
+    expect(container.querySelector('.bixin-home')).toBeInTheDocument();
+    expect(screen.queryByRole('main', { name: 'Story workspace' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '返回首页' }));
+    expect(screen.getByRole('region', { name: '最近项目' })).toBeInTheDocument();
   });
 
-  it('announces the new-project and hero actions exactly', async () => {
+  it('opens project setup from every new-project entry', async () => {
     const user = userEvent.setup();
     render(<App />);
+    for (const button of screen.getAllByRole('button', { name: '新建作品' })) {
+      await user.click(button);
+      expect(screen.getByRole('dialog', { name: '选择工作区' })).toBeVisible();
+      await user.click(screen.getByRole('button', { name: '关闭' }));
+    }
 
-    const status = screen.getByRole('status');
-    expect(status).toHaveAttribute('aria-live', 'polite');
-    expect(status).not.toHaveClass('is-visible');
-
-    await user.click(screen.getByRole('button', { name: 'New Project' }));
-    expect(status).toHaveTextContent('New project creation is not available in this demo.');
-    expect(status).toHaveClass('is-visible');
-
-    await user.click(screen.getByRole('button', { name: /Continue Writing/i }));
-    expect(status).toHaveTextContent('Opening the selected chapter draft.');
-
-    await user.click(screen.getByRole('button', { name: /AI Assist/i }));
-    expect(status).toHaveTextContent('AI Assist is ready for the selected chapter.');
+    await user.click(within(screen.getByRole('navigation', { name: '工作区导航' })).getByRole('button', { name: '世界观' }));
+    expect(screen.getByRole('region', { name: '世界观' })).toBeInTheDocument();
   });
 
   it('dismisses action feedback after 3200ms while keeping the live region mounted', () => {
     vi.useFakeTimers();
     render(<App />);
-
     const status = screen.getByRole('status');
-    fireEvent.click(screen.getByRole('button', { name: /Continue Writing/i }));
-    expect(status).toHaveTextContent('Opening the selected chapter draft.');
+    fireEvent.click(screen.getByRole('button', { name: '查看通知' }));
     expect(status).toHaveClass('is-visible');
-
     act(() => vi.advanceTimersByTime(3199));
-    expect(status).toHaveTextContent('Opening the selected chapter draft.');
     expect(status).toHaveClass('is-visible');
-
     act(() => vi.advanceTimersByTime(1));
     expect(status).toBeInTheDocument();
     expect(status).toBeEmptyDOMElement();
     expect(status).not.toHaveClass('is-visible');
   });
 
-  it('opens agent details from both cards and restores focus for button and Escape closes', async () => {
+  it('opens writing from 写作 and the world editor from 世界观', async () => {
     const user = userEvent.setup();
     render(<App />);
-
-    const viewAll = screen.getByRole('button', { name: 'View All agent details' });
-    await user.click(viewAll);
-    expect(screen.getByRole('dialog', { name: 'Agent details' })).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Close agent details' }));
-    expect(screen.queryByRole('dialog', { name: 'Agent details' })).not.toBeInTheDocument();
-    expect(document.activeElement).toBe(viewAll);
-
-    const manage = screen.getByRole('button', { name: 'Manage memory' });
-    await user.click(manage);
-    expect(screen.getByRole('dialog', { name: 'Agent details' })).toBeInTheDocument();
-    await user.keyboard('{Escape}');
-    expect(screen.queryByRole('dialog', { name: 'Agent details' })).not.toBeInTheDocument();
-    expect(document.activeElement).toBe(manage);
+    const navigation = screen.getByRole('navigation', { name: '工作区导航' });
+    await user.click(within(navigation).getByRole('button', { name: '写作' }));
+    expect(screen.getByLabelText('写作工作台')).toBeInTheDocument();
+    await user.click(within(navigation).getByRole('button', { name: '世界观' }));
+    expect(screen.getByRole('region', { name: '世界观' })).toBeInTheDocument();
+    expect(screen.getByText('这是设定编辑，不会召唤 Agent。')).toBeInTheDocument();
   });
 
-  it('selects the first chapter when the active act changes', async () => {
+  it('opens characters, relations, workflow, and tasks from the rail', async () => {
     const user = userEvent.setup();
-    render(<App />);
+    const { container } = render(<App />);
+    const navigation = screen.getByRole('navigation', { name: '工作区导航' });
 
-    await user.click(screen.getByRole('button', { name: /Act I .*The Ash Tide/i }));
-    const timeline = screen.getByRole('region', { name: 'Chapter Timeline' });
+    await user.click(within(navigation).getByRole('button', { name: '人物' }));
+    expect(screen.getByRole('heading', { name: '人物' })).toBeInTheDocument();
+    expect(container.querySelector('.bixin-home')).toBeInTheDocument();
 
-    expect(within(timeline).getByRole('button', { name: /Chapter 1/i })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
-    expect(within(timeline).getByRole('button', { name: /Chapter 2/i })).toBeInTheDocument();
-    expect(within(timeline).queryByRole('button', { name: /Chapter 3/i })).not.toBeInTheDocument();
+    await user.click(within(navigation).getByRole('button', { name: '关系' }));
+    expect(screen.getByRole('heading', { name: '人物关系网' })).toBeInTheDocument();
+    expect(container.querySelector('.bixin-home')).toBeInTheDocument();
+
+    await user.click(within(navigation).getByRole('button', { name: '工作流' }));
+    expect(screen.getByRole('heading', { name: '工作流' })).toBeInTheDocument();
+    expect(container.querySelector('.bixin-home')).toBeInTheDocument();
+
+    await user.click(within(navigation).getByRole('button', { name: '任务' }));
+    expect(screen.getByRole('heading', { name: '任务' })).toBeInTheDocument();
+    expect(container.querySelector('.bixin-home')).toBeInTheDocument();
   });
 
-  it('updates clue attribution when a timeline chapter is selected', async () => {
-    const user = userEvent.setup();
+  it('keeps visible copy free of em-dashes', () => {
     render(<App />);
+    expect(document.body.textContent ?? '').not.toMatch(/[—–]/);
+  });
 
-    await user.click(screen.getByRole('button', { name: /Act I .*The Ash Tide/i }));
-    await user.click(
-      within(screen.getByRole('region', { name: 'Chapter Timeline' })).getByRole('button', {
-        name: /Chapter 2/i,
+  it('opens a workspace picker dialog from 打开项目', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) => {
+        if (String(url).includes('/workspaces')) {
+          return Promise.resolve(
+            new Response(
+              JSON.stringify([
+                {
+                  id: 'taoyuan',
+                  title: '桃园密码',
+                  rootPath: 'D:\\桃园密码',
+                  addedAt: '2026-08-16T00:00:00.000Z',
+                },
+              ]),
+              { status: 200, headers: { 'Content-Type': 'application/json' } },
+            ),
+          );
+        }
+        return Promise.reject(new Error(`unexpected ${url}`));
       }),
     );
-
-    expect(screen.getByText('Evidence connected to Chapter 2.')).toBeInTheDocument();
-    expect(screen.getByText('The old tide map')).toBeInTheDocument();
-    expect(screen.getByText('The map reveals the only safe approach under black water.')).toBeInTheDocument();
+    render(<App />);
+    await user.click(screen.getByRole('button', { name: /云上王座/ }));
+    expect(screen.getByRole('dialog', { name: '选择工作区' })).toBeInTheDocument();
   });
 
-  it('filters inspiration and announces the archive action', async () => {
+  it('announces a finished outline import and opens the editor from the notice', async () => {
     const user = userEvent.setup();
-    render(<App />);
-
-    const quotesFilter = screen.getByRole('button', { name: 'Quotes' });
-    await user.click(quotesFilter);
-    expect(quotesFilter).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByText('The price of a kept vow')).toBeInTheDocument();
-    expect(screen.queryByText('Cold lighthouse signal')).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: 'View All inspiration' }));
-    expect(screen.getByRole('status')).toHaveTextContent(
-      'The full inspiration archive is available from Inspiration.',
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string, init?: RequestInit) => {
+        if (String(url).startsWith('/api/local-text')) {
+          return Promise.resolve(okJson({ content: '卷一杂记' }));
+        }
+        if (String(url).includes('/documents/outline') && init?.method === 'PUT') {
+          return Promise.resolve(okJson({ content: '# 整理大纲' }));
+        }
+        return Promise.reject(new Error(`unexpected ${url}`));
+      }),
     );
+    streamChatMock.mockImplementation(async function* () {
+      yield { content: '# 整理大纲' };
+    });
+
+    render(<App />);
+    await act(async () => {
+      await startDocumentImport({
+        projectId: 'default-project',
+        kind: 'outline',
+        filePath: 'D:\\桃园密码\\副本大纲.md',
+      });
+    });
+
+    const notice = await screen.findByRole('button', { name: '大纲已整理完成' });
+    expect(document.querySelector('.bixin-action-feedback')).toHaveClass('is-visible');
+    await user.click(notice);
+    expect(await screen.findByDisplayValue('# 整理大纲')).toBeInTheDocument();
   });
 
-  it('opens chapter details and restores trigger focus after both close paths', async () => {
-    const user = userEvent.setup();
+  it('announces a failed character import on the live region', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) => {
+        if (String(url).startsWith('/api/local-text')) {
+          return Promise.resolve(okJson({ content: '人物草稿' }));
+        }
+        return Promise.reject(new Error(`unexpected ${url}`));
+      }),
+    );
+    streamChatMock.mockImplementation(async function* () {
+      yield { content: '无法提取' };
+    });
+
     render(<App />);
+    await act(async () => {
+      await startCharacterImport({
+        projectId: 'default-project',
+        filePath: 'D:\\桃园密码\\人物小传.md',
+      });
+    });
 
-    const opener = screen.getByRole('button', { name: 'Open chapter details' });
-    await user.click(opener);
-    expect(screen.getByRole('dialog', { name: 'Chapter details' })).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Close chapter details' }));
-    expect(screen.queryByRole('dialog', { name: 'Chapter details' })).not.toBeInTheDocument();
-    expect(document.activeElement).toBe(opener);
-
-    await user.click(opener);
-    await user.keyboard('{Escape}');
-    expect(screen.queryByRole('dialog', { name: 'Chapter details' })).not.toBeInTheDocument();
-    expect(document.activeElement).toBe(opener);
+    expect(await screen.findByRole('button', { name: '人物提取失败，请重试' })).toBeInTheDocument();
   });
 });

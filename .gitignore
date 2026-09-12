@@ -11,5 +11,12 @@ apps/web/dist/
 coverage/
 .worktrees/
 .runtime/
+.novelora-data/
+apps/desktop/out/
 *.log
 debug.log
+
+.cursor/
+.opencode/
+TalkingPet/
+tmp/

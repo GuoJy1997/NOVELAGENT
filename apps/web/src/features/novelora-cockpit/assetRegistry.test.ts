@@ -2,9 +2,7 @@
 
 import { render, screen } from '@testing-library/react';
 import { createElement } from 'react';
-import { Buffer } from 'node:buffer';
-import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { closeSync, openSync, readFileSync, readSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -12,10 +10,11 @@ import * as assetRegistry from './assetRegistry';
 import {
   actionIcons,
   appIcon,
+  bixinAssets,
+  characterBanners,
   characterPortraits,
   clueNodes,
-  echoAssistantCard,
-  echoHeroBackground,
+  homeProjectCovers,
   inspirationThumbnails,
   logo,
   navigationIcons,
@@ -71,11 +70,133 @@ function readResolvedAsset(assetUrl: string) {
   return new TextEncoder().encode(decodeURIComponent(encodedContents));
 }
 
+function readAssetPrefix(assetPath: string, length: number) {
+  const fileDescriptor = openSync(assetPath, 'r');
+  const prefix = new Uint8Array(length);
+
+  try {
+    return prefix.subarray(0, readSync(fileDescriptor, prefix, 0, length, 0));
+  } finally {
+    closeSync(fileDescriptor);
+  }
+}
+
 function normalizeSvg(contents: Uint8Array) {
   return textDecoder.decode(contents).replace(/[\s"']/g, '');
 }
 
 describe('novelora asset registry', () => {
+  it('exposes complete non-empty Bixin and character banner runtime registries', () => {
+    expect(Object.keys(bixinAssets)).toEqual([
+      'appIcon',
+      'scene',
+      'book',
+      'projectCover',
+      'heroRobot',
+      'homeBackdrop',
+      'skyBand',
+      'mascotChallenge',
+      'mascotCopilot',
+      'mascotQuickgen',
+      'mascotPro',
+      'promoRocket',
+      'quill',
+      'avatarWriter',
+    ]);
+    expect(Object.keys(characterBanners)).toEqual([
+      'liora',
+      'arden',
+      'kael',
+      'selene',
+      'vex',
+      'theOrder',
+    ]);
+    expect(Object.keys(homeProjectCovers)).toEqual([
+      'cloudThrone',
+      'starseaTraveler',
+      'changanNightTales',
+      'defaultFantasy',
+    ]);
+
+    expect(
+      [...Object.values(bixinAssets), ...Object.values(characterBanners)].every(
+        (asset) => typeof asset === 'string' && asset.length > 0,
+      ),
+    ).toBe(true);
+  });
+
+  it('maps approved generated Bixin assets to their final filenames', () => {
+    const source = readFileSync(
+      resolve(process.cwd(), 'src/features/novelora-cockpit/assetRegistry.ts'),
+      'utf8',
+    );
+
+    expect(source).toContain(
+      "homeBackdrop: new URL('../../assets/bixin/home-sky-backdrop.png', import.meta.url).href",
+    );
+    expect(source).toContain(
+      "skyBand: new URL('../../assets/bixin/scene-sky-band.png', import.meta.url).href",
+    );
+    expect(source).toContain(
+      "heroRobot: new URL('../../assets/bixin/hero-robot-uizip-v3.png', import.meta.url).href",
+    );
+    expect(source).toContain(
+      "avatarWriter: new URL('../../assets/bixin/avatar-writer.png', import.meta.url).href",
+    );
+  });
+
+  it('maps approved generated character portraits to their final PNG filenames', () => {
+    const source = readFileSync(
+      resolve(process.cwd(), 'src/features/novelora-cockpit/assetRegistry.ts'),
+      'utf8',
+    );
+
+    expect(source).toContain(
+      "liora: new URL('../../assets/bixin/uizip-generated/portrait-liora.png', import.meta.url).href",
+    );
+    expect(source).toContain(
+      "arden: new URL('../../assets/bixin/uizip-generated/portrait-arden.png', import.meta.url).href",
+    );
+    expect(source).toContain(
+      "kael: new URL('../../assets/bixin/uizip-generated/portrait-kael.png', import.meta.url).href",
+    );
+    expect(source).toContain(
+      "selene: new URL('../../assets/bixin/uizip-generated/portrait-selene.png', import.meta.url).href",
+    );
+    expect(source).toContain(
+      "vex: new URL('../../assets/bixin/uizip-generated/portrait-vex.png', import.meta.url).href",
+    );
+    expect(source).toContain(
+      "theOrder: new URL('../../assets/bixin/uizip-generated/portrait-the-order.png', import.meta.url).href",
+    );
+  });
+
+  it('maps each character banner to its supplied generated PNG filename', () => {
+    const source = readFileSync(
+      resolve(process.cwd(), 'src/features/novelora-cockpit/assetRegistry.ts'),
+      'utf8',
+    );
+
+    expect(source).toContain(
+      "liora: new URL('../../assets/bixin/uizip-generated/portrait-liora-banner.png', import.meta.url).href",
+    );
+    expect(source).toContain(
+      "arden: new URL('../../assets/bixin/uizip-generated/portrait-arden-banner.png', import.meta.url).href",
+    );
+    expect(source).toContain(
+      "kael: new URL('../../assets/bixin/uizip-generated/portrait-kael-banner.png', import.meta.url).href",
+    );
+    expect(source).toContain(
+      "selene: new URL('../../assets/bixin/uizip-generated/portrait-selene-banner.png', import.meta.url).href",
+    );
+    expect(source).toContain(
+      "vex: new URL('../../assets/bixin/uizip-generated/portrait-vex-banner.png', import.meta.url).href",
+    );
+    expect(source).toContain(
+      "theOrder: new URL('../../assets/bixin/uizip-generated/portrait-the-order-banner.png', import.meta.url).href",
+    );
+  });
+
   it('registers typed navigation and action icon groups as local SVG assets', () => {
     expect(Object.keys(navigationIcons)).toEqual([
       'home',
@@ -92,31 +213,6 @@ describe('novelora asset registry', () => {
       expect(asset).toMatch(/^(?:data:image\/svg\+xml.*|.*\.svg(?:\?.*)?)$/);
       expect(textDecoder.decode(readResolvedAsset(asset))).toContain('<svg');
     }
-  });
-
-  it('registers the approved Echo hero background', () => {
-    expect(echoHeroBackground).toContain('hero-background-clean');
-    expect(echoHeroBackground).toMatch(/\.png(?:\?|$)/);
-  });
-
-  it('registers a compact 192 square Echo assistant card raster', () => {
-    const sourcePath = '../../assets/echo/echo-assistant-card.png';
-    const assetPath = fileURLToPath(new URL(sourcePath, import.meta.url));
-    const sourceContents = new Uint8Array(readFileSync(assetPath));
-    const resolvedContents = readResolvedAsset(echoAssistantCard);
-    const dimensions = new DataView(
-      sourceContents.buffer,
-      sourceContents.byteOffset,
-      sourceContents.byteLength,
-    );
-
-    expect(echoAssistantCard).toMatch(/echo-assistant-card.*\.png$/);
-    expect(sourceContents.subarray(0, pngSignature.length)).toEqual(pngSignature);
-    expect(textDecoder.decode(sourceContents.subarray(12, 16))).toBe('IHDR');
-    expect(dimensions.getUint32(16)).toBe(192);
-    expect(dimensions.getUint32(20)).toBe(192);
-    expect(sourceContents.byteLength).toBeLessThanOrEqual(200 * 1024);
-    expect(Buffer.compare(resolvedContents, sourceContents)).toBe(0);
   });
 
   it('keeps legacy book-origin rasters out of the active registry module', () => {
@@ -170,8 +266,23 @@ describe('novelora asset registry', () => {
     const assets = [
       [logo, '../../assets/novelora/novelora_ui_asset_pack/01_logo/novelora_logo_horizontal.svg'],
       [appIcon, '../../assets/novelora/novelora_ui_asset_pack/01_logo/app_icon_star.svg'],
-      [echoAssistantCard, '../../assets/echo/echo-assistant-card.png'],
-      [echoHeroBackground, '../../assets/echo/hero-background-clean.png'],
+      [bixinAssets.appIcon, '../../assets/bixin/bixin-app-icon.png'],
+      [bixinAssets.scene, '../../assets/bixin/scene-robot-background.png'],
+      [bixinAssets.book, '../../assets/bixin/book-foreground.svg'],
+      [bixinAssets.projectCover, '../../assets/bixin/project-cover.png'],
+      [bixinAssets.heroRobot, '../../assets/bixin/hero-robot-uizip-v3.png'],
+      [bixinAssets.homeBackdrop, '../../assets/bixin/home-sky-backdrop.png'],
+      [bixinAssets.skyBand, '../../assets/bixin/scene-sky-band.png'],
+      [bixinAssets.mascotChallenge, '../../assets/bixin/mascot-challenge.png'],
+      [bixinAssets.mascotCopilot, '../../assets/bixin/mascot-copilot.png'],
+      [bixinAssets.mascotQuickgen, '../../assets/bixin/mascot-quickgen.png'],
+      [bixinAssets.mascotPro, '../../assets/bixin/mascot-pro.png'],
+      [bixinAssets.promoRocket, '../../assets/bixin/promo-rocket.png'],
+      [bixinAssets.avatarWriter, '../../assets/bixin/avatar-writer.png'],
+      [homeProjectCovers.cloudThrone, '../../assets/bixin/cover-cloud-throne.png'],
+      [homeProjectCovers.starseaTraveler, '../../assets/bixin/cover-starsea-traveler.png'],
+      [homeProjectCovers.changanNightTales, '../../assets/bixin/cover-changan-night-tales.png'],
+      [homeProjectCovers.defaultFantasy, '../../assets/bixin/cover-default-fantasy.png'],
       [novaFront, '../../assets/novelora/novelora_ui_asset_pack/02_mascot/mascot_nova_front.svg'],
       [novaAvatar, '../../assets/novelora/novelora_ui_asset_pack/02_mascot/mascot_nova_avatar.svg'],
       [navigationIcons.home, '../../assets/novelora/novelora_ui_asset_pack/03_icons/navigation/home.svg'],
@@ -186,11 +297,12 @@ describe('novelora asset registry', () => {
       [projectCovers.eclipseOfEchoes, '../../assets/novelora/novelora_ui_asset_pack/05_project_covers/cover_eclipse_of_echoes.svg'],
       [projectCovers.whispersVale, '../../assets/novelora/novelora_ui_asset_pack/05_project_covers/cover_whispers_vale.svg'],
       [projectCovers.chroniclesLumin, '../../assets/novelora/novelora_ui_asset_pack/05_project_covers/cover_chronicles_lumin.svg'],
-      [characterPortraits.liora, '../../assets/novelora/novelora_ui_asset_pack/06_character_portraits/portrait_liora.svg'],
-      [characterPortraits.arden, '../../assets/novelora/novelora_ui_asset_pack/06_character_portraits/portrait_arden.svg'],
-      [characterPortraits.kael, '../../assets/novelora/novelora_ui_asset_pack/06_character_portraits/portrait_kael.svg'],
-      [characterPortraits.selene, '../../assets/novelora/novelora_ui_asset_pack/06_character_portraits/portrait_selene.svg'],
-      [characterPortraits.vex, '../../assets/novelora/novelora_ui_asset_pack/06_character_portraits/portrait_vex.svg'],
+      [characterPortraits.liora, '../../assets/bixin/uizip-generated/portrait-liora.png'],
+      [characterPortraits.arden, '../../assets/bixin/uizip-generated/portrait-arden.png'],
+      [characterPortraits.kael, '../../assets/bixin/uizip-generated/portrait-kael.png'],
+      [characterPortraits.selene, '../../assets/bixin/uizip-generated/portrait-selene.png'],
+      [characterPortraits.vex, '../../assets/bixin/uizip-generated/portrait-vex.png'],
+      [characterPortraits.theOrder, '../../assets/bixin/uizip-generated/portrait-the-order.png'],
       [inspirationThumbnails.moonQuote, '../../assets/novelora/novelora_ui_asset_pack/07_inspiration_thumbnails/inspiration_moon_quote.svg'],
       [inspirationThumbnails.observatory, '../../assets/novelora/novelora_ui_asset_pack/07_inspiration_thumbnails/inspiration_observatory.svg'],
       [inspirationThumbnails.ruins, '../../assets/novelora/novelora_ui_asset_pack/07_inspiration_thumbnails/inspiration_ruins.svg'],
@@ -202,32 +314,32 @@ describe('novelora asset registry', () => {
       [clueNodes.memory, '../../assets/novelora/novelora_ui_asset_pack/08_graph_nodes/node_memory.svg'],
     ];
 
-    expect(assets).toHaveLength(32);
+    expect(assets).toHaveLength(48);
     expect(assets.every(([asset]) => asset.length > 0)).toBe(true);
 
     assets.forEach(([asset, sourcePath]) => {
       const assetPath = fileURLToPath(new URL(sourcePath, import.meta.url));
-      const contents = new Uint8Array(readFileSync(assetPath));
-
-      expect(contents.byteLength).toBeGreaterThan(0);
-      const resolvedContents = readResolvedAsset(asset);
-
-      expect(resolvedContents.byteLength).toBeGreaterThan(0);
 
       if (assetPath.endsWith('.svg')) {
+        const contents = new Uint8Array(readFileSync(assetPath));
+        const resolvedContents = readResolvedAsset(asset);
+
+        expect(contents.byteLength).toBeGreaterThan(0);
+        expect(resolvedContents.byteLength).toBeGreaterThan(0);
         expect(textDecoder.decode(contents)).toContain('<svg');
         expect(textDecoder.decode(resolvedContents)).toContain('<svg');
         expect(normalizeSvg(resolvedContents)).toBe(normalizeSvg(contents));
       } else {
-        expect(contents.subarray(0, pngSignature.length)).toEqual(pngSignature);
-        expect(resolvedContents.subarray(0, pngSignature.length)).toEqual(pngSignature);
+        const resolvedPath = assetUrlToFilePath(asset);
+        const sourcePrefix = readAssetPrefix(assetPath, 24);
+        const resolvedPrefix = readAssetPrefix(resolvedPath, 24);
 
-        if (sourcePath === '../../assets/echo/hero-background-clean.png') {
-          expect(Buffer.compare(resolvedContents, contents)).toBe(0);
-          expect(createHash('sha256').update(contents).digest('hex')).toBe(
-            'abe1dd54dc4f5c587c406c8e567593f5b63fda0672568621e2320b9f2d3be9df',
-          );
-        }
+        expect(resolvedPath).toBe(assetPath);
+        expect(statSync(assetPath).size).toBeGreaterThan(0);
+        expect(sourcePrefix.subarray(0, pngSignature.length)).toEqual(pngSignature);
+        expect(resolvedPrefix.subarray(0, pngSignature.length)).toEqual(pngSignature);
+        expect(textDecoder.decode(sourcePrefix.subarray(12, 16))).toBe('IHDR');
+        expect(textDecoder.decode(resolvedPrefix.subarray(12, 16))).toBe('IHDR');
       }
     });
 

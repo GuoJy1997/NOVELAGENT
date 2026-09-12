@@ -1,0 +1,155 @@
+{
+  "checks": [
+    {
+      "name": "no vite error overlay",
+      "ok": true,
+      "detail": "Echo — AI Writing Studio"
+    },
+    {
+      "name": "hero artwork loaded",
+      "ok": true,
+      "detail": "{\"complete\":true,\"naturalWidth\":1671}"
+    },
+    {
+      "name": "scale root scales up at 1920",
+      "ok": true,
+      "detail": "matrix(1.14833, 0, 0, 1.14833, 0, 0)"
+    },
+    {
+      "name": "new-project button uses gradient background",
+      "ok": true,
+      "detail": "linear-gradient(135deg, rgb(6, 128, 81), rgb(11, 127, 122))"
+    },
+    {
+      "name": "new-project button text is white",
+      "ok": true,
+      "detail": "rgb(255, 255, 255)"
+    },
+    {
+      "name": "white on both gradient stops >= 4.5:1",
+      "ok": true,
+      "detail": "stops=[[6,128,81],[11,127,122]] contrasts=4.98,4.85"
+    },
+    {
+      "name": "glass pills translucent",
+      "ok": true,
+      "detail": "{\"search\":{\"box\":{\"x\":1504,\"y\":41,\"w\":280,\"h\":44},\"bg\":\"rgba(255, 255, 255, 0.55)\",\"alpha\":0.55,\"backdrop\":\"blur(18px) saturate(1.6)\",\"color\":\"rgb(16, 22, 19)\"},\"icon\":{\"box\":{\"x\":1795,\"y\":41,\"w\":44,\"h\":44},\"bg\":\"rgba(255, 255, 255, 0.55)\",\"alpha\":0.55,\"backdrop\":\"blur(18px) saturate(1.6)\"}}"
+    },
+    {
+      "name": "glass pills blur backdrop",
+      "ok": true,
+      "detail": "blur(18px) saturate(1.6) / blur(18px) saturate(1.6)"
+    },
+    {
+      "name": "panels are glass (alpha<1, blur, border)",
+      "ok": true,
+      "detail": "[{\"box\":{\"x\":299,\"y\":678,\"w\":599,\"h\":222},\"bg\":\"rgba(255, 255, 255, 0.72)\",\"alpha\":0.72,\"backdrop\":\"blur(18px) saturate(1.5)\",\"border\":\"1px solid rgba(255, 255, 255, 0.65)\"},{\"box\":{\"x\":916,\"y\":678,\"w\":628,\"h\":218},\"bg\":\"rgba(255, 255, 255, 0.72)\",\"alpha\":0.72,\"backdrop\":\"blur(18px) saturate(1.5)\",\"border\":\"1px solid rgba(255, 255, 255, 0.65)\"}]"
+    },
+    {
+      "name": "sidebar active state gradient indicator",
+      "ok": true,
+      "detail": "linear-gradient(135deg, rgb(9, 199, 121), rgb(20, 194, 192))"
+    },
+    {
+      "name": "agent task flow connectors drawn",
+      "ok": true,
+      "detail": "{\"itemCount\":4,\"connectors\":[{\"height\":\"18.2969px\",\"borderLeft\":\"1px solid rgb(223, 248, 239)\"},{\"height\":\"18.2969px\",\"borderLeft\":\"1px solid rgb(223, 248, 239)\"},{\"height\":\"18.2969px\",\"borderLeft\":\"1px solid rgb(223, 248, 239)\"},{\"height\":\"auto\",\"borderLeft\":\"1px solid rgb(223, 248, 239)\"}]}"
+    },
+    {
+      "name": "structure map connectors drawn",
+      "ok": true,
+      "detail": "3"
+    },
+    {
+      "name": "clue flow connectors drawn",
+      "ok": true,
+      "detail": "2"
+    },
+    {
+      "name": "writing view renders",
+      "ok": true,
+      "detail": "{\"x\":299,\"y\":678,\"w\":1603,\"h\":919}"
+    },
+    {
+      "name": "paper editor present with serif font",
+      "ok": true,
+      "detail": "\"EB Garamond\", Georgia, \"Times New Roman\", serif"
+    },
+    {
+      "name": "glass chat panel present",
+      "ok": true,
+      "detail": "{\"box\":{\"x\":1534,\"y\":727,\"w\":367,\"h\":869},\"bg\":\"rgba(255, 255, 255, 0.72)\",\"backdrop\":\"blur(16px)\",\"border\":\"1px solid rgba(255, 255, 255, 0.65)\",\"radius\":\"18px\"}"
+    },
+    {
+      "name": "editor has chapter text",
+      "ok": true,
+      "detail": "202"
+    },
+    {
+      "name": "chat streams a reply from hermes",
+      "ok": true,
+      "detail": "295"
+    },
+    {
+      "name": "reduced transparency: glass surfaces resolve solid",
+      "ok": true,
+      "detail": "[{\"bg\":\"rgb(255, 255, 255)\",\"backdrop\":\"blur(18px) saturate(1.5)\"},{\"bg\":\"rgb(255, 255, 255)\",\"backdrop\":\"blur(18px) saturate(1.5)\"}]"
+    },
+    {
+      "name": "reduced transparency: pill resolves solid",
+      "ok": true,
+      "detail": "\"rgb(255, 255, 255)\""
+    },
+    {
+      "name": "no browser console errors (dashboard)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "dashboard panel#0: glass shows blurred artwork (no white cut)",
+      "ok": true,
+      "detail": "{\"n\":7791,\"meanR\":243.9,\"meanG\":249.3,\"meanB\":247.3,\"meanL\":248,\"std\":30}"
+    },
+    {
+      "name": "dashboard panel#1: glass shows blurred artwork (no white cut)",
+      "ok": true,
+      "detail": "{\"n\":8008,\"meanR\":237.8,\"meanG\":243.5,\"meanB\":244.8,\"meanL\":242.4,\"std\":34.6}"
+    },
+    {
+      "name": "new-project button renders dark green gradient",
+      "ok": true,
+      "detail": "{\"n\":48,\"meanR\":23.8,\"meanG\":136.8,\"meanB\":97.9,\"meanL\":110,\"std\":34.7}"
+    },
+    {
+      "name": "dashboard raw artwork at chat coords: region characterized",
+      "ok": true,
+      "detail": "{\"n\":7654,\"meanR\":231.6,\"meanG\":243,\"meanB\":239.7,\"meanL\":240.3,\"std\":41.1}"
+    },
+    {
+      "name": "writing editor paper renders with text",
+      "ok": true,
+      "detail": "{\"n\":49020,\"meanR\":251.7,\"meanG\":253.7,\"meanB\":253,\"meanL\":253.2,\"std\":1.6}"
+    },
+    {
+      "name": "writing chat glass over artwork (artwork behind is busy)",
+      "ok": true,
+      "detail": "{\"chat\":{\"n\":7654,\"meanR\":250.1,\"meanG\":250.6,\"meanB\":250.3,\"meanL\":250.4,\"std\":19.5},\"artworkBehind\":{\"n\":7654,\"meanR\":231.6,\"meanG\":243,\"meanB\":239.7,\"meanL\":240.3,\"std\":41.1}}"
+    },
+    {
+      "name": "reduced panel#0: solid surface (content over white)",
+      "ok": true,
+      "detail": "{\"n\":7791,\"meanR\":244.2,\"meanG\":249.5,\"meanB\":247.4,\"meanL\":248.2,\"std\":30}"
+    },
+    {
+      "name": "reduced panel#1: solid surface (content over white)",
+      "ok": true,
+      "detail": "{\"n\":8008,\"meanR\":244.6,\"meanG\":247,\"meanB\":248.3,\"meanL\":246.6,\"std\":34.6}"
+    },
+    {
+      "name": "reduced search pill: solid surface (content over white)",
+      "ok": true,
+      "detail": "{\"n\":536,\"meanR\":240.4,\"meanG\":242.4,\"meanB\":247.6,\"meanL\":242.4,\"std\":38.6}"
+    }
+  ],
+  "defects": []
+}

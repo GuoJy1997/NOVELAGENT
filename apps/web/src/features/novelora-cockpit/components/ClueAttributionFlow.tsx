@@ -4,6 +4,7 @@ interface ClueAttributionFlowProps {
   clueFlows: ClueFlow[];
   chapters: CockpitChapter[];
   selectedChapterId: string;
+  onViewFullFlow?: () => void;
 }
 
 const flowStages = ['provider', 'trigger', 'receiver', 'payoff'] as const;
@@ -27,7 +28,7 @@ function chapterLabel(chapters: CockpitChapter[], chapterId: string) {
 }
 
 function connectorPath(index: number) {
-  const y = 37 + index * 74;
+  const y = 22 + index * 44;
   return `M 132 ${y} C 153 ${y - 8} 167 ${y + 8} 188 ${y}`;
 }
 
@@ -35,18 +36,28 @@ export function ClueAttributionFlow({
   clueFlows,
   chapters,
   selectedChapterId,
+  onViewFullFlow,
 }: ClueAttributionFlowProps) {
   const relatedFlows = firstById(clueFlows).filter((flow) =>
     isRelatedToChapter(flow, selectedChapterId),
   );
   const selectedChapter = chapterLabel(chapters, selectedChapterId);
-  const canvasHeight = Math.max(150, relatedFlows.length * 74);
+  const canvasHeight = Math.max(88, relatedFlows.length * 44);
 
   return (
     <section className="clue-attribution-flow" aria-labelledby="clue-attribution-flow-title">
       <header className="clue-attribution-flow__heading">
         <h2 id="clue-attribution-flow-title">Clue Attribution Flow</h2>
-        <p>{`Evidence connected to ${selectedChapter}.`}</p>
+        {onViewFullFlow ? (
+          <button
+            className="clue-attribution-flow__view-all"
+            type="button"
+            onClick={onViewFullFlow}
+          >
+            View Full Flow
+          </button>
+        ) : null}
+        <p className="sr-only">{`Evidence connected to ${selectedChapter}.`}</p>
       </header>
 
       {relatedFlows.length === 0 ? (
@@ -74,19 +85,27 @@ export function ClueAttributionFlow({
 
           <div className="clue-attribution-flow__columns">
             <section aria-labelledby="clue-sources-title">
-              <h3 id="clue-sources-title">Clue sources</h3>
-              <ul aria-label="Clue sources">
+              <h3 id="clue-sources-title">Clues</h3>
+              <ul aria-label="Clues">
                 {relatedFlows.map((flow) => (
                   <li key={flow.id}>
                     <article
-                      className="clue-source-card"
+                      className={`clue-source-card${
+                        flow.provider.chapterId === selectedChapterId ? ' is-active' : ''
+                      }`}
                       data-flow-id={flow.id}
                       aria-label={flow.title}
                     >
                       <strong>{flow.title}</strong>
-                      <p>{flow.provider.clue}</p>
-                      <small>{`Provided by ${flow.provider.providedBy}`}</small>
-                      <small>{`Triggered by ${flow.trigger.triggeredBy}`}</small>
+                      <span className="clue-source-card__chapter">
+                        {chapterLabel(chapters, flow.provider.chapterId)}
+                      </span>
+                      <svg viewBox="0 0 12 12" aria-hidden="true" focusable="false">
+                        <path d="M4 2.5 8 6l-4 3.5" />
+                      </svg>
+                      <span className="sr-only">{flow.provider.clue}</span>
+                      <span className="sr-only">{`Provided by ${flow.provider.providedBy}`}</span>
+                      <span className="sr-only">{`Triggered by ${flow.trigger.triggeredBy}`}</span>
                     </article>
                   </li>
                 ))}
@@ -94,8 +113,8 @@ export function ClueAttributionFlow({
             </section>
 
             <section aria-labelledby="clue-recipients-title">
-              <h3 id="clue-recipients-title">Revealed to</h3>
-              <ul aria-label="Revealed to">
+              <h3 id="clue-recipients-title">Revealed To</h3>
+              <ul aria-label="Revealed To">
                 {relatedFlows.map((flow) => (
                   <li key={flow.id}>
                     <article
@@ -103,10 +122,15 @@ export function ClueAttributionFlow({
                       data-flow-id={flow.id}
                       aria-label={`${flow.title} recipient`}
                     >
-                      <strong>{`Received by ${flow.receiver.receivedBy}`}</strong>
-                      <p>{flow.receiver.interpretation}</p>
-                      <small>{`Paid off by ${flow.payoff.paidOffBy}`}</small>
-                      <small>{flow.payoff.resolution}</small>
+                      <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                        <circle cx="8" cy="5.5" r="2.5" />
+                        <path d="M3.5 13c.7-2.4 2.5-3.6 4.5-3.6s3.8 1.2 4.5 3.6" />
+                      </svg>
+                      <strong>{flow.receiver.receivedBy}</strong>
+                      <span className="sr-only">{`Received by ${flow.receiver.receivedBy}`}</span>
+                      <span className="sr-only">{flow.receiver.interpretation}</span>
+                      <span className="sr-only">{`Paid off by ${flow.payoff.paidOffBy}`}</span>
+                      <span className="sr-only">{flow.payoff.resolution}</span>
                     </article>
                   </li>
                 ))}
