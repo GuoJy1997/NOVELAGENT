@@ -1,0 +1,6 @@
+{
+  "name": "@novelora/hermes-plugins",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Novelora plugins for Hermes Agent (installed into HERMES_HOME/plugins at deploy time)"
+}

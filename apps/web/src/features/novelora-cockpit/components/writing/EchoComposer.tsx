@@ -1,4 +1,6 @@
-import { useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import type { HermesCatalog } from '../../lib/hermesCatalog';
+import { DEFAULT_LLM_MODEL } from '../../lib/hermesChat';
 
 export interface ComposerSendPayload {
   text: string;
@@ -6,33 +8,18 @@ export interface ComposerSendPayload {
   attachments: File[];
 }
 
+export interface ComposerModel {
+  id: string;
+  label: string;
+}
+
 interface EchoComposerProps {
+  catalog: HermesCatalog;
+  models: ComposerModel[];
   streaming: boolean;
   onSend: (payload: ComposerSendPayload) => void;
   onStop: () => void;
 }
-
-const ECHO_MODELS = [
-  { id: 'hermes-agent', label: 'Hermes Agent' },
-  { id: 'gpt-4.1', label: 'GPT-4.1' },
-  { id: 'claude-sonnet-4', label: 'Claude Sonnet 4' },
-] as const;
-
-const ECHO_SKILLS = [
-  { id: 'scene-drafting', label: '单章起草', hint: 'writing' },
-  { id: 'draft-act', label: '一幕起草', hint: 'writing' },
-  { id: 'draft-volume', label: '一卷起草', hint: 'writing' },
-  { id: 'expand', label: '扩写', hint: 'writing' },
-  { id: 'polish', label: '润色', hint: 'writing' },
-  { id: 'continue', label: '续写', hint: 'writing' },
-];
-
-const ECHO_EXPERTS = [
-  { id: 'plot-architect', label: '情节顾问', hint: '结构与转折' },
-  { id: 'character-voice', label: '人物声音', hint: '对白是否人设' },
-  { id: 'worldbuilding-check', label: '世界观考据', hint: '只查不改设定' },
-  { id: 'story-architect', label: '结构', hint: '幕与卷拆章' },
-];
 
 type TriggerKind = 'skill' | 'expert';
 
@@ -54,26 +41,35 @@ function readTrigger(value: string, caret: number): ActiveTrigger | null {
   };
 }
 
-export function EchoComposer({ streaming, onSend, onStop }: EchoComposerProps) {
+export function EchoComposer({ catalog, models, streaming, onSend, onStop }: EchoComposerProps) {
+  const resolvedModels = useMemo(
+    () => (models.length > 0 ? models : [{ id: DEFAULT_LLM_MODEL, label: DEFAULT_LLM_MODEL }]),
+    [models],
+  );
   const [input, setInput] = useState('');
   const [caret, setCaret] = useState(0);
-  const [modelId, setModelId] = useState<string>(ECHO_MODELS[0].id);
+  const [modelId, setModelId] = useState<string>(resolvedModels[0].id);
   const [modelOpen, setModelOpen] = useState(false);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const fieldRef = useRef<HTMLTextAreaElement>(null);
 
+  useEffect(() => {
+    if (resolvedModels.some((model) => model.id === modelId)) return;
+    setModelId(resolvedModels[0].id);
+  }, [modelId, resolvedModels]);
+
   const trigger = readTrigger(input, caret);
   const items = useMemo(() => {
     if (!trigger) return [];
-    const source = trigger.kind === 'skill' ? ECHO_SKILLS : ECHO_EXPERTS;
+    const source = trigger.kind === 'skill' ? [...catalog.skills, ...catalog.commands] : catalog.experts;
     return source.filter((item) => {
       const haystack = `${item.id} ${item.label}`.toLowerCase();
       return haystack.includes(trigger.query);
     });
-  }, [trigger]);
+  }, [trigger, catalog]);
 
-  const modelLabel = ECHO_MODELS.find((model) => model.id === modelId)?.label ?? 'Hermes Agent';
+  const modelLabel = resolvedModels.find((model) => model.id === modelId)?.label ?? modelId;
 
   function updateInput(next: string, nextCaret: number) {
     setInput(next);
@@ -139,12 +135,12 @@ export function EchoComposer({ streaming, onSend, onStop }: EchoComposerProps) {
   }
 
   return (
-    <div className="echo-chat__composer">
+    <div className="bixin-chat__composer">
       {trigger ? (
         <ul
-          className="echo-chat__menu"
+          className="bixin-chat__menu"
           role="listbox"
-          aria-label={trigger.kind === 'skill' ? 'Skills' : 'Experts'}
+          aria-label={trigger.kind === 'skill' ? '技能' : '专家'}
         >
           {items.map((item, index) => (
             <li key={item.id} role="presentation">
@@ -165,18 +161,18 @@ export function EchoComposer({ streaming, onSend, onStop }: EchoComposerProps) {
       ) : null}
 
       {attachments.length > 0 ? (
-        <ul className="echo-chat__chips">
+        <ul className="bixin-chat__chips">
           {attachments.map((file) => (
             <li key={`${file.name}:${file.lastModified}`}>{file.name}</li>
           ))}
         </ul>
       ) : null}
 
-      <div className="echo-chat__composer-card">
+      <div className="bixin-chat__composer-card">
         <textarea
           ref={fieldRef}
-          aria-label="Message Echo"
-          placeholder="问 Echo 关于本章"
+          aria-label="给 Hermes 的消息"
+          placeholder="问 Hermes 关于本章"
           rows={3}
           value={input}
           onChange={(event) => updateInput(event.target.value, event.target.selectionStart ?? event.target.value.length)}
@@ -184,12 +180,12 @@ export function EchoComposer({ streaming, onSend, onStop }: EchoComposerProps) {
           onKeyUp={(event) => setCaret(event.currentTarget.selectionStart ?? 0)}
           onKeyDown={onFieldKeyDown}
         />
-        <div className="echo-chat__composer-bar">
-          <label className="echo-chat__attach">
+        <div className="bixin-chat__composer-bar">
+          <label className="bixin-chat__attach">
             <input
               type="file"
               multiple
-              aria-label="Attach files"
+              aria-label="附件"
               onChange={(event) => {
                 const files = Array.from(event.target.files ?? []);
                 if (files.length) setAttachments((current) => [...current, ...files]);
@@ -201,7 +197,7 @@ export function EchoComposer({ streaming, onSend, onStop }: EchoComposerProps) {
             </svg>
           </label>
 
-          <div className="echo-chat__model">
+          <div className="bixin-chat__model">
             <button
               type="button"
               aria-label="模型"
@@ -215,8 +211,8 @@ export function EchoComposer({ streaming, onSend, onStop }: EchoComposerProps) {
               </svg>
             </button>
             {modelOpen ? (
-              <ul className="echo-chat__menu echo-chat__menu--model" role="listbox" aria-label="Models">
-                {ECHO_MODELS.map((model) => (
+              <ul className="bixin-chat__menu bixin-chat__menu--model" role="listbox" aria-label="模型">
+                {resolvedModels.map((model) => (
                   <li key={model.id} role="presentation">
                     <button
                       type="button"
@@ -236,11 +232,11 @@ export function EchoComposer({ streaming, onSend, onStop }: EchoComposerProps) {
           </div>
 
           {streaming ? (
-            <button type="button" className="echo-chat__send is-stop" onClick={onStop}>
+            <button type="button" className="bixin-btn" onClick={onStop}>
               停止
             </button>
           ) : (
-            <button type="button" className="echo-chat__send" onClick={submit} disabled={!input.trim()}>
+            <button type="button" className="bixin-btn bixin-btn--primary" onClick={submit} disabled={!input.trim()}>
               发送
             </button>
           )}

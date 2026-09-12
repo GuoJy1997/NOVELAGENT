@@ -10,7 +10,7 @@ interface StructureMapProps {
 }
 
 const actPhases = ['Setup', 'Confrontation', 'Resolution', 'Aftermath'] as const;
-const actPercentages = ['1 – 25%', '25 – 75%', '75 – 100%', '100%+'] as const;
+const actPercentages = ['1 - 25%', '25 - 75%', '75 - 100%', '100%+'] as const;
 const actIcons = [clueNodes.origin, clueNodes.trigger, clueNodes.receiver, clueNodes.payoff] as const;
 
 function getChapterMetric(chapterIds: string[]) {
@@ -35,7 +35,7 @@ function getChapterMetric(chapterIds: string[]) {
   const lastChapter = Math.max(...safeChapterNumbers);
   const chapterRange = firstChapter === lastChapter
     ? `Ch. ${firstChapter}`
-    : `Ch. ${firstChapter}–${lastChapter}`;
+    : `Ch. ${firstChapter}-${lastChapter}`;
 
   return `${chapterCount} · ${chapterRange}`;
 }
@@ -108,7 +108,7 @@ function getActPresentation(acts: Act[], index: number) {
   const start = isFirst ? 1 : Math.round((nonEpilogueIndex / nonEpilogueActs.length) * 100);
   const end = Math.round(((nonEpilogueIndex + 1) / nonEpilogueActs.length) * 100);
 
-  return { phase, percentage: `${start} – ${end}%` };
+  return { phase, percentage: `${start} - ${end}%` };
 }
 
 function getTrackMinWidth(actCount: number) {
@@ -123,11 +123,23 @@ export function StructureMap({ acts, selectedActId, onSelectAct }: StructureMapP
     '--structure-act-count': renderedActCount,
     '--structure-track-min-width': `${getTrackMinWidth(acts.length)}px`,
   } as CSSProperties;
+  const firstMarker = acts.flatMap((act) => act.narrativeMarkers)[0];
 
   return (
     <OccludedPanel className="echo-structure-map" labelledBy="echo-structure-title">
       <header className="echo-panel-heading">
         <h2 id="echo-structure-title">Novel Structure Map</h2>
+        <span className="echo-panel-heading__chevron" aria-hidden="true">
+          <svg viewBox="0 0 12 12" focusable="false">
+            <path d="M2.5 4.5 6 8l3.5-3.5" />
+          </svg>
+        </span>
+        {firstMarker ? (
+          <span className="echo-structure-map__legend">
+            <span aria-hidden="true" />
+            {getMarkerLabel(firstMarker.label)}
+          </span>
+        ) : null}
       </header>
 
       <div
@@ -144,6 +156,12 @@ export function StructureMap({ acts, selectedActId, onSelectAct }: StructureMapP
             viewBox="0 0 1000 80"
             preserveAspectRatio="none"
           >
+            <defs>
+              <linearGradient id="echoProgressGradientStructure" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stopColor="var(--bixin-green-600)" />
+                <stop offset="1" stopColor="var(--bixin-green-700)" />
+              </linearGradient>
+            </defs>
             {acts.slice(0, -1).map((act, index) => {
               const nextAct = acts[index + 1] as Act;
               const startX = getNodeX(index, acts.length);
@@ -157,6 +175,7 @@ export function StructureMap({ acts, selectedActId, onSelectAct }: StructureMapP
                   className="echo-structure-map__connector"
                   data-from-act-id={act.id}
                   data-to-act-id={nextAct.id}
+                  stroke="url(#echoProgressGradientStructure)"
                   d={`M ${startX} 40 C ${startX + handle} 26, ${endX - handle} 54, ${endX} 40`}
                 />
               );
@@ -186,29 +205,11 @@ export function StructureMap({ acts, selectedActId, onSelectAct }: StructureMapP
                   })}
                   onClick={() => onSelectAct(act.id)}
                 >
-                  <span className="echo-act-card__topline">
-                    <span className="echo-act-card__label">{label}</span>
-                    <span className="echo-act-card__percentage">{percentage}</span>
-                  </span>
-                  <span className="echo-act-card__body">
-                    <img src={icon} alt="" aria-hidden="true" />
-                    <span>
-                      <strong>{phase}</strong>
-                      <small>{chapterMetric}</small>
-                    </span>
-                  </span>
-                  {act.narrativeMarkers.length > 0 ? (
-                    <span className="echo-act-card__markers" aria-label="Narrative markers">
-                      {act.narrativeMarkers.map((marker, markerIndex) => (
-                        <span
-                          className={`echo-act-card__marker echo-act-card__marker--${marker.tone}`}
-                          key={`${marker.tone}-${marker.label}-${markerIndex}`}
-                        >
-                          {getMarkerLabel(marker.label)}
-                        </span>
-                      ))}
-                    </span>
-                  ) : null}
+                  <span className="echo-act-card__label">{label}</span>
+                  <strong className="echo-act-card__phase">{phase}</strong>
+                  <span className="echo-act-card__percentage">{percentage}</span>
+                  <img className="echo-act-card__icon" src={icon} alt="" aria-hidden="true" />
+                  <small className="echo-act-card__metric">{chapterMetric}</small>
                 </button>
               );
             })}

@@ -1,125 +1,166 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { resetImportSessions, startCharacterImport, startDocumentImport } from './features/novelora-cockpit/lib/importSession';
 import App from './App';
 
+vi.mock('./features/novelora-cockpit/lib/hermesChat', () => ({
+  DEFAULT_LLM_MODEL: 'deepseek-v4-flash',
+  streamChat: vi.fn(),
+}));
+
+import { streamChat } from './features/novelora-cockpit/lib/hermesChat';
+
+const streamChatMock = vi.mocked(streamChat);
+
+const okJson = (body: unknown) =>
+  new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json' } });
+
 afterEach(() => {
+  resetImportSessions();
   vi.useRealTimers();
+  vi.unstubAllGlobals();
+  streamChatMock.mockReset();
 });
 
 describe('App', () => {
-  it('composes the Echo home dashboard with the Bixin card set', () => {
-    const { container } = render(<App />);
-
-    const page = container.querySelector('.echo-page.cockpit-scroll');
-    const navigationRail = screen.getByRole('complementary', { name: 'Project navigation' });
-    const home = container.querySelector('.echo-home-dashboard');
-
-    expect(page?.children).toHaveLength(2);
-    expect(page?.children[0]).toHaveClass('echo-hero-background');
-    expect(page?.children[1]).toHaveClass('cockpit-shell');
-    expect(container.querySelectorAll('img[src*="hero-background-clean"]')).toHaveLength(1);
-    expect(container.querySelector('.echo-book-layer')).not.toBeInTheDocument();
-    expect(container.querySelector('.echo-scale-viewport')).not.toBeInTheDocument();
-    expect(within(navigationRail).getAllByRole('img', { name: 'Echo' })).toHaveLength(1);
-    expect(screen.queryByText(/Novelora/i)).not.toBeInTheDocument();
-    expect(screen.getAllByRole('heading', { name: 'Bring your story to life with AI' })).toHaveLength(1);
-
-    expect(home?.children).toHaveLength(5);
-    expect(home?.children[0]).toBe(screen.getByRole('region', { name: '我的项目' }));
-    expect(home?.children[1]).toBe(screen.getByRole('region', { name: '章节进度' }));
-    expect(home?.children[2]).toBe(screen.getByRole('region', { name: '人物关系' }));
-    expect(home?.children[3]).toBe(screen.getByRole('region', { name: '写作目标' }));
-    expect(home?.children[4]).toContainElement(screen.getByRole('region', { name: '场景日程' }));
-    expect(home?.children[4]).toContainElement(screen.getByRole('region', { name: '日历' }));
-
-    expect(screen.queryByRole('region', { name: 'Novel Structure Map' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('region', { name: 'Chapter Timeline' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('region', { name: 'AI Writing Partner' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('complementary', { name: 'Workspace assistant' })).not.toBeInTheDocument();
-    expect(container.querySelector('.cockpit-right-panel')).not.toBeInTheDocument();
-  });
-
-  it('keeps the project controls, menu, search, and controlled navigation usable', async () => {
+  it('keeps workspace selection available on the outline workbench', async () => {
     const user = userEvent.setup();
     render(<App />);
-
-    expect(screen.getByRole('searchbox', { name: 'Search workspace' })).toBeInTheDocument();
-    const projectMenu = screen.getByRole('button', { name: /Tides of Embers/i });
-    await user.click(projectMenu);
-    expect(screen.getByRole('menu', { name: 'Project switcher' })).toBeInTheDocument();
-
-    const navigation = screen.getByRole('navigation', { name: 'Workspace navigation' });
-    const home = within(navigation).getByRole('button', { name: '首页' });
-    const outline = within(navigation).getByRole('button', { name: '大纲' });
-    expect(home).toHaveAttribute('aria-pressed', 'true');
-    await user.click(outline);
-    expect(home).toHaveAttribute('aria-pressed', 'false');
-    expect(outline).toHaveAttribute('aria-pressed', 'true');
+    await user.click(screen.getByRole('button', { name: '小说大纲' }));
+    await user.click(screen.getByRole('button', { name: '选择小说项目' }));
+    expect(screen.getByRole('dialog', { name: '选择工作区' })).toBeVisible();
+    expect(screen.getByRole('button', { name: '选择小说目录' })).toBeVisible();
+  });
+  it('navigates to outline from QuickGen 小说大纲', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole('button', { name: '小说大纲' }));
+    const navigation = screen.getByRole('navigation', { name: '工作区导航' });
+    expect(within(navigation).getByRole('button', { name: '大纲' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('region', { name: '大纲' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: '大纲' })).toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: '大纲' })).toBeInTheDocument();
   });
 
-  it('announces the new-project and AI assist actions exactly', async () => {
+  it('opens writing from the Copilot start action', async () => {
     const user = userEvent.setup();
     render(<App />);
+    await user.click(screen.getByRole('button', { name: '开始陪写' }));
+    const navigation = screen.getByRole('navigation', { name: '工作区导航' });
+    expect(within(navigation).getByRole('button', { name: '写作' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByLabelText('写作工作台')).toBeInTheDocument();
+  });
 
-    const status = screen.getByRole('status');
-    expect(status).toHaveAttribute('aria-live', 'polite');
-    expect(status).not.toHaveClass('is-visible');
+  it('composes the Bixin home chrome with the workbench rail', () => {
+    const { container } = render(<App />);
+    const frame = container.querySelector('.bixin-home__frame');
+    const navigation = screen.getByRole('navigation', { name: '工作区导航' });
 
-    await user.click(screen.getByRole('button', { name: 'New Project' }));
-    expect(status).toHaveTextContent('演示中无法新建项目。');
-    expect(status).toHaveClass('is-visible');
+    expect(container.querySelector('.bixin-home')).toBeInTheDocument();
+    expect(frame?.children[0]).toHaveClass('bixin-scene-layer');
+    expect(frame?.children[1]).toHaveClass('bixin-home__interface');
+    expect(frame?.children[2]).toBeUndefined();
+    expect(container.querySelector('.echo-page')).not.toBeInTheDocument();
+    expect(container.querySelector('.echo-hero-background')).not.toBeInTheDocument();
+    expect(screen.queryByRole('complementary', { name: 'Project navigation' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Bring your story to life with AI/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /笔心在手/ })).toBeInTheDocument();
+    expect(
+      Array.from(navigation.querySelectorAll<HTMLButtonElement>('.bixin-navigation-rail__item')).map(
+        (button) => button.textContent,
+      ),
+    ).toEqual([
+      '首页',
+      '写作',
+      '工作流',
+      '大纲',
+      '人物',
+      '关系',
+      '世界观',
+      '任务',
+    ]);
+    expect(screen.getByRole('button', { name: '继续写作' })).toBeInTheDocument();
+    expect(within(screen.getByRole('main', { name: '创作首页' })).getByRole('button', { name: '新建作品' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: '最近项目' })).toBeInTheDocument();
+  });
 
-    await user.click(screen.getByRole('button', { name: /AI Assist/i }));
-    expect(status).toHaveTextContent('AI 助手已就绪，可用于当前章节。');
+  it('opens outline from the rail and writing from 继续写作 without leaving the Bixin frame', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<App />);
+    const navigation = screen.getByRole('navigation', { name: '工作区导航' });
+
+    await user.click(within(navigation).getByRole('button', { name: '大纲' }));
+    expect(screen.getByRole('region', { name: '大纲' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: '大纲' })).toBeInTheDocument();
+    expect(container.querySelector('.bixin-home')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /笔心在手/ })).not.toBeInTheDocument();
+
+    await user.click(within(navigation).getByRole('button', { name: '首页' }));
+    await user.click(screen.getByRole('button', { name: '继续写作' }));
+    expect(screen.getByLabelText('写作工作台')).toBeInTheDocument();
+    expect(container.querySelector('.bixin-home')).toBeInTheDocument();
+    expect(screen.queryByRole('main', { name: 'Story workspace' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '返回首页' }));
+    expect(screen.getByRole('region', { name: '最近项目' })).toBeInTheDocument();
+  });
+
+  it('opens project setup from every new-project entry', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    for (const button of screen.getAllByRole('button', { name: '新建作品' })) {
+      await user.click(button);
+      expect(screen.getByRole('dialog', { name: '选择工作区' })).toBeVisible();
+      await user.click(screen.getByRole('button', { name: '关闭' }));
+    }
+
+    await user.click(within(screen.getByRole('navigation', { name: '工作区导航' })).getByRole('button', { name: '世界观' }));
+    expect(screen.getByRole('region', { name: '世界观' })).toBeInTheDocument();
   });
 
   it('dismisses action feedback after 3200ms while keeping the live region mounted', () => {
     vi.useFakeTimers();
     render(<App />);
-
     const status = screen.getByRole('status');
-    fireEvent.click(screen.getByRole('button', { name: /AI Assist/i }));
-    expect(status).toHaveTextContent('AI 助手已就绪，可用于当前章节。');
+    fireEvent.click(screen.getByRole('button', { name: '查看通知' }));
     expect(status).toHaveClass('is-visible');
-
     act(() => vi.advanceTimersByTime(3199));
-    expect(status).toHaveTextContent('AI 助手已就绪，可用于当前章节。');
     expect(status).toHaveClass('is-visible');
-
     act(() => vi.advanceTimersByTime(1));
     expect(status).toBeInTheDocument();
     expect(status).toBeEmptyDOMElement();
     expect(status).not.toHaveClass('is-visible');
   });
 
-  it('opens the writing workspace from Continue Writing and returns', async () => {
+  it('opens writing from 写作 and the world editor from 世界观', async () => {
     const user = userEvent.setup();
     render(<App />);
-    await user.click(screen.getByRole('button', { name: /continue writing/i }));
-    expect(screen.getByLabelText('Writing workspace')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: '返回首页' }));
-    expect(screen.getByRole('main', { name: 'Story workspace' })).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: '我的项目' })).toBeInTheDocument();
+    const navigation = screen.getByRole('navigation', { name: '工作区导航' });
+    await user.click(within(navigation).getByRole('button', { name: '写作' }));
+    expect(screen.getByLabelText('写作工作台')).toBeInTheDocument();
+    await user.click(within(navigation).getByRole('button', { name: '世界观' }));
+    expect(screen.getByRole('region', { name: '世界观' })).toBeInTheDocument();
+    expect(screen.getByText('这是设定编辑，不会召唤 Agent。')).toBeInTheDocument();
   });
 
-  it('opens the writing workspace from 打开项目', async () => {
+  it('opens characters, relations, workflow, and tasks from the rail', async () => {
     const user = userEvent.setup();
-    render(<App />);
-    await user.click(screen.getByRole('button', { name: '打开项目' }));
-    expect(screen.getByLabelText('Writing workspace')).toBeInTheDocument();
-  });
+    const { container } = render(<App />);
+    const navigation = screen.getByRole('navigation', { name: '工作区导航' });
 
-  it('announces schedule add from the home dashboard', async () => {
-    const user = userEvent.setup();
-    render(<App />);
-    await user.click(screen.getByRole('button', { name: '添加日程' }));
-    expect(screen.getByRole('status')).toHaveTextContent(
-      '演示中无法编辑日程。',
-    );
+    await user.click(within(navigation).getByRole('button', { name: '人物' }));
+    expect(screen.getByRole('heading', { name: '人物' })).toBeInTheDocument();
+    expect(container.querySelector('.bixin-home')).toBeInTheDocument();
+
+    await user.click(within(navigation).getByRole('button', { name: '关系' }));
+    expect(screen.getByRole('heading', { name: '人物关系网' })).toBeInTheDocument();
+    expect(container.querySelector('.bixin-home')).toBeInTheDocument();
+
+    await user.click(within(navigation).getByRole('button', { name: '工作流' }));
+    expect(screen.getByRole('heading', { name: '工作流' })).toBeInTheDocument();
+    expect(container.querySelector('.bixin-home')).toBeInTheDocument();
+
+    await user.click(within(navigation).getByRole('button', { name: '任务' }));
+    expect(screen.getByRole('heading', { name: '任务' })).toBeInTheDocument();
+    expect(container.querySelector('.bixin-home')).toBeInTheDocument();
   });
 
   it('keeps visible copy free of em-dashes', () => {
@@ -127,27 +168,89 @@ describe('App', () => {
     expect(document.body.textContent ?? '').not.toMatch(/[—–]/);
   });
 
-  it('exposes the seven Chinese workspace nav items without em-dashes', () => {
+  it('opens a workspace picker dialog from 打开项目', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) => {
+        if (String(url).includes('/workspaces')) {
+          return Promise.resolve(
+            new Response(
+              JSON.stringify([
+                {
+                  id: 'taoyuan',
+                  title: '桃园密码',
+                  rootPath: 'D:\\桃园密码',
+                  addedAt: '2026-08-16T00:00:00.000Z',
+                },
+              ]),
+              { status: 200, headers: { 'Content-Type': 'application/json' } },
+            ),
+          );
+        }
+        return Promise.reject(new Error(`unexpected ${url}`));
+      }),
+    );
     render(<App />);
-    const navigation = screen.getByRole('navigation', { name: 'Workspace navigation' });
-    const world = within(navigation).getByRole('button', { name: '世界观' });
-    const tasks = within(navigation).getByRole('button', { name: '任务' });
-    expect(world).toBeInTheDocument();
-    expect(tasks).toBeInTheDocument();
-    expect(world.textContent ?? '').not.toMatch(/[—–]/);
-    expect(tasks.textContent ?? '').not.toMatch(/[—–]/);
+    await user.click(screen.getByRole('button', { name: /云上王座/ }));
+    expect(screen.getByRole('dialog', { name: '选择工作区' })).toBeInTheDocument();
   });
 
-  it('opens the writing workspace from 写作 and a labeled placeholder from 世界观', async () => {
+  it('announces a finished outline import and opens the editor from the notice', async () => {
     const user = userEvent.setup();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string, init?: RequestInit) => {
+        if (String(url).startsWith('/api/local-text')) {
+          return Promise.resolve(okJson({ content: '卷一杂记' }));
+        }
+        if (String(url).includes('/documents/outline') && init?.method === 'PUT') {
+          return Promise.resolve(okJson({ content: '# 整理大纲' }));
+        }
+        return Promise.reject(new Error(`unexpected ${url}`));
+      }),
+    );
+    streamChatMock.mockImplementation(async function* () {
+      yield { content: '# 整理大纲' };
+    });
+
     render(<App />);
-    const navigation = screen.getByRole('navigation', { name: 'Workspace navigation' });
-    await user.click(within(navigation).getByRole('button', { name: '写作' }));
-    expect(screen.getByLabelText('Writing workspace')).toBeInTheDocument();
-    await user.click(within(navigation).getByRole('button', { name: '世界观' }));
-    expect(screen.getByRole('region', { name: '世界观' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: '世界观' })).toBeInTheDocument();
-    expect(screen.getByText('这是设定编辑，不会召唤 Agent。')).toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: '世界观' })).toBeInTheDocument();
+    await act(async () => {
+      await startDocumentImport({
+        projectId: 'default-project',
+        kind: 'outline',
+        filePath: 'D:\\桃园密码\\副本大纲.md',
+      });
+    });
+
+    const notice = await screen.findByRole('button', { name: '大纲已整理完成' });
+    expect(document.querySelector('.bixin-action-feedback')).toHaveClass('is-visible');
+    await user.click(notice);
+    expect(await screen.findByDisplayValue('# 整理大纲')).toBeInTheDocument();
+  });
+
+  it('announces a failed character import on the live region', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string) => {
+        if (String(url).startsWith('/api/local-text')) {
+          return Promise.resolve(okJson({ content: '人物草稿' }));
+        }
+        return Promise.reject(new Error(`unexpected ${url}`));
+      }),
+    );
+    streamChatMock.mockImplementation(async function* () {
+      yield { content: '无法提取' };
+    });
+
+    render(<App />);
+    await act(async () => {
+      await startCharacterImport({
+        projectId: 'default-project',
+        filePath: 'D:\\桃园密码\\人物小传.md',
+      });
+    });
+
+    expect(await screen.findByRole('button', { name: '人物提取失败，请重试' })).toBeInTheDocument();
   });
 });

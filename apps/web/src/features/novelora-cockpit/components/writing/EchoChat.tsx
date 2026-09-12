@@ -1,37 +1,81 @@
-import { useEffect, useRef, useState } from 'react';
-import { streamChat, type ChatMessage } from '../../lib/hermesChat';
-import { EchoComposer, type ComposerSendPayload } from './EchoComposer';
+import { useEffect, useState, useSyncExternalStore } from 'react';
+import { emptyCatalog, fetchHermesCatalog, listBixinModels, type HermesCatalog } from '../../lib/hermesCatalog';
+import { DEFAULT_LLM_MODEL } from '../../lib/hermesChat';
+import {
+  getChatSession,
+  markChatOnline,
+  sendChatTurn,
+  stopChatSession,
+  subscribeChatSession,
+} from '../../lib/chatSession';
+import { EchoComposer, type ComposerModel, type ComposerSendPayload } from './EchoComposer';
+import { Check } from 'lucide-react';
 
-interface EchoChatProps { context: string }
+interface EchoChatProps {
+  context: string;
+  chapterNum: number;
+  projectId: string;
+  cwd?: string;
+  onCandidatesChanged?: () => void;
+}
 
-const HEALTH_URL = '/hermes/health';
+const MODELS_URL = '/hermes/v1/models';
 const OFFLINE_POLL_MS = 15000;
 const BACK_ONLINE_NOTICE_MS = 5000;
+const DEV_KEY = 'novelora-dev-key';
 
-export function EchoChat({ context }: EchoChatProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [streaming, setStreaming] = useState(false);
-  const [error, setError] = useState('');
-  const [offline, setOffline] = useState(false);
+function preferGatewayModels(ids: string[]): ComposerModel[] {
+  const unique = [...new Set(ids.filter(Boolean))];
+  unique.sort((left, right) => {
+    if (left === DEFAULT_LLM_MODEL) return 1;
+    if (right === DEFAULT_LLM_MODEL) return -1;
+    return left.localeCompare(right);
+  });
+  return unique.map((id) => ({ id, label: id }));
+}
+
+export function EchoChat({ context, chapterNum, projectId, cwd, onCandidatesChanged }: EchoChatProps) {
+  const session = useSyncExternalStore(
+    (listener) => subscribeChatSession(projectId, listener),
+    () => getChatSession(projectId),
+    () => getChatSession(projectId),
+  );
+  const [catalog, setCatalog] = useState<HermesCatalog>(emptyCatalog());
+  const [models, setModels] = useState<ComposerModel[]>([
+    { id: DEFAULT_LLM_MODEL, label: DEFAULT_LLM_MODEL },
+  ]);
   const [backOnline, setBackOnline] = useState(false);
-  const abortRef = useRef<AbortController | null>(null);
-  const contextSent = useRef(false);
 
   useEffect(() => {
-    if (!offline) return undefined;
+    const controller = new AbortController();
+    void fetchHermesCatalog(controller.signal).then(setCatalog);
+    void listBixinModels(controller.signal).then((listed) => {
+      const next = preferGatewayModels(listed);
+      if (next.length) setModels(next);
+    });
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    if (!session.offline) return undefined;
     const timer = window.setInterval(() => {
-      void fetch(HEALTH_URL)
+      void fetch(MODELS_URL, { headers: { Authorization: `Bearer ${DEV_KEY}` } })
         .then((response) => {
           if (response.ok) {
-            setOffline(false);
-            setError('');
+            markChatOnline(projectId);
             setBackOnline(true);
+            void fetchHermesCatalog().then(setCatalog);
+            void listBixinModels()
+              .then((listed) => {
+                const next = preferGatewayModels(listed);
+                if (next.length) setModels(next);
+              });
           }
         })
         .catch(() => undefined);
     }, OFFLINE_POLL_MS);
     return () => window.clearInterval(timer);
-  }, [offline]);
+  }, [projectId, session.offline]);
 
   useEffect(() => {
     if (!backOnline) return undefined;
@@ -39,57 +83,45 @@ export function EchoChat({ context }: EchoChatProps) {
     return () => window.clearTimeout(timer);
   }, [backOnline]);
 
-  async function send({ text, model, attachments }: ComposerSendPayload) {
-    if (streaming) return;
-    setError('');
-    const attached = attachments.map((file) => file.name).join(', ');
-    const body = attached ? `Attached: ${attached}\n\n${text}` : text;
-    const prefixed = contextSent.current ? body : `${context}\n\n${body}`;
-    contextSent.current = true;
-    const next: ChatMessage[] = [...messages, { role: 'user', content: prefixed }, { role: 'assistant', content: '' }];
-    setMessages(next);
-    setStreaming(true);
-    abortRef.current = new AbortController();
-    try {
-      const wireMessages = next.slice(0, -1);
-      for await (const delta of streamChat(wireMessages, abortRef.current.signal, { model })) {
-        setMessages((current) => {
-          const copy = [...current];
-          copy[copy.length - 1] = { role: 'assistant', content: copy[copy.length - 1].content + delta };
-          return copy;
-        });
-      }
-    } catch (err) {
-      if ((err as Error).name !== 'AbortError') {
-        setError('Echo is unreachable. Is the hermes gateway running?');
-        setOffline(true);
-      }
-    } finally {
-      setStreaming(false);
-      abortRef.current = null;
-    }
+  function send({ text, model, attachments }: ComposerSendPayload) {
+    void sendChatTurn({
+      projectId,
+      chapterNum,
+      context,
+      text,
+      model,
+      attachments,
+      cwd,
+      onCandidatesChanged,
+    });
   }
 
   return (
-    <section className="echo-chat" aria-label="Echo chat">
-      <header className="echo-chat__header">
-        <span className={`echo-chat__pulse${offline ? ' is-offline' : ''}`} aria-hidden="true" />
-        <div>
-          <p className="echo-chat__eyebrow">Writing partner</p>
-          <h2>Echo</h2>
-        </div>
+    <section className="bixin-chat" aria-label="Hermes 对话">
+      <header className="bixin-chat__header">
+        <span className={`bixin-chat__pulse${session.offline ? ' is-offline' : ''}`} aria-hidden="true" />
+        <h2>Hermes</h2>
       </header>
-      <div className="echo-chat__log" role="log" aria-live="polite">
-        {messages.map((message, index) => (
-          <p key={index} data-role={message.role}>{message.content}</p>
+      <div className="bixin-chat__context" aria-label="当前上下文"><strong>当前上下文</strong><div>{['当前章节', '前一章节', '大纲', '人物关系', '世界观'].map((item) => <span key={item}><Check aria-hidden="true" />{item}</span>)}</div></div>
+      <div className="bixin-chat__quick" aria-label="快捷能力">{[['续写下一段', '请基于当前章节续写下一段。'], ['润色选中内容', '请润色我当前选中的段落。'], ['检查人物OOC', '请检查本章人物是否有 OOC。'], ['检查世界观冲突', '请检查本章是否与世界观设定冲突。']].map(([label, text]) => <button key={label} type="button" onClick={() => send({ text, model: models[0].id, attachments: [] })}>{label}</button>)}</div>
+      <div className="bixin-chat__log" role="log" aria-live="polite">
+        {session.messages.map((message, index) => (
+          <p key={index} data-role={message.role}>
+            {message.role === 'assistant' && message.reasoning ? (
+              <span className="bixin-chat__think">{message.reasoning}</span>
+            ) : null}
+            {message.content}
+          </p>
         ))}
-        {error ? <p role="alert">{error}</p> : null}
-        {backOnline ? <p role="status">Echo is back online</p> : null}
+        {session.error ? <p role="alert">{session.error}</p> : null}
+        {backOnline ? <p role="status">Hermes 已恢复</p> : null}
       </div>
       <EchoComposer
-        streaming={streaming}
-        onSend={(payload) => { void send(payload); }}
-        onStop={() => abortRef.current?.abort()}
+        catalog={catalog}
+        models={models}
+        streaming={session.streaming}
+        onSend={send}
+        onStop={() => stopChatSession(projectId)}
       />
     </section>
   );

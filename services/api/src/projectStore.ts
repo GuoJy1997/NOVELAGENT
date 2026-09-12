@@ -1,17 +1,21 @@
 import { randomBytes } from 'node:crypto';
 import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import type { CharacterFile, DocumentName } from './projectTypes.ts';
 
 export type { CharacterFile, CharacterRecord, DocumentName, RecipeId, RelationshipRecord } from './projectTypes.ts';
 
-export interface ChapterMeta { num: number; title: string; status: string; words: number }
-export interface ProjectMeta { id: string; title: string; currentChapter: number; chapters: ChapterMeta[] }
+export interface ChapterMeta { num: number; title: string; status: string; words: number; file?: string }
+export interface ProjectMeta {
+  id: string; title: string; currentChapter: number; chapters: ChapterMeta[];
+  cover?: string; chaptersDir?: string; rootPath?: string;
+}
 export interface ChapterContent { num: number; title: string; content: string }
 
 interface ProjectFile {
   id: string; title: string; currentChapter: number;
-  chapters: Array<{ num: number; title: string; status: string }>;
+  chapters: Array<{ num: number; title: string; status: string; file?: string }>;
+  cover?: string; chaptersDir?: string;
 }
 
 export function countWords(text: string): number {
@@ -22,6 +26,18 @@ export function countWords(text: string): number {
 
 const chapterFile = (num: number) => `ch_${String(num).padStart(2, '0')}.md`;
 const documentFile = (name: DocumentName) => `${name}.md`;
+
+function chapterPath(root: string, chapter: { num: number; file?: string }): string {
+  if (chapter.file) {
+    const resolved = resolve(root, chapter.file);
+    const rel = relative(resolve(root), resolved);
+    if (rel === '' || rel.startsWith('..') || isAbsolute(rel)) {
+      throw new Error(`Chapter file escapes project root: ${chapter.file}`);
+    }
+    return resolved;
+  }
+  return join(root, 'chapters', chapterFile(chapter.num));
+}
 
 function uniqueTmp(target: string): string {
   return `${target}.${process.pid}.${randomBytes(8).toString('hex')}.tmp`;
@@ -124,7 +140,7 @@ export async function readProject(root: string): Promise<ProjectMeta> {
   for (const chapter of file.chapters) {
     let words = 0;
     try {
-      words = countWords(await readFile(join(root, 'chapters', chapterFile(chapter.num)), 'utf8'));
+      words = countWords(await readFile(chapterPath(root, chapter), 'utf8'));
     } catch { words = 0; }
     chapters.push({ ...chapter, words });
   }
@@ -135,15 +151,16 @@ export async function readChapter(root: string, num: number): Promise<ChapterCon
   const file = await readProjectFile(root);
   const meta = file.chapters.find((chapter) => chapter.num === num);
   if (!meta) throw new Error(`Unknown chapter ${num}`);
-  const content = await readFile(join(root, 'chapters', chapterFile(num)), 'utf8');
+  const content = await readFile(chapterPath(root, meta), 'utf8');
   return { num, title: meta.title, content };
 }
 
 export async function writeChapter(root: string, num: number, content: string): Promise<{ words: number }> {
   const file = await readProjectFile(root);
-  if (!file.chapters.some((chapter) => chapter.num === num)) throw new Error(`Unknown chapter ${num}`);
-  await mkdir(join(root, 'chapters'), { recursive: true });
-  const target = join(root, 'chapters', chapterFile(num));
+  const meta = file.chapters.find((chapter) => chapter.num === num);
+  if (!meta) throw new Error(`Unknown chapter ${num}`);
+  const target = chapterPath(root, meta);
+  await mkdir(dirname(target), { recursive: true });
   await atomicWrite(target, content);
   return { words: countWords(content) };
 }

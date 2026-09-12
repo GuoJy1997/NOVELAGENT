@@ -1,12 +1,17 @@
 import type { CSSProperties } from 'react';
 import { characterPortraits } from '../assetRegistry';
-import type { CharacterNode, CharacterRelationship } from '../types';
+import { KIND_META } from '../types';
+import type { CharacterNode, CharacterRelationship, RelationshipKind } from '../types';
+import './CharacterGraph.css';
 
 interface CharacterGraphProps {
   characters: CharacterNode[];
   relationships: CharacterRelationship[];
   title?: string;
+  onSelectCharacter?: (id: string) => void;
 }
+
+const RELATIONSHIP_KINDS = Object.keys(KIND_META) as RelationshipKind[];
 
 interface NodeCoordinate {
   x: number;
@@ -18,10 +23,8 @@ interface GraphLayout {
   height: number;
 }
 
-const GRAPH_WIDTH = 320;
-const COMPACT_GRAPH_HEIGHT = 180;
-const GRID_COLUMNS = [50, 160, 270] as const;
-const GRID_ROW_PITCH = 48;
+const GRAPH_WIDTH = 760;
+const GRAPH_HEIGHT = 560;
 
 function firstById<T extends { id: string }>(items: T[]) {
   const seen = new Set<string>();
@@ -34,44 +37,31 @@ function firstById<T extends { id: string }>(items: T[]) {
 
 function graphLayout(characters: CharacterNode[]): GraphLayout {
   const coordinates = new Map<string, NodeCoordinate>();
-
-  if (characters.length >= 6) {
-    characters.forEach((character, index) => {
-      coordinates.set(character.id, {
-        x: GRID_COLUMNS[index % GRID_COLUMNS.length],
-        y: 30 + Math.floor(index / GRID_COLUMNS.length) * GRID_ROW_PITCH,
-      });
-    });
-    return {
-      coordinates,
-      height: Math.max(
-        COMPACT_GRAPH_HEIGHT,
-        Math.ceil(characters.length / GRID_COLUMNS.length) * GRID_ROW_PITCH,
-      ),
-    };
-  }
+  const centerX = GRAPH_WIDTH / 2;
+  const centerY = GRAPH_HEIGHT / 2;
 
   if (characters.length === 1) {
-    coordinates.set(characters[0]?.id ?? '', { x: GRAPH_WIDTH / 2, y: COMPACT_GRAPH_HEIGHT / 2 });
-    return { coordinates, height: COMPACT_GRAPH_HEIGHT };
+    coordinates.set(characters[0]?.id ?? '', { x: centerX, y: centerY });
+    return { coordinates, height: GRAPH_HEIGHT };
   }
 
-  const centerX = GRAPH_WIDTH / 2;
-  const centerY = COMPACT_GRAPH_HEIGHT / 2;
+  const ringCount = Math.max(1, characters.length - 1);
+  const radiusX = ringCount <= 4 ? 230 : ringCount <= 8 ? 285 : 315;
+  const radiusY = ringCount <= 4 ? 150 : ringCount <= 8 ? 190 : 205;
   characters.forEach((character, index) => {
     if (index === 0) {
       coordinates.set(character.id, { x: centerX, y: centerY });
       return;
     }
 
-    const angle = -Math.PI / 2 + ((index - 1) * Math.PI * 2) / (characters.length - 1);
+    const angle = -Math.PI / 2 + ((index - 1) * Math.PI * 2) / ringCount;
     coordinates.set(character.id, {
-      x: Math.round((centerX + Math.cos(angle) * 112) * 10) / 10,
-      y: Math.round((centerY + Math.sin(angle) * 60) * 10) / 10,
+      x: Math.round((centerX + Math.cos(angle) * radiusX) * 10) / 10,
+      y: Math.round((centerY + Math.sin(angle) * radiusY) * 10) / 10,
     });
   });
 
-  return { coordinates, height: COMPACT_GRAPH_HEIGHT };
+  return { coordinates, height: GRAPH_HEIGHT };
 }
 
 function relationshipPath(
@@ -94,6 +84,7 @@ export function CharacterGraph({
   characters,
   relationships,
   title = 'Character Relationship Graph',
+  onSelectCharacter,
 }: CharacterGraphProps) {
   const uniqueCharacters = firstById(characters);
   const uniqueRelationships = firstById(relationships);
@@ -128,20 +119,15 @@ export function CharacterGraph({
             viewBox={`0 0 ${GRAPH_WIDTH} ${layout.height}`}
             aria-hidden="true"
           >
-            {knownRelationships.map(({ relationship }, index) => {
-              const from = layout.coordinates.get(relationship.fromCharacterId);
-              const to = layout.coordinates.get(relationship.toCharacterId);
-              if (!from || !to) return null;
+            {knownRelationships.map(({ relationship, from, to }, index) => {
+              const fromCoordinate = layout.coordinates.get(from.id);
+              const toCoordinate = layout.coordinates.get(to.id);
+              if (!fromCoordinate || !toCoordinate) return null;
 
-              return (
-                <path
-                  key={relationship.id}
-                  className={`character-graph__edge character-graph__edge--${relationship.kind}`}
-                  data-relationship-id={relationship.id}
-                  data-relationship-kind={relationship.kind}
-                  d={relationshipPath(from, to, index)}
-                />
-              );
+              return <g key={relationship.id}>
+                <path className={`character-graph__edge character-graph__edge--${relationship.kind}`} data-relationship-id={relationship.id} data-relationship-kind={relationship.kind} fill="none" d={relationshipPath(fromCoordinate, toCoordinate, index)} />
+                <text className="character-graph__edge-label" x={(fromCoordinate.x + toCoordinate.x) / 2} y={(fromCoordinate.y + toCoordinate.y) / 2}>{relationship.label}</text>
+              </g>;
             })}
           </svg>
 
@@ -149,7 +135,7 @@ export function CharacterGraph({
             {uniqueCharacters.map((character, characterIndex) => {
               const coordinate = layout.coordinates.get(character.id) ?? {
                 x: GRAPH_WIDTH / 2,
-                y: COMPACT_GRAPH_HEIGHT / 2,
+                y: GRAPH_HEIGHT / 2,
               };
               const nodeStyle = {
                 '--character-x': `${coordinate.x}px`,
@@ -170,13 +156,12 @@ export function CharacterGraph({
                   className={`character-graph__node${characterIndex === 0 ? ' is-protagonist' : ''}`}
                   style={nodeStyle}
                   aria-label={`${character.name}, ${character.role}`}
-                  title={relatedTensions || undefined}
-                >
+                title={relatedTensions || undefined}
+              >
+                <button type="button" aria-label={`${character.name}, ${character.role}`} onClick={() => onSelectCharacter?.(character.id)}>
                   <img src={characterPortraits[character.portraitAssetKey]} alt="" />
-                  <span>
-                    <strong>{character.name}</strong>
-                    <small>{character.role}</small>
-                  </span>
+                  <span><strong>{character.name}</strong><small>{character.role}</small></span>
+                </button>
                 </li>
               );
             })}
@@ -184,11 +169,11 @@ export function CharacterGraph({
         </div>
       </div>
 
-      <ul className="character-graph__legend" aria-label="Relationship kinds">
-        {(['ally', 'neutral', 'rival', 'unknown'] as const).map((kind) => (
+      <ul className="character-graph__legend" aria-label="关系图例">
+        {RELATIONSHIP_KINDS.map((kind) => (
           <li key={kind} className={`character-graph__legend-item character-graph__legend-item--${kind}`}>
             <span aria-hidden="true" />
-            {kind.charAt(0).toUpperCase() + kind.slice(1)}
+            {KIND_META[kind].label}
           </li>
         ))}
       </ul>

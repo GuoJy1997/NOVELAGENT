@@ -12,14 +12,6 @@ export function OccludedPanel({ children, className, labelledBy }: OccludedPanel
   return (
     <section className={panelClassName} aria-labelledby={labelledBy}>
       <div className="occluded-panel__surface" aria-hidden="true" />
-      <div
-        className="occluded-panel__top-cap occluded-panel__top-cap--left"
-        aria-hidden="true"
-      />
-      <div
-        className="occluded-panel__top-cap occluded-panel__top-cap--right"
-        aria-hidden="true"
-      />
       <div className="occluded-panel__content">{children}</div>
     </section>
   );

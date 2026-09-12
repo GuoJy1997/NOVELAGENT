@@ -4,6 +4,11 @@
   "version": "0.1.0",
   "type": "module",
   "main": "./out/main/main.js",
+  "build": {
+    "appId": "com.novelora.bixin",
+    "files": ["out/**", "assets/**"],
+    "win": { "icon": "assets/icon.png" }
+  },
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",

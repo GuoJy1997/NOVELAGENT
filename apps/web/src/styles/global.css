@@ -1,5 +1,5 @@
 @import './tokens.css';
-@import './echo.css';
+@import './bixin-home.css';
 
 * {
   box-sizing: border-box;
@@ -19,9 +19,9 @@ body {
   position: relative;
   isolation: isolate;
   min-height: 100vh;
-  background: var(--echo-page);
-  color: var(--echo-ink);
-  font-family: var(--font-ui);
+  background: var(--bixin-canvas);
+  color: var(--bixin-ink);
+  font-family: var(--bixin-font-ui);
 }
 
 #root {

@@ -7,16 +7,6 @@ interface InspirationVaultProps {
   onViewAll?: () => void;
 }
 
-type InspirationFilter = 'all' | InspirationType;
-
-const filters: Array<{ label: string; value: InspirationFilter }> = [
-  { label: 'All', value: 'all' },
-  { label: 'Quotes', value: 'quote' },
-  { label: 'Images', value: 'image' },
-  { label: 'Ideas', value: 'location' },
-  { label: 'Refs', value: 'research' },
-];
-
 const typeLabels: Record<InspirationType, string> = {
   image: 'Image',
   quote: 'Quote',
@@ -36,36 +26,22 @@ function firstById<T extends { id: string }>(items: T[]) {
 }
 
 export function InspirationVault({ inspirations, onViewAll = noop }: InspirationVaultProps) {
-  const [filter, setFilter] = useState<InspirationFilter>('all');
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const filteredInspirations = firstById(inspirations).filter(
-    (inspiration) => filter === 'all' || inspiration.type === filter,
-  );
-  const visibleInspirations = filteredInspirations.slice(0, 3);
-  const activeFilterLabel = filters.find(({ value }) => value === filter)?.label ?? 'All';
+  const visibleInspirations = firstById(inspirations).slice(0, 3);
 
   return (
     <section className="inspiration-vault" aria-labelledby="inspiration-vault-title">
       <header className="inspiration-vault__heading">
         <h2 id="inspiration-vault-title">Inspiration Vault</h2>
-        <button className="inspiration-vault__view-all" type="button" onClick={onViewAll}>
-          View All inspiration
+        <button
+          className="inspiration-vault__view-all"
+          type="button"
+          aria-label="View All inspiration"
+          onClick={onViewAll}
+        >
+          View All
         </button>
       </header>
-
-      <div className="inspiration-vault__filters" role="group" aria-label="Inspiration filters">
-        {filters.map(({ label, value }) => (
-          <button
-            key={value}
-            className={`inspiration-filter${filter === value ? ' is-selected' : ''}`}
-            type="button"
-            aria-pressed={filter === value}
-            onClick={() => setFilter(value)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
 
       <div
         className="inspiration-vault__grid"
@@ -75,7 +51,7 @@ export function InspirationVault({ inspirations, onViewAll = noop }: Inspiration
       >
         {visibleInspirations.length === 0 ? (
           <p className="inspiration-vault__empty" role="status">
-            No inspiration matches {activeFilterLabel}.
+            No inspiration available yet.
           </p>
         ) : (
           visibleInspirations.map((inspiration) => {
@@ -97,10 +73,11 @@ export function InspirationVault({ inspirations, onViewAll = noop }: Inspiration
               >
                 <img src={inspirationThumbnails[inspiration.assetKey]} alt="" />
                 <span className="inspiration-card__content">
-                  <span className="inspiration-card__meta">{typeLabels[inspiration.type]}</span>
                   <strong>{inspiration.title}</strong>
-                  <span className="inspiration-card__note">{inspiration.note}</span>
-                  <span className="inspiration-card__provenance">{provenance}</span>
+                  <span className="inspiration-card__meta">
+                    {`${typeLabels[inspiration.type]} • ${provenance}`}
+                  </span>
+                  <span className="sr-only">{inspiration.note}</span>
                 </span>
               </button>
             );

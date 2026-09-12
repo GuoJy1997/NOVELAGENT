@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { OccludedPanel } from './OccludedPanel';
 
 describe('OccludedPanel', () => {
-  it('keeps decorative occlusion geometry separate from functional content', () => {
+  it('keeps the decorative surface separate from functional content', () => {
     const { container } = render(
       <OccludedPanel labelledBy="panel-title" className="test-panel">
         <h2 id="panel-title">Story structure</h2>
@@ -20,18 +20,12 @@ describe('OccludedPanel', () => {
     expect(panel).toHaveAttribute('class', 'occluded-panel test-panel');
     expect(directChildren.map((child) => child.className)).toEqual([
       'occluded-panel__surface',
-      'occluded-panel__top-cap occluded-panel__top-cap--left',
-      'occluded-panel__top-cap occluded-panel__top-cap--right',
       'occluded-panel__content',
     ]);
 
-    const [surface, leftCap, rightCap, content] = directChildren;
+    const [surface, content] = directChildren;
     expect(surface).toHaveAttribute('aria-hidden', 'true');
-    expect(leftCap).toHaveAttribute('aria-hidden', 'true');
-    expect(rightCap).toHaveAttribute('aria-hidden', 'true');
     expect(surface).toBeEmptyDOMElement();
-    expect(leftCap).toBeEmptyDOMElement();
-    expect(rightCap).toBeEmptyDOMElement();
     expect(within(surface as HTMLElement).queryByRole('button', { name: 'Action' })).toBeNull();
     expect(within(content as HTMLElement).getByRole('button', { name: 'Action' })).toBe(action);
     expect(container.querySelectorAll('#panel-title')).toHaveLength(1);

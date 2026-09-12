@@ -42,6 +42,53 @@ describe('projectStore', () => {
     await assert.rejects(writeChapter(root, 99, 'x'), /Unknown chapter 99/);
   });
 
+  it('reads and writes chapters with a real file path', async () => {
+    const cn = join(root, 'cn-book');
+    await mkdir(join(cn, '正文'), { recursive: true });
+    await writeFile(join(cn, 'project.json'), JSON.stringify({
+      id: 'cn-book', title: '桃园密码', currentChapter: 1,
+      chapters: [{ num: 1, title: '忘路之远近', status: 'draft', file: '正文/001-第1章-忘路之远近.md' }],
+    }));
+    await writeFile(join(cn, '正文/001-第1章-忘路之远近.md'), '# 忘路之远近\n\n晋太元中\n');
+
+    const meta = await readProject(cn);
+    assert.equal(meta.chapters[0].file, '正文/001-第1章-忘路之远近.md');
+    assert.equal(meta.chapters[0].words, 9);
+
+    const chapter = await readChapter(cn, 1);
+    assert.equal(chapter.title, '忘路之远近');
+    assert.match(chapter.content, /晋太元中/);
+
+    const { words } = await writeChapter(cn, 1, '# 忘路之远近\n\n重写 四个汉字\n');
+    assert.equal(words, 11);
+    assert.match(await readFile(join(cn, '正文/001-第1章-忘路之远近.md'), 'utf8'), /重写/);
+    await assert.rejects(readFile(join(cn, 'chapters/ch_01.md'), 'utf8'), { code: 'ENOENT' });
+  });
+
+  it('writes a file-field chapter whose parent directory does not exist yet', async () => {
+    const nested = join(root, 'nested-book');
+    await mkdir(nested, { recursive: true });
+    await writeFile(join(nested, 'project.json'), JSON.stringify({
+      id: 'nested-book', title: 'Nested', currentChapter: 1,
+      chapters: [{ num: 1, title: 'One', status: 'draft', file: 'deep/dir/one.md' }],
+    }));
+    await writeChapter(nested, 1, 'hello world\n');
+    assert.equal(await readFile(join(nested, 'deep/dir/one.md'), 'utf8'), 'hello world\n');
+  });
+
+  it('rejects chapter file paths that escape the project root', async () => {
+    const evil = join(root, 'evil-book');
+    await mkdir(evil, { recursive: true });
+    await writeFile(join(evil, 'project.json'), JSON.stringify({
+      id: 'evil-book', title: 'Evil', currentChapter: 1,
+      chapters: [{ num: 1, title: 'One', status: 'draft', file: '../escape.md' }],
+    }));
+    await assert.rejects(readChapter(evil, 1), /escapes project root/);
+    await assert.rejects(writeChapter(evil, 1, 'x'), /escapes project root/);
+    const meta = await readProject(evil);
+    assert.equal(meta.chapters[0].words, 0);
+  });
+
   it('projects relations.md without layout fields', async () => {
     await writeCharacters(root, {
       characters: [{ id: 'liora', name: '莉奥拉', role: '档案员', goal: '守镜', knows: '潮图', x: 12, y: 40 }],

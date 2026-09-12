@@ -3,47 +3,34 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { HomeDashboard } from './HomeDashboard';
 
+const props = () => ({
+  onOpenProject: vi.fn(), onNewProject: vi.fn(), onNavigate: vi.fn(), onStartWriting: vi.fn(), onShowMessage: vi.fn(),
+});
 describe('HomeDashboard', () => {
-  it('renders the six home cards in the Bixin grid order', () => {
-    const { container } = render(
-      <HomeDashboard onOpenProject={() => undefined} onAddSchedule={() => undefined} />,
-    );
-
-    const grid = container.querySelector('.echo-home-dashboard');
-    expect(grid?.children).toHaveLength(5);
-    expect(grid?.children[0]).toHaveClass('echo-home-card--project');
-    expect(grid?.children[1]).toHaveClass('echo-home-card--chapters');
-    expect(grid?.children[2]).toHaveClass('echo-home-card--network');
-    expect(grid?.children[3]).toHaveClass('echo-home-card--goals');
-    expect(grid?.children[4]).toHaveClass('echo-home-dashboard__pair');
-    expect(screen.getByRole('heading', { name: '我的项目' })).toBeVisible();
-    expect(screen.getByRole('heading', { name: '章节进度' })).toBeVisible();
-    expect(screen.getByRole('heading', { name: '人物关系' })).toBeVisible();
-    expect(screen.getByRole('heading', { name: '写作目标' })).toBeVisible();
-    expect(screen.getByRole('heading', { name: '场景日程' })).toBeVisible();
-    expect(screen.getByRole('heading', { name: '2024 年 5 月' })).toBeVisible();
-    expect(screen.getByText('Tides of Embers')).toBeVisible();
-    expect(screen.getByText('Kael')).toBeVisible();
-    expect(screen.getByText('Liora')).toBeVisible();
-    expect(document.body.textContent ?? '').not.toMatch(/[—–]/);
+  it('renders the five new home sections', () => {
+    render(<HomeDashboard {...props()} />);
+    for (const name of ['今日创作挑战', 'AI 陪写', '快速生成', '最近项目', 'AI 建议']) {
+      expect(screen.getByRole('region', { name })).toBeVisible();
+    }
   });
-
-  it('reports 打开项目 and 添加日程 actions', async () => {
-    const user = userEvent.setup();
-    const onOpenProject = vi.fn();
-    const onAddSchedule = vi.fn();
-    render(<HomeDashboard onOpenProject={onOpenProject} onAddSchedule={onAddSchedule} />);
-
-    await user.click(screen.getByRole('button', { name: '打开项目' }));
-    await user.click(screen.getByRole('button', { name: '添加日程' }));
-
-    expect(onOpenProject).toHaveBeenCalledOnce();
-    expect(onAddSchedule).toHaveBeenCalledOnce();
+  it('routes quick generation and starts writing', async () => {
+    const p = props();
+    render(<HomeDashboard {...p} />);
+    await userEvent.click(screen.getByRole('button', { name: '小说大纲' }));
+    await userEvent.click(screen.getByRole('button', { name: '开始陪写' }));
+    expect(p.onNavigate).toHaveBeenCalledWith('outline');
+    expect(p.onStartWriting).toHaveBeenCalledOnce();
   });
-
-  it('marks the active calendar day without using color alone', () => {
-    render(<HomeDashboard onOpenProject={() => undefined} onAddSchedule={() => undefined} />);
-    const calendar = screen.getByRole('region', { name: '日历' });
-    expect(within(calendar).getByText('17')).toHaveAttribute('aria-current', 'date');
+  it('wires challenge, project, and new-project actions', async () => {
+    const p = props();
+    render(<HomeDashboard {...p} />);
+    await userEvent.click(screen.getByRole('button', { name: '立即挑战' }));
+    await userEvent.click(screen.getByRole('button', { name: /星海旅人/ }));
+    await userEvent.click(within(screen.getByRole('region', { name: '最近项目' })).getByRole('button', { name: '新建作品' }));
+    await userEvent.click(screen.getByRole('button', { name: /云上王座/ }));
+    expect(p.onShowMessage).toHaveBeenNthCalledWith(1, '创作挑战暂未在演示版开放。');
+    expect(p.onShowMessage).toHaveBeenNthCalledWith(2, '该演示项目暂未开放。');
+    expect(p.onNewProject).toHaveBeenCalledOnce();
+    expect(p.onOpenProject).toHaveBeenCalledOnce();
   });
 });

@@ -145,6 +145,11 @@ export function TaskBoardPage({ projectId }: TaskBoardPageProps) {
             <section key={column.id} className="task-board__column" aria-label={column.label}>
               <h3>{column.label}</h3>
               <ul className="task-board__list">
+                {cards.length === 0 ? (
+                  <li>
+                    <p className="task-board__empty">暂无任务</p>
+                  </li>
+                ) : null}
                 {cards.map((item) => {
                   const open = item.id === openId;
                   return (

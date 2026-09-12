@@ -53,17 +53,9 @@ describe('StructureMap', () => {
 
     expect(panel).toHaveClass('occluded-panel', 'echo-structure-map');
     expect(panel).toHaveAttribute('aria-labelledby', 'echo-structure-title');
-    expect(panel.children).toHaveLength(4);
+    expect(panel.children).toHaveLength(2);
     expect(panel.children[0]).toHaveClass('occluded-panel__surface');
-    expect(panel.children[1]).toHaveClass(
-      'occluded-panel__top-cap',
-      'occluded-panel__top-cap--left',
-    );
-    expect(panel.children[2]).toHaveClass(
-      'occluded-panel__top-cap',
-      'occluded-panel__top-cap--right',
-    );
-    expect(panel.children[3]).toHaveClass('occluded-panel__content');
+    expect(panel.children[1]).toHaveClass('occluded-panel__content');
     expect(within(panel).getByRole('heading', { level: 2, name: 'Novel Structure Map' })).toHaveAttribute(
       'id',
       'echo-structure-title',
@@ -78,9 +70,9 @@ describe('StructureMap', () => {
     const rail = within(panel).getByRole('region', { name: 'Novel structure acts' });
     const buttons = within(rail).getAllByRole('button');
     const expected = [
-      ['ACT I', 'Setup', '1 – 25%'],
-      ['ACT II', 'Confrontation', '25 – 75%'],
-      ['ACT III', 'Resolution', '75 – 100%'],
+      ['ACT I', 'Setup', '1 - 25%'],
+      ['ACT II', 'Confrontation', '25 - 75%'],
+      ['ACT III', 'Resolution', '75 - 100%'],
       ['EPILOGUE', 'Aftermath', '100%+'],
     ];
 
@@ -97,7 +89,7 @@ describe('StructureMap', () => {
     }
 
     expect(within(panel).getByText('Core Conflict')).toBeVisible();
-    expect(within(panel).getByText('Climax')).toBeVisible();
+    expect(within(panel).queryByText('Climax')).toBeNull();
     expect(panel.querySelector('.act-card__summary')).toBeNull();
     expect(panel.querySelector('.act-card__progress')).toBeNull();
   });
@@ -124,6 +116,10 @@ describe('StructureMap', () => {
       ['act-ii', 'act-iii'],
       ['act-iii', 'epilogue'],
     ]);
+    const gradient = container.querySelector('linearGradient');
+    expect(gradient).not.toBeNull();
+    expect(container.innerHTML).toMatch(/stroke="url\(#/);
+    expect(gradient?.getAttribute('id')).toBe('echoProgressGradientStructure');
     expect(container.querySelector('.echo-structure-map__cards')).not.toBeNull();
   });
 
@@ -228,7 +224,7 @@ describe('StructureMap', () => {
       'Confrontation',
       'Resolution',
     ]);
-    expect(['1 – 20%', '20 – 40%', '40 – 60%', '60 – 80%', '80 – 100%']).toEqual(
+    expect(['1 - 20%', '20 - 40%', '40 - 60%', '60 - 80%', '80 - 100%']).toEqual(
       buttons.map((button) => button.querySelector('.echo-act-card__percentage')?.textContent),
     );
     expect(within(rail).queryByText('Aftermath')).not.toBeInTheDocument();
@@ -255,7 +251,7 @@ describe('StructureMap', () => {
     const rail = within(panel).getByRole('region', { name: 'Novel structure acts' });
     const buttons = within(rail).getAllByRole('button');
     const actTwo = within(rail).getByRole('button', {
-      name: /^ACT II, Confrontation,.*The Drowned Map.*25 – 75%.*2 chapters/i,
+      name: /^ACT II, Confrontation,.*The Drowned Map.*25 - 75%.*2 chapters/i,
     });
 
     expect(buttons.map((button) => button.getAttribute('aria-pressed'))).toEqual([

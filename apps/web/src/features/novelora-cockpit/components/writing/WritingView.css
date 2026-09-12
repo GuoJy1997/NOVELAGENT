@@ -1,8 +1,511 @@
-.writing-view__bar .writing-view__delegate::before {
-  display: none;
-  width: 0;
-  height: 0;
-  margin: 0;
-  border: 0;
-  content: none;
+.bixin-writing {
+  display: grid;
+  width: 100%;
+  max-width: 1286px;
+  box-sizing: border-box;
+  grid-template-columns: minmax(250px, 280px) minmax(0, 605px) minmax(320px, 372px);
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 12px;
+  height: 100%;
+  min-height: 0;
+  margin: 0 auto;
+  color: var(--bixin-ink);
+  font-family: var(--bixin-font-ui);
 }
+
+.bixin-writing__bar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 66px;
+  gap: 20px;
+  padding: 0 18px;
+}
+
+.bixin-writing__identity {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+}
+
+.bixin-writing__title-row,
+.bixin-writing__actions {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 10px;
+}
+
+.bixin-writing__title-row h1,
+.bixin-writing__identity p {
+  margin: 0;
+}
+
+.bixin-writing__title-row h1 {
+  font-family: var(--bixin-font-display);
+  font-size: 28px;
+  line-height: 1;
+}
+
+.bixin-writing__title-row strong {
+  overflow: hidden;
+  max-width: 290px;
+  padding: 9px 14px;
+  border-radius: var(--bixin-radius-action);
+  background: var(--bixin-surface-84);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+.bixin-writing__identity p,
+.bixin-writing__save-status {
+  color: var(--bixin-muted);
+  font-size: 13px;
+}
+
+.bixin-writing__save-status {
+  padding: 8px 10px;
+  border-radius: var(--bixin-radius-action);
+  background: var(--bixin-surface-84);
+}
+
+.bixin-writing__chapters,
+.bixin-writing__editor,
+.bixin-writing__chat {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--bixin-card-border);
+  border-radius: var(--bixin-radius-card);
+  box-shadow: var(--bixin-shadow-card);
+  backdrop-filter: blur(8px);
+}
+
+.bixin-writing__chapters,
+.bixin-writing__chat {
+  padding: 16px 14px;
+  background: var(--bixin-card);
+}
+
+.bixin-writing__editor {
+  padding: 0;
+  background: var(--bixin-surface-solid);
+}
+
+.bixin-writing__editor .bixin-editor {
+  padding: 16px 22px 14px;
+  box-sizing: border-box;
+}
+
+.bixin-chapter-list {
+  height: 100%;
+  overflow-y: auto;
+}
+
+.bixin-chapter-list__head,
+.bixin-chapter-list__progress { display: grid; gap: 6px; margin-bottom: 12px; color: var(--bixin-muted); font-size: 12px; }
+.bixin-chapter-list__head { display: flex; justify-content: space-between; align-items: center; color: var(--bixin-ink); font-size: 14px; }
+.bixin-chapter-list > input { width: 100%; margin-bottom: 12px; padding: 8px 10px; border: 1px solid var(--bixin-card-border); border-radius: var(--bixin-radius-input); color: var(--bixin-ink); background: var(--bixin-surface-84); font: inherit; }
+.bixin-chapter-list__badge { justify-self: end; padding: 3px 7px; border-radius: var(--bixin-radius-pill); background: var(--bixin-surface-58); color: var(--bixin-muted); font-size: 11px; }
+.bixin-chapter-list button > .bixin-chapter-list__badge[data-status='complete'] { color: var(--bixin-green-700); background: var(--bixin-green-100); }
+.bixin-chapter-list button > .bixin-chapter-list__badge[data-status='drafting'] { color: var(--bixin-pop-yellow-ink); background: var(--bixin-pop-yellow-soft); }
+.bixin-chapter-list button > .bixin-chapter-list__badge[data-status='revision'] { color: var(--bixin-pop-blue); background: var(--bixin-pop-blue-soft); }
+.bixin-chapter-list button > .bixin-chapter-list__badge[data-status='published'] { color: var(--bixin-pop-cyan); background: var(--bixin-pop-cyan-soft); }
+.bixin-chapter-list__track { height: 6px; overflow: hidden; border-radius: var(--bixin-radius-pill); background: var(--bixin-surface-58); }
+.bixin-chapter-list__track span { display: block; height: 100%; background: var(--bixin-green-600); }
+
+.bixin-chapter-list ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bixin-chapter-list button {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--bixin-card-border);
+  border-radius: var(--bixin-radius-medium);
+  background: var(--bixin-surface-84);
+  color: var(--bixin-ink);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.bixin-chapter-list button:hover {
+  background: var(--bixin-green-50);
+}
+
+.bixin-chapter-list button[aria-pressed='true'] {
+  border-color: var(--bixin-green-100);
+  background: var(--bixin-green-100);
+  box-shadow: var(--bixin-shadow-nav-active);
+}
+
+.bixin-chapter-list button > span:first-child {
+  color: var(--bixin-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.bixin-chapter-list strong {
+  font-size: 14px;
+}
+
+.bixin-chapter-list button > span:last-child {
+  color: var(--bixin-subtle);
+  font-size: 12px;
+}
+
+.bixin-editor {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+  gap: 12px;
+  height: 100%;
+  min-height: 0;
+}
+.bixin-editor__toolbar, .bixin-editor__ai-bar { display: flex; flex-wrap: wrap; gap: 6px; }
+.bixin-editor__toolbar button, .bixin-editor__ai-bar button, .bixin-chat__quick button { border: 1px solid var(--bixin-card-border); border-radius: var(--bixin-radius-action); padding: 6px 9px; color: var(--bixin-ink); background: var(--bixin-surface-84); cursor: pointer; font: inherit; font-size: 12px; }
+.bixin-editor__toolbar button[aria-disabled='true'] { opacity: .55; cursor: default; }
+.bixin-editor__ai-bar { padding-top: 8px; border-top: 1px solid var(--bixin-ink-05); }
+.bixin-editor__stats { display: flex; gap: 12px; color: var(--bixin-muted); font-size: 12px; }
+
+.bixin-editor__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  color: var(--bixin-muted);
+  font-size: 13px;
+}
+
+.bixin-editor__tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bixin-editor textarea,
+.bixin-editor__preview {
+  min-height: 0;
+  overflow: auto;
+  color: var(--bixin-ink);
+  font-family: var(--bixin-font-display);
+  font-size: 17px;
+  line-height: 1.75;
+}
+
+.bixin-editor textarea {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  outline: none;
+  resize: none;
+  background: transparent;
+}
+
+.bixin-candidate {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--bixin-ink-05);
+}
+
+.bixin-candidate__list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bixin-candidate__item {
+  display: grid;
+  gap: 10px;
+}
+
+.bixin-candidate__preview {
+  max-height: 160px;
+  margin: 0;
+  overflow: auto;
+  color: var(--bixin-ink);
+  font-family: var(--bixin-font-display);
+  font-size: 15px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.bixin-candidate__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.bixin-candidate [role='alert'] {
+  margin: 0 0 8px;
+  color: var(--color-state-danger);
+  font-size: 13px;
+}
+
+.bixin-chat {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.bixin-chat__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.bixin-chat__context, .bixin-chat__quick { display: grid; gap: 8px; margin-bottom: 10px; }
+.bixin-chat__context > div { display: flex; flex-wrap: wrap; gap: 5px; }
+.bixin-chat__context span { display: inline-flex; align-items: center; gap: 3px; padding: 4px 7px; border-radius: var(--bixin-radius-pill); color: var(--bixin-green-700); background: var(--bixin-green-100); font-size: 11px; }
+.bixin-chat__context svg { width: 12px; height: 12px; }
+.bixin-chat__quick { grid-template-columns: 1fr 1fr; }
+
+.bixin-chat__header h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.bixin-chat__pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--bixin-radius-circle);
+  background: var(--bixin-green-600);
+}
+
+.bixin-chat__pulse.is-offline {
+  background: var(--bixin-subtle);
+}
+
+.bixin-chat__log {
+  display: grid;
+  gap: 8px;
+  flex: 1;
+  align-content: start;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 4px 0 12px;
+}
+
+.bixin-chat__log p {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: var(--bixin-radius-medium);
+  background: var(--bixin-green-50);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.bixin-chat__log p[data-role='user'] {
+  justify-self: end;
+  color: var(--bixin-surface-solid);
+  background: var(--bixin-green-600);
+}
+
+.bixin-chat__think {
+  display: block;
+  margin: 0 0 8px;
+  color: var(--bixin-subtle);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.bixin-chat__log p[role='alert'],
+.bixin-chat__log p[role='status'] {
+  justify-self: stretch;
+  color: var(--bixin-ink);
+  background: var(--bixin-surface-84);
+}
+
+.bixin-chat__composer {
+  position: relative;
+}
+
+.bixin-chat__composer-card {
+  padding: 10px 12px 8px;
+  border: 1px solid var(--bixin-card-border);
+  border-radius: var(--bixin-radius-input);
+  background: var(--bixin-surface-94);
+}
+
+.bixin-chat__composer textarea {
+  width: 100%;
+  border: 0;
+  outline: none;
+  resize: none;
+  color: var(--bixin-ink);
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.bixin-chat__composer textarea::placeholder {
+  color: var(--bixin-muted);
+}
+
+.bixin-chat__composer-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.bixin-chat__attach {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: var(--bixin-radius-circle);
+  color: var(--bixin-muted);
+  background: var(--bixin-surface-58);
+  cursor: pointer;
+}
+
+.bixin-chat__attach input {
+  display: none;
+}
+
+.bixin-chat__attach svg {
+  width: 16px;
+  height: 16px;
+}
+
+.bixin-chat__model {
+  position: relative;
+  margin-right: auto;
+}
+
+.bixin-chat__model > button {
+  min-height: 36px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--bixin-radius-action);
+  color: var(--bixin-ink);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.bixin-chat__model > button svg {
+  width: 12px;
+  height: 12px;
+  margin-left: 4px;
+}
+
+.bixin-chat__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.bixin-chat__chips li {
+  padding: 4px 10px;
+  border-radius: var(--bixin-radius-pill);
+  background: var(--bixin-green-100);
+  color: var(--bixin-green-700);
+  font-size: 12px;
+}
+
+.bixin-chat__menu {
+  position: absolute;
+  right: 0;
+  bottom: 100%;
+  left: 0;
+  z-index: 2;
+  max-height: 220px;
+  margin: 0 0 8px;
+  overflow: auto;
+  padding: 6px;
+  border: 1px solid var(--bixin-card-border);
+  border-radius: var(--bixin-radius-medium);
+  background: var(--bixin-surface-solid);
+  box-shadow: var(--bixin-shadow-card);
+  list-style: none;
+}
+
+.bixin-chat__menu--model {
+  right: auto;
+  left: 0;
+  width: max-content;
+  min-width: 160px;
+}
+
+.bixin-chat__menu button {
+  display: grid;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--bixin-radius-stage);
+  background: transparent;
+  color: var(--bixin-ink);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.bixin-chat__menu button strong {
+  font-size: 13px;
+}
+
+.bixin-chat__menu button small {
+  color: var(--bixin-muted);
+  font-size: 12px;
+}
+
+.bixin-chat__menu button.is-active,
+.bixin-chat__menu button[aria-selected='true'],
+.bixin-chat__menu button:hover {
+  background: var(--bixin-green-50);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bixin-writing,
+  .bixin-writing * {
+    transition: none;
+  }
+}
+
+/* Paper/editor hierarchy aligned to the 1536 x 1024 writing reference. */
+.bixin-writing { max-width: none; grid-template-columns: 280px minmax(0, 1fr) 372px; }
+.bixin-writing__chapters, .bixin-writing__chat { background: var(--bixin-surface-94); }
+.bixin-writing__editor .bixin-editor { padding: 22px 24px 16px; }
+.bixin-chapter-list { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.bixin-chapter-list ul { flex: 1; min-height: 0; overflow: auto; align-content: start; gap: 3px; scrollbar-width: thin; }
+.bixin-chapter-list li button { grid-template-columns: 42px minmax(0, 1fr) 45px; align-items: center; gap: 2px 5px; min-height: 46px; padding: 7px 6px; border-radius: var(--bixin-radius-stage); background: transparent; border-color: transparent; }
+.bixin-chapter-list li button > span:first-child { white-space: nowrap; font-size: 10px; grid-row: 1 / 3; }
+.bixin-chapter-list li button > span:nth-child(3) { font-size: 10px; text-align: right; white-space: nowrap; grid-row: 1 / 3; grid-column: 3; }
+.bixin-chapter-list li button strong { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bixin-chapter-list li button > span:last-child { font-size: 9px; grid-column: 2; padding: 0; justify-self: start; }
+.bixin-chapter-list__progress { flex-shrink: 0; margin: 16px 4px 0; padding: 14px 10px; border: 1px solid var(--bixin-card-border); border-radius: var(--bixin-radius-medium); background: var(--bixin-surface-solid); }
+.bixin-chapter-list > input { flex-shrink: 0; font-size: 12px; }
+.bixin-editor textarea, .bixin-editor__preview { font-size: 15px; line-height: 1.9; }
+.bixin-editor__meta { justify-content: space-between; align-items: end; }
+.bixin-editor__chapter-heading > span { color: var(--bixin-muted); font-size: 11px; }
+.bixin-editor__chapter-heading h2 { margin: 6px 0; color: var(--bixin-ink); font-size: 25px; line-height: 1.3; }
+.bixin-chapter-list__head { margin: 3px 5px 16px; font-size: 16px; }
+.bixin-editor__toolbar { padding: 8px 0; border-block: 1px solid var(--bixin-card-border); gap: 8px; }
+.bixin-editor__toolbar button { border: 0; background: transparent; padding: 6px 8px; border-radius: var(--bixin-radius-badge); }
+.bixin-editor__ai-bar { align-self: center; justify-content: center; width: max-content; max-width: 100%; padding: 8px 12px; border: 1px solid var(--bixin-card-border); border-radius: var(--bixin-radius-pill); box-shadow: var(--bixin-shadow-card); }
+.bixin-editor__ai-bar button { border: 0; color: var(--bixin-green-700); }
+

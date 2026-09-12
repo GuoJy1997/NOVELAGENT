@@ -15,3 +15,8 @@ coverage/
 apps/desktop/out/
 *.log
 debug.log
+
+.cursor/
+.opencode/
+TalkingPet/
+tmp/

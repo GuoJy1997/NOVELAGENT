@@ -1,13 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import { noveloraMockProject } from '../data/noveloraMockProject';
 import type { CharacterNode, CharacterRelationship } from '../types';
 import { CharacterGraph } from './CharacterGraph';
 
 const finitePathPattern = /^M\s*-?\d+(?:\.\d+)?\s+-?\d+(?:\.\d+)?\s+C\s+-?\d+(?:\.\d+)?\s+-?\d+(?:\.\d+)?\s+-?\d+(?:\.\d+)?\s+-?\d+(?:\.\d+)?\s+-?\d+(?:\.\d+)?\s+-?\d+(?:\.\d+)?$/;
-const echoCss = readFileSync(resolve(process.cwd(), 'src/styles/echo.css'), 'utf8');
+const graphCss = readFileSync(resolve(process.cwd(), 'src/features/novelora-cockpit/components/CharacterGraph.css'), 'utf8');
 
 describe('CharacterGraph', () => {
   it('renders a named graph and one curved path for every known relationship', () => {
@@ -27,6 +27,7 @@ describe('CharacterGraph', () => {
     for (const relationship of noveloraMockProject.characterRelationships) {
       const path = graph.querySelector(`path[data-relationship-id="${relationship.id}"]`);
       expect(path).toHaveAttribute('data-relationship-kind', relationship.kind);
+      expect(path).toHaveAttribute('fill', 'none');
       expect(path?.getAttribute('d')).toMatch(finitePathPattern);
       expect(path?.getAttribute('d')).toContain('C');
     }
@@ -99,16 +100,14 @@ describe('CharacterGraph', () => {
     expect(within(nodes).getByRole('listitem', { name: 'Kael, Exiled tide-runner' })).toBeTruthy();
   });
 
-  it('keeps the node stage in the same 320-unit coordinate system as its SVG', () => {
+  it('uses a wide coordinate system so the relation canvas stays legible', () => {
     const { container } = render(
       <CharacterGraph characters={noveloraMockProject.characters} relationships={[]} />,
     );
-    const stageRule = echoCss.match(
-      /\.cockpit-scroll \.character-graph__stage\s*\{([^}]*)\}/,
-    )?.[1];
+    const stageRule = graphCss.match(/\.character-graph__stage\s*\{([^}]*)\}/)?.[1];
 
-    expect(container.querySelector('svg')).toHaveAttribute('viewBox', '0 0 320 180');
-    expect(stageRule).toMatch(/width:\s*320px;/);
+    expect(container.querySelector('svg')).toHaveAttribute('viewBox', '0 0 760 560');
+    expect(stageRule).toMatch(/width:\s*760px;/);
     expect(stageRule).toMatch(/height:\s*var\(--character-graph-height\);/);
     expect(stageRule).not.toMatch(/max-width:/);
   });
@@ -121,9 +120,12 @@ describe('CharacterGraph', () => {
       />,
     );
 
-    const legend = screen.getByRole('list', { name: 'Relationship kinds' });
+    const legend = screen.getByRole('list', { name: '关系图例' });
     const items = within(legend).getAllByRole('listitem');
-    expect(items.map((item) => item.textContent)).toEqual(['Ally', 'Neutral', 'Rival', 'Unknown']);
+    expect(items.map((item) => item.textContent)).toEqual([
+      '亲密 / 信任', '友好 / 合作', '竞争 / 敌对', '利用 / 交易',
+      '亲属 / 血缘', '师徒 / 指导', '中立', '其他',
+    ]);
 
     const edges = screen
       .getByRole('region', { name: 'Character relationship graph' })
@@ -132,10 +134,23 @@ describe('CharacterGraph', () => {
       noveloraMockProject.characterRelationships.map((relationship) => relationship.kind),
     );
 
-    const legendRule = echoCss.match(
-      /\.cockpit-scroll \.character-graph__legend\s*\{([^}]*)\}/,
-    )?.[1];
+    const legendRule = graphCss.match(/\.character-graph__legend\s*\{([^}]*)\}/)?.[1];
     expect(legendRule).toMatch(/list-style:\s*none;/);
+    expect(graphCss).toMatch(/\.character-graph__edge\s*\{[^}]*fill:\s*none;/s);
+    for (const kind of ['ally', 'friend', 'rival', 'deal', 'kin', 'mentor', 'neutral', 'unknown']) expect(graphCss).toContain(`.character-graph__edge--${kind}`);
+    expect(graphCss).toMatch(/\.character-graph__legend-item--friend\s*>\s*span\s*\{[^}]*var\(--bixin-pop-blue\)/s);
+    expect(graphCss).toMatch(/\.character-graph__legend-item--deal\s*>\s*span\s*\{[^}]*var\(--bixin-pop-orange\)/s);
+    expect(graphCss).toMatch(/\.character-graph__legend-item--kin\s*>\s*span\s*\{[^}]*var\(--bixin-pop-cyan\)/s);
+    expect(graphCss).toMatch(/\.character-graph__legend-item--mentor\s*>\s*span\s*\{[^}]*var\(--bixin-pop-purple\)/s);
+    expect(graphCss).not.toMatch(/\.cockpit-scroll \.character-graph__edge/);
+  });
+
+  it('labels every edge and selects a node through its accessible button', () => {
+    const onSelectCharacter = vi.fn();
+    render(<CharacterGraph characters={noveloraMockProject.characters} relationships={noveloraMockProject.characterRelationships} onSelectCharacter={onSelectCharacter} />);
+    expect(screen.getAllByText('uneasy allies').length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole('button', { name: 'Kael, Exiled tide-runner' }));
+    expect(onSelectCharacter).toHaveBeenCalledWith('kael');
   });
 
   it('centers the first character as the protagonist', () => {
@@ -149,8 +164,8 @@ describe('CharacterGraph', () => {
     const kaelNode = container.querySelector<HTMLElement>('.character-graph__node.is-protagonist');
     expect(kaelNode).not.toBeNull();
     expect(kaelNode?.textContent).toContain('Kael');
-    expect(kaelNode?.style.getPropertyValue('--character-x')).toBe('160px');
-    expect(kaelNode?.style.getPropertyValue('--character-y')).toBe('90px');
+    expect(kaelNode?.style.getPropertyValue('--character-x')).toBe('380px');
+    expect(kaelNode?.style.getPropertyValue('--character-y')).toBe('280px');
   });
 
   it('lays out eight characters without overlapping node bounds', () => {
@@ -169,10 +184,10 @@ describe('CharacterGraph', () => {
       };
     });
 
-    expect(container.querySelector('svg')).toHaveAttribute('viewBox', '0 0 320 180');
+    expect(container.querySelector('svg')).toHaveAttribute('viewBox', '0 0 760 560');
     expect(container.querySelector('.character-graph__stage')).toHaveStyle({
-      '--character-graph-height': '180px',
-      height: '180px',
+      '--character-graph-height': '560px',
+      height: '560px',
     });
     for (let first = 0; first < centers.length; first += 1) {
       for (let second = first + 1; second < centers.length; second += 1) {

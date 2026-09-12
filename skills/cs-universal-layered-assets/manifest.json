@@ -1,0 +1,32 @@
+{
+  "name": "universal-layered-assets",
+  "version": "1.2.0",
+  "description": "Portable workflow and scripts for generating, processing, validating, and packaging layered visual assets from text descriptions or reference images.",
+  "entrypoint": "SKILL.md",
+  "license": "custom-project-shareable",
+  "requires": {
+    "python": ">=3.9",
+    "pythonPackages": ["Pillow"]
+  },
+  "resources": {
+    "references": [
+      "references/asset-types.md",
+      "references/generation-workflow.md",
+      "references/size-guide.md",
+      "references/prompt-patterns.md",
+      "references/delivery.md"
+    ],
+    "scripts": [
+      "scripts/remove_chroma_key.py",
+      "scripts/black_to_alpha.py",
+      "scripts/inspect_alpha.py",
+      "scripts/make_contact_sheet.py",
+      "scripts/make_composite_preview.py"
+    ],
+    "platforms": [
+      "platforms/codex.md",
+      "platforms/claude.md",
+      "platforms/generic-agent.md"
+    ]
+  }
+}
